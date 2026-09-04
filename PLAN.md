@@ -41,6 +41,12 @@ Copiar los tokens tal cual a `globals.css` / config de Tailwind:
 1. **Imputación diaria**: el empleado imputa horas por día sobre subcategorías (tareas) de proyectos a los que está asignado (`empleado_proyecto`). Empresa y categoría van implícitas (proyecto → empresa destino; subcategoría → categoría). Jornada 7 h/día laborable; tope duro 12 h/día (trigger).
 2. **Estados**: `borrador → enviada → aprobada|rechazada → cerrada`. Aprueban admin de la empresa destino o admin de grupo. El cierre de periodo (mes) congela todo.
 3. **Requeridas**: laborables del mes × jornada, descontando festivos (grupo o empresa) y días con ausencia aprobada.
+   **Contrato "requeridas efectivas"** — fórmula única, un solo helper compartido (`src/lib/horas/requeridas-efectivas.ts`), fuente para FTE s/requeridas (export F4), KPIs del admin y balance del empleado:
+   ```
+   requeridas_efectivas(empleado, mes) =
+     horas_requeridas_mes(empresa) − (dias_vacaciones + dias_baja + dias_permiso) × jornada
+   ```
+   `horas_requeridas_mes(empresa)` es una constante de calendario (laborables×jornada, NO por empleado). Los días por tipo de ausencia y el total imputado se obtienen de `balance_mes(anio,mes)` (RPC propia del empleado autenticado, una fila aunque el mes esté vacío) o de `fte_mes(anio,mes)` (solo admin, una fila por empleado+proyecto, base del export); `jornada_horas` sale de `ajuste`, nunca hardcodeada. La resta se hace una sola vez en el helper — ningún consumidor la reimplementa.
 4. **Ausencias**: solicitud desde la app (vacaciones/baja/permiso) → aprueba responsable de departamento o admin. Aprobada = bloquea imputación esos días y descuenta requeridas.
 5. **Tarifas**: `resolver_tarifa()` — prioridad empleado > categoría; filtro opcional por empresa origen; vigencias por fecha. Horas sin tarifa bloquean el cierre.
 6. **Refacturación**: solo si `empresa_origen (del empleado) ≠ empresa_destino (del proyecto)` y el proyecto es refacturable. Vista `v_refacturacion_mensual`.

@@ -754,6 +754,16 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["rol_usuario"]
       }
+      balance_mes: {
+        Args: { p_anio: number; p_mes: number }
+        Returns: {
+          dias_baja: number
+          dias_permiso: number
+          dias_vacaciones: number
+          horas_imputadas: number
+          horas_requeridas: number
+        }[]
+      }
       cancelar_ausencia: { Args: { p_id: string }; Returns: undefined }
       cerrar_periodo: {
         Args: { p_anio: number; p_empresa: string; p_mes: number }
@@ -787,6 +797,7 @@ export type Database = {
         Args: { p_anio: number; p_mes: number }
         Returns: {
           dias_baja: number
+          dias_permiso: number
           dias_vacaciones: number
           email: string
           empleado: string
