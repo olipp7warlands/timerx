@@ -163,7 +163,7 @@ create or replace function trg_imputacion_sin_ausencia() returns trigger
 language plpgsql
 as $$
 begin
-  if tiene_ausencia_aprobada(new.perfil_id, new.fecha) then
+  if tiene_ausencia_aprobada(new.empleado_id, new.fecha) then
     raise exception 'El día % tiene una ausencia aprobada: no admite imputaciones', new.fecha;
   end if;
   return new;
@@ -224,7 +224,7 @@ begin
   delete from imputacion i
   using ausencia a
   where a.id = p_id
-    and i.perfil_id = a.perfil_id
+    and i.empleado_id = a.perfil_id
     and i.estado = 'borrador'
     and i.fecha between a.fecha_inicio and a.fecha_fin;
 end;
@@ -284,7 +284,7 @@ as $$
   from perfil p
   cross join generate_series(p_desde, least(p_hasta, current_date), interval '1 day') d
   left join imputacion i
-         on i.perfil_id = p.id and i.fecha = d::date and i.estado <> 'rechazada'
+         on i.empleado_id = p.id and i.fecha = d::date and i.estado <> 'rechazada'
   where p.activo
     and es_laborable(d::date, p.empresa_id)
     and not tiene_ausencia_aprobada(p.id, d::date)
@@ -311,10 +311,10 @@ as $$
            (make_date(p_anio, p_mes, 1) + interval '1 month - 1 day')::date as d2
   ),
   horas as (
-    select i.perfil_id, i.proyecto_id, sum(i.horas) as h
+    select i.empleado_id, i.proyecto_id, sum(i.horas) as h
     from imputacion i, rango r
     where i.fecha between r.d1 and r.d2 and i.estado <> 'rechazada'
-    group by i.perfil_id, i.proyecto_id
+    group by i.empleado_id, i.proyecto_id
   ),
   aus as (
     select a.perfil_id,
@@ -333,7 +333,7 @@ as $$
          horas_requeridas_mes(p_anio, p_mes, p.empresa_id),
          coalesce(a.vac, 0), coalesce(a.baja, 0)
   from horas h
-  join perfil p   on p.id = h.perfil_id
+  join perfil p   on p.id = h.empleado_id
   join empresa ep on ep.id = p.empresa_id
   join proyecto pr on pr.id = h.proyecto_id
   join empresa ed on ed.id = pr.empresa_id
