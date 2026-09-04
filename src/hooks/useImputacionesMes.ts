@@ -140,8 +140,12 @@ export function useImputacionesMes(anio: number, mes: number) {
   const ajustarHoras = useCallback(
     async (id: string, horas: number) => {
       const supabase = createClient();
-      const { error } = await supabase.from('imputacion').update({ horas }).eq('id', id);
+      const { data, error } = await supabase.from('imputacion').update({ horas }).eq('id', id).select('id');
       if (!error) await recargar();
+      // RLS bloquea sin error (0 filas) si la línea ya no está en borrador/rechazada: no es un éxito silencioso.
+      if (!error && (data?.length ?? 0) === 0) {
+        return { error: 'No se pudo modificar: la línea ya no está en borrador (puede que se haya enviado o aprobado).' };
+      }
       return { error: mensajeError(error) };
     },
     [recargar]
@@ -150,8 +154,11 @@ export function useImputacionesMes(anio: number, mes: number) {
   const eliminar = useCallback(
     async (id: string) => {
       const supabase = createClient();
-      const { error } = await supabase.from('imputacion').delete().eq('id', id);
+      const { data, error } = await supabase.from('imputacion').delete().eq('id', id).select('id');
       if (!error) await recargar();
+      if (!error && (data?.length ?? 0) === 0) {
+        return { error: 'No se pudo eliminar: la línea ya no está en borrador (puede que se haya enviado o aprobado).' };
+      }
       return { error: mensajeError(error) };
     },
     [recargar]
