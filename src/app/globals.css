@@ -98,7 +98,7 @@ html[data-theme="dark"] {
   }
 }
 
-@layer utilities {
+@layer components {
   .mono {
     font-family: var(--mono);
     font-variant-numeric: tabular-nums;

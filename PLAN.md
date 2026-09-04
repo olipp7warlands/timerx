@@ -8,12 +8,16 @@ Herramienta interna de imputación de horas para un grupo de empresas, con repor
 
 | Archivo | Qué define |
 |---|---|
-| `mocks/app_movil_empleado.html` | App del empleado (móvil): pantallas, flujos, estados y diseño exactos |
-| `mocks/panel_administracion.html` | Panel de administración (escritorio): sidebar, home KPIs, todas las secciones |
+| `mocks/app_movil_empleado.html` | Empleado · móvil: pantallas, flujos (hoja por pasos), estados y diseño exactos |
+| `mocks/empleado_web.html` | Empleado · escritorio: layout web-nativo (filas + calendario lateral), composer inline |
+| `mocks/panel_administracion.html` | Admin · escritorio: sidebar, home KPIs, todas las secciones |
+| `mocks/admin_movil.html` | Admin · móvil: drawer lateral, home día+mes, bandeja de ausencias |
 | `supabase/migrations/001_esquema_inicial.sql` | Esquema base: empresas, proyectos, categorías, perfiles, tarifas, periodos, imputaciones, vistas de valoración y refacturación, RLS |
 | `supabase/migrations/002_departamentos_ausencias_calendario.sql` | Departamentos, festivos y ajustes, ausencias con aprobación, faltantes y base FTE |
 
 Los mockups son la especificación de UI/UX validada por el cliente: replicar 1:1 (layout, textos, estados, navegación). Los estilos ya están extraídos como tokens (sección 3).
+
+**Matriz rol × dispositivo**: cada rol tiene DOS layouts sobre la misma lógica y los mismos componentes. No es responsive por estiramiento: en cada breakpoint (~980 px) se cambia la disposición según el mock correspondiente. Empleado: móvil = 3 pestañas + FAB + hojas inferiores por pasos; escritorio = sidebar plegable + composer inline con selects + modales centrados. Admin: escritorio = sidebar completo; móvil = drawer (hamburguesa) con las mismas 11 secciones agrupadas, home que fusiona día + resumen del mes, Ausencias funcional, y las secciones de gestión pura remiten al escritorio.
 
 ## 2. Stack y arquitectura
 
@@ -36,17 +40,16 @@ Copiar los tokens tal cual a `globals.css` / config de Tailwind:
 - Estados sin color: punto relleno = completo/aprobado; punto hueco = parcial/pendiente; punto gris = futuro/inactivo; rechazado = tachado.
 - Formas: tarjetas 16–18 px con sombra suave, botones píldora (primario oscuro), inputs rellenos sin borde, hoja inferior móvil 26 px, botón "añadir en vacío" cuadrado con borde discontinuo.
 
+### 3.1 Patrones de implementación validados en los mocks
+- **Delegación de eventos**: toda la interacción de listas re-renderizables pasa por atributos `data-act` y un manejador delegado (en React: handlers en el contenedor o por render declarativo, jamás bindings imperativos que se pierdan al repintar). Este patrón resolvió el bug de "Confirmar" del prototipo y es norma.
+- **Estado de formularios sobrevive al re-render**: los selects/steppers del composer del precargado conservan su valor cuando el bloque se repinta (en React sale gratis con estado controlado; no usar `defaultValue` no controlado en estos casos).
+- Quesos = `conic-gradient`; barras = divs; sin librería de gráficos. Cifras siempre en IBM Plex Mono con `tabular-nums` y formato es-ES (coma decimal).
+
 ## 4. Reglas de negocio (resumen ejecutable)
 
 1. **Imputación diaria**: el empleado imputa horas por día sobre subcategorías (tareas) de proyectos a los que está asignado (`empleado_proyecto`). Empresa y categoría van implícitas (proyecto → empresa destino; subcategoría → categoría). Jornada 7 h/día laborable; tope duro 12 h/día (trigger).
 2. **Estados**: `borrador → enviada → aprobada|rechazada → cerrada`. Aprueban admin de la empresa destino o admin de grupo. El cierre de periodo (mes) congela todo.
 3. **Requeridas**: laborables del mes × jornada, descontando festivos (grupo o empresa) y días con ausencia aprobada.
-   **Contrato "requeridas efectivas"** — fórmula única, un solo helper compartido (`src/lib/horas/requeridas-efectivas.ts`), fuente para FTE s/requeridas (export F4), KPIs del admin y balance del empleado:
-   ```
-   requeridas_efectivas(empleado, mes) =
-     horas_requeridas_mes(empresa) − (dias_vacaciones + dias_baja + dias_permiso) × jornada
-   ```
-   `horas_requeridas_mes(empresa)` es una constante de calendario (laborables×jornada, NO por empleado). Los días por tipo de ausencia y el total imputado se obtienen de `balance_mes(anio,mes)` (RPC propia del empleado autenticado, una fila aunque el mes esté vacío) o de `fte_mes(anio,mes)` (solo admin, una fila por empleado+proyecto, base del export); `jornada_horas` sale de `ajuste`, nunca hardcodeada. La resta se hace una sola vez en el helper — ningún consumidor la reimplementa.
 4. **Ausencias**: solicitud desde la app (vacaciones/baja/permiso) → aprueba responsable de departamento o admin. Aprobada = bloquea imputación esos días y descuenta requeridas.
 5. **Tarifas**: `resolver_tarifa()` — prioridad empleado > categoría; filtro opcional por empresa origen; vigencias por fecha. Horas sin tarifa bloquean el cierre.
 6. **Refacturación**: solo si `empresa_origen (del empleado) ≠ empresa_destino (del proyecto)` y el proyecto es refacturable. Vista `v_refacturacion_mensual`.
@@ -61,18 +64,27 @@ Copiar los tokens tal cual a `globals.css` / config de Tailwind:
 - **Hecho cuando**: login funciona, un empleado ve solo sus proyectos asignados vía RLS (probar con dos usuarios).
 
 ### F2 · App del empleado (2–3 días)
-Replicar `app_movil_empleado.html`:
+Replicar `app_movil_empleado.html` (móvil) y `empleado_web.html` (escritorio) con componentes compartidos:
 - Inicio: tarjeta de hoy + KPIs mes/requeridas/balance, carrusel "Últimos días imputados" con **Reutilizar** (precarga staged), calendario del mes.
 - Imputar: navegación de días, bloque **Precargado** (steppers ±0,5 h por línea, "＋ Imputar nueva tarea" al lote, Confirmar/Descartar → inserta como `borrador`), cuadro del día con CTA punteado, "Últimas imputaciones" agrupadas por día con "Usar", popup "Imputaciones anteriores".
 - Hoja de nueva imputación: Proyecto|Ausencia → proyecto → tarea (agrupada por categoría con cat-dot) → horas (stepper, atajos, multi-día) / tipo de ausencia → días → `solicitar_ausencia()`.
 - Calendario: mes con estados + lista de ausencias propias.
-- **Hecho cuando**: el flujo completo del mock funciona contra Supabase real, incluido reutilizar+confirmar y solicitar vacaciones.
+
+**Layout web (escritorio, `empleado_web.html`)** — mismo estado y lógica, otra disposición:
+- Sidebar plegable (chevron → 64 px solo iconos) con Inicio / Imputar / Calendario y pie con tema + enlace al panel admin.
+- **Imputar = filas apiladas + calendario lateral**: columna principal con 3 filas (1· tira de fecha: flechas + total + barra + estado; 2· imputación del día: tabla editable proyecto·tarea / empresa / horas ± / eliminar, con **composer inline al pie** — select de proyecto con su empresa, select de tarea con `optgroup` por categoría, stepper, botón Añadir; 3· anteriores imputaciones) y columna derecha de 400 px con el **calendario del mes grande y sticky**, operativo: clic en día laborable → lo carga en el editor.
+- **Precargado (staged)**: líneas con stepper ±0,5 h, **composer propio "＋ Añadir al lote"** (misma fila de selects) y Confirmar (total en vivo) / Descartar. "Reutilizar día" desde Inicio precarga sobre **hoy**; desde Imputar, sobre el **día seleccionado**.
+- **Módulo `FilaDia` compartido** entre Inicio ("Últimos días imputados") e Imputar ("Anteriores imputaciones"): fecha+total | líneas con horas | botón "Reutilizar día". La repetición de líneas sueltas ("Usar") vive solo en el modal "Ver todo".
+- Modales **centrados** (no hojas inferiores) únicamente para: histórico completo y solicitud de ausencia (formulario directo: tipo + desde/hasta).
+- En móvil (<~980 px o user-agent móvil) se sirve el layout del mock móvil: pestañas + FAB + hojas por pasos.
+- **Hecho cuando**: el flujo completo de AMBOS mocks funciona contra Supabase real, incluido reutilizar+ajustar+añadir al lote+confirmar y solicitar vacaciones, en los dos layouts.
 
 ### F3 · Panel de administración (2–3 días)
 Replicar `panel_administracion.html`:
 - Sidebar plegable con grupos e iconos; home con día navegable (KPIs + pendientes + ausentes), mes navegable (KPIs + calendario sincronizado + quesos + refacturación), botones directos.
 - Secciones: Usuarios (invitar vía service role), Ausencias (bandeja aprobar/rechazar → RPCs), Empresas, Proyectos (con **ficha de proyecto**: queso por categoría, departamentos, personas), Categorías, Calendario (jornada, festivos, requeridas/mes), Control (`faltantes()` + imputación directa), Tarifas, Refacturaciones (detalle + cierre), Ajustes (tabla `ajuste`).
-- **Hecho cuando**: cada card del mock muestra datos reales y las acciones (aprobar ausencia, crear tarifa, festivo) persisten.
+- **Layout móvil (`admin_movil.html`)**: sin tabbar — **drawer lateral** (hamburguesa en cabecera) con las 11 secciones agrupadas (General/Personas/Estructura/Operación/Sistema), activo con franja de 3 px. Home = bloque del día (KPIs 2×2 + pendientes con Recordar + ausentes) seguido del **Resumen del mes completo** (navegador ‹›, KPIs, barras por empresa, queso de proyectos en grises, refacturación con total). Ausencias funcional (aprobar/rechazar). Las secciones de gestión (Usuarios, Empresas, Proyectos, Categorías, Calendario, Control, Tarifas, Refacturaciones, Ajustes) muestran pantalla de remisión al escritorio: en móvil el admin vigila y aprueba, no configura.
+- **Hecho cuando**: cada card de ambos mocks muestra datos reales y las acciones (aprobar ausencia, crear tarifa, festivo) persisten.
 
 ### F4 · Cierre y exports (1 día)
 - `cerrar_periodo()` con precondiciones (sin faltantes, sin horas sin tarifa) y UI de bloqueo con motivos.
@@ -115,7 +127,7 @@ Al terminar: git add, resumen de decisiones y siguiente paso propuesto.
 ## 8. Estructura de repo propuesta
 
 ```
-/mocks/                      ← los dos HTML (referencia, no se sirven)
+/mocks/                      ← los cuatro HTML (referencia, no se sirven)
 /supabase/migrations/        ← 001, 002
 /supabase/seed.sql
 /src/app/(empleado)/...      ← inicio, imputar, calendario + hoja

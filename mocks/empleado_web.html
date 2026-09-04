@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<title>Horas Grupo · Mi registro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F6F4; --bg-surface:#FFFFFF; --bg-subtle:#EFEFEC;
+    --border:#E9E9E6; --border-strong:#D8D8D4;
+    --ink-primary:#2E2E2B; --ink-secondary:#5C5C58; --ink-tertiary:#8A8A85; --ink-disabled:#C4C4C0;
+    --accent:#3A3A36; --on-accent:#FFFFFF; --scrim:rgba(30,30,28,.35);
+    --cat-desarrollo:#5E7A8C; --cat-diseno:#8C7A5E; --cat-abogados:#7C6480; --cat-gestion:#6E8B72;
+    --sans:"Nunito",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --sombra:0 2px 12px rgba(30,30,28,.06);
+  }
+  html[data-theme="dark"]{
+    --bg:#141413; --bg-surface:#1D1D1B; --bg-subtle:#262623;
+    --border:#2C2C29; --border-strong:#3E3E3A;
+    --ink-primary:#F0F0ED; --ink-secondary:#C8C8C4; --ink-tertiary:#8F8F8A; --ink-disabled:#4C4C48;
+    --accent:#F0F0ED; --on-accent:#1B1B19; --scrim:rgba(0,0,0,.55);
+    --cat-desarrollo:#7FA0B4; --cat-diseno:#B4A07F; --cat-abogados:#A487A9; --cat-gestion:#8FB196;
+    --sombra:none;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg); color:var(--ink-primary); font-family:var(--sans); font-size:14px; line-height:1.5; font-weight:600}
+  a{color:inherit; text-decoration:none}
+  button{font:inherit; cursor:pointer; color:inherit; background:none; border:none; padding:0}
+  button:focus-visible, select:focus-visible, input:focus-visible{outline:2px solid var(--ink-primary); outline-offset:2px}
+  svg{display:block}
+  .mono{font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:500}
+  .micro{font-size:12px; font-weight:800; color:var(--ink-tertiary)}
+  .sec-label{display:flex; align-items:center; gap:9px; font-size:15.5px; font-weight:800; margin:24px 0 12px}
+  .sec-label svg{color:var(--ink-secondary); flex-shrink:0}
+
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:7px; background:var(--bg-surface); color:var(--ink-primary); border:1px solid var(--border-strong); border-radius:99px; padding:9px 16px; font-size:13px; font-weight:800}
+  .btn:hover{background:var(--bg-subtle)}
+  .btn.dark{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+  .btn.dark:hover{opacity:.92; background:var(--accent)}
+  .btn.sm{padding:6px 12px; font-size:12px}
+  .btn.txt{border:none; color:var(--ink-tertiary)}
+  .btn.txt:hover{color:var(--ink-primary); background:none}
+  select, input{background:var(--bg-subtle); color:var(--ink-primary); border:1px solid transparent; border-radius:12px; padding:9px 12px; font:inherit; font-size:13px; font-weight:600}
+  select:focus, input:focus{border-color:var(--ink-primary); background:var(--bg-surface)}
+
+  .layout{display:flex; min-height:100vh}
+  .side{width:225px; flex-shrink:0; background:var(--bg-surface); border-right:1px solid var(--border); padding:20px 12px 16px; display:flex; flex-direction:column; gap:2px; position:sticky; top:0; height:100vh}
+  .wordmark{display:flex; align-items:center; gap:9px; font-weight:800; font-size:17px; padding:0 8px 16px}
+  .logo-mark{width:30px; height:30px; border-radius:10px; background:var(--accent); color:var(--on-accent); display:grid; place-items:center; flex-shrink:0}
+  .nav-label{font-size:11px; font-weight:800; color:var(--ink-tertiary); padding:10px 12px 5px; margin:0}
+  .side .tab{display:flex; align-items:center; gap:11px; width:100%; text-align:left; color:var(--ink-tertiary); border-radius:12px; position:relative; padding:9px 12px; font-size:13.5px; font-weight:800; margin-bottom:2px}
+  .side .tab svg{flex-shrink:0}
+  .side .tab:hover{color:var(--ink-primary); background:var(--bg-subtle)}
+  .side .tab.on{color:var(--ink-primary); background:var(--bg-subtle)}
+  .side .tab.on::before{content:""; position:absolute; left:-12px; top:8px; bottom:8px; width:3px; border-radius:0 3px 3px 0; background:var(--ink-primary)}
+  .side-foot{margin-top:auto; display:flex; align-items:center; gap:8px; padding:14px 6px 0; border-top:1px solid var(--border)}
+  .side-top{display:flex; align-items:center; justify-content:space-between; padding:0 4px 12px}
+  .side-top .wordmark{padding:0 4px}
+  .collapse-btn{width:28px; height:28px; border-radius:10px; border:1px solid var(--border); display:grid; place-items:center; color:var(--ink-tertiary); background:var(--bg-surface); flex-shrink:0}
+  .collapse-btn:hover{color:var(--ink-primary); background:var(--bg-subtle)}
+  .side.mini{width:64px; padding:20px 8px 16px}
+  .side.mini .tab span, .side.mini .wordmark, .side.mini .nav-label, .side.mini .side-foot .btn{display:none}
+  .side.mini .tab{justify-content:center; padding:10px}
+  .side.mini .tab.on::before{left:-8px}
+  .side.mini .side-top{justify-content:center; padding:0 0 12px}
+  .side.mini .collapse-btn svg{transform:rotate(180deg)}
+  .side.mini .side-foot{justify-content:center}
+  .icon-btn{width:36px; height:36px; border-radius:50%; border:1px solid var(--border); display:grid; place-items:center; color:var(--ink-secondary); background:var(--bg-surface); box-shadow:var(--sombra); flex-shrink:0}
+
+  .wrap{flex:1; min-width:0; padding:26px 32px 60px; max-width:1140px}
+  .screen{display:none}
+  .screen.on{display:block}
+  .page-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; gap:16px}
+  .page-head h1{margin:0; font-weight:800; font-size:24px}
+  .page-head .sub{margin:2px 0 0; font-size:12.5px; color:var(--ink-tertiary)}
+  .avatar{width:36px; height:36px; border-radius:50%; background:var(--accent); color:var(--on-accent); display:grid; place-items:center; font-size:12px; font-weight:800}
+
+  .dot{width:7px; height:7px; border-radius:50%; flex-shrink:0}
+  .dot.full{background:var(--ink-primary)}
+  .dot.hollow{border:1.5px solid var(--ink-primary)}
+  .dot.off{background:var(--ink-disabled)}
+  .state{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--ink-secondary); white-space:nowrap}
+  .cat-dot{width:7px; height:7px; border-radius:50%; flex-shrink:0; display:inline-block}
+
+  .card{background:var(--bg-surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--sombra)}
+  .card-h{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--border)}
+  .card-h h2{margin:0; font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px}
+  .card-h h2 svg{color:var(--ink-secondary)}
+  .card-b{padding:16px 18px}
+
+  .grid2{display:grid; grid-template-columns:minmax(0,1fr) 400px; gap:18px; align-items:start}
+  .grid3{display:grid; grid-template-columns:272px minmax(0,1fr) 330px; gap:18px; align-items:start}
+  .cal-grid.compact{gap:4px}
+  .cal-grid.compact .cal-day{border-radius:10px; font-size:12px; box-shadow:none}
+  @media (max-width:1280px){ .grid3{grid-template-columns:272px minmax(0,1fr)} .grid3 > .col-ant{grid-column:1 / -1} }
+  @media (max-width:980px){ .grid3{grid-template-columns:1fr} }
+  .grid2i{display:grid; grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr); gap:18px; align-items:start}
+  @media (max-width:980px){
+    .grid2,.grid2i{grid-template-columns:1fr}
+    .side{width:64px}
+    .side .tab span,.wordmark b,.nav-label,.side-foot .btn{display:none}
+    .side .tab{justify-content:center; padding:10px}
+    .side .tab.on::before{left:-8px}
+  }
+
+  /* Héroe + KPIs */
+  .hero{padding:16px 18px}
+  .hero .top{display:flex; justify-content:space-between; align-items:baseline}
+  .big{font-weight:800; font-size:28px; font-variant-numeric:tabular-nums}
+  .big small{font-size:12.5px; color:var(--ink-tertiary); font-weight:600}
+  .pbar{height:10px; background:var(--bg-subtle); margin-top:11px; border-radius:99px; overflow:hidden}
+  .pbar i{display:block; height:100%; background:var(--ink-primary); border-radius:99px; transition:width .25s}
+  .kpi3{display:grid; grid-template-columns:1fr 1fr 1fr; margin-top:12px}
+  .kpi3 > div{padding:12px 16px}
+  .kpi3 > div + div{border-left:1px solid var(--border)}
+  .kpi3 .v{margin:0; font-weight:800; font-size:18px; font-variant-numeric:tabular-nums}
+  .kpi3 .l{margin:2px 0 0}
+
+  /* Calendario */
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px}
+  .cal-grid .wd{text-align:center; padding:4px 0}
+  .cal-day{aspect-ratio:1; border-radius:14px; background:var(--bg-surface); border:1px solid var(--border); box-shadow:var(--sombra); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:14px; font-weight:800}
+  .cal-day .dot{width:5px; height:5px}
+  .cal-day:disabled{opacity:.4; box-shadow:none; background:transparent; border-color:transparent}
+  .cal-day.sel{background:var(--accent); color:var(--on-accent); border-color:var(--accent)}
+  .cal-day.sel .dot.full{background:var(--on-accent)}
+  .cal-day.sel .dot.hollow{border-color:var(--on-accent)}
+  .cal-day.aus{background:var(--bg-subtle); color:var(--ink-tertiary); box-shadow:none}
+
+  /* Filas de día (Inicio y recientes): lista vertical, no bloques */
+  .dia-row{display:flex; align-items:center; gap:16px; padding:13px 18px; border-bottom:1px solid var(--border)}
+  .dia-row:last-child{border-bottom:none}
+  .dia-row .fecha{width:130px; flex-shrink:0}
+  .col-ant .dia-row{flex-direction:column; align-items:stretch; gap:8px}
+  .col-ant .dia-row .fecha{width:auto; display:flex; justify-content:space-between; align-items:baseline}
+  .dia-row .fecha b{font-size:14px; font-weight:800; display:block}
+  .dia-row .fecha .mono{font-size:12px; color:var(--ink-secondary)}
+  .dia-row .lineas{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px}
+  .linea-mini{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-secondary); min-width:0}
+  .linea-mini .txt{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .linea-mini .mono{margin-left:auto; font-size:11.5px; flex-shrink:0}
+  .linea-mini .btn{flex-shrink:0; margin-left:10px}
+
+  /* Navegador de día */
+  .day-nav{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px}
+  .arrowb{width:38px; height:38px; border:1px solid var(--border); border-radius:14px; display:grid; place-items:center; color:var(--ink-secondary); font-size:18px; background:var(--bg-subtle)}
+  .arrowb:disabled{opacity:.35}
+  .day-mid{flex:1; text-align:center}
+  .day-mid .name{font-size:17px; font-weight:800}
+  .day-nav-tot{display:flex; justify-content:space-between; align-items:baseline; padding:0 16px 14px}
+  .day-strip{display:flex; align-items:center; gap:18px; padding:2px 18px 16px}
+  .day-strip .pbar{flex:1; margin-top:0}
+  .fila{margin-bottom:18px}
+  .cal-sticky{position:sticky; top:26px}
+
+  /* Tabla del día */
+  table{width:100%; border-collapse:collapse; font-size:13.5px}
+  th{font-weight:800; color:var(--ink-tertiary); text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); font-size:11.5px}
+  td{padding:11px 12px; border-bottom:1px solid var(--border); vertical-align:middle}
+  tbody tr:last-child td{border-bottom:none}
+  .r{text-align:right}
+  td .subtxt{display:block; font-size:11px; color:var(--ink-tertiary)}
+  .hstep{width:26px; height:26px; border-radius:50%; background:var(--bg-subtle); border:1px solid var(--border-strong); font-size:14px; font-weight:800; display:inline-grid; place-items:center; color:var(--ink-secondary); vertical-align:middle}
+  .hval{display:inline-block; min-width:52px; text-align:center; vertical-align:middle}
+  .rm{color:var(--ink-tertiary); padding:6px 8px; font-size:14px}
+  .rm:hover{color:var(--ink-primary)}
+  .empty-day{padding:26px 18px; text-align:center; color:var(--ink-tertiary); font-weight:700}
+
+  /* Composer inline */
+  .composer{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1.1fr) auto auto; gap:10px; align-items:center; padding:14px 18px; border-top:1.5px dashed var(--border-strong)}
+  .composer select{width:100%}
+  .stepper-inline{display:flex; align-items:center; gap:6px}
+  @media (max-width:1240px){ .composer{grid-template-columns:1fr 1fr; } .composer .btn{grid-column:span 1} }
+
+  /* Precargado */
+  .staged{border:1.5px dashed var(--border-strong); border-radius:18px; background:var(--bg-subtle); padding:14px 18px; margin-bottom:18px}
+  .staged .head{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px}
+  .staged .head b{font-size:14px; font-weight:800}
+  .staged-line{display:flex; align-items:center; gap:10px; padding:6px 0; font-size:13px; color:var(--ink-secondary)}
+  .staged-line .txt{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .staged .btns{display:flex; gap:10px; margin-top:12px}
+  .staged .btns .btn{flex:1}
+
+  /* Modales */
+  .scrim{position:fixed; inset:0; background:var(--scrim); z-index:20; opacity:0; pointer-events:none; transition:opacity .2s}
+  .scrim.on{opacity:1; pointer-events:auto}
+  .modal{position:fixed; left:50%; top:50%; z-index:21; width:min(600px,94vw); max-height:84vh; background:var(--bg-surface); border-radius:18px; box-shadow:0 14px 44px rgba(20,20,18,.22); transform:translate(-50%,-50%) scale(.96); opacity:0; pointer-events:none; transition:.2s; display:flex; flex-direction:column}
+  .modal.on{transform:translate(-50%,-50%) scale(1); opacity:1; pointer-events:auto}
+  .modal .card-b{overflow-y:auto}
+  .hist-date{margin:14px 0 4px}
+  .hist-date:first-child{margin-top:0}
+  .hist-row{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px}
+  .hist-row .txt{flex:1; min-width:0}
+  .hist-row .subtxt{display:block; font-size:11px; color:var(--ink-tertiary)}
+
+  .field{margin-bottom:14px}
+  .field label{display:block; font-size:12px; font-weight:800; color:var(--ink-tertiary); margin-bottom:5px}
+  .field select, .field input{width:100%}
+
+  .aus-row{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:13px 18px; border-bottom:1px solid var(--border)}
+  .aus-row:last-child{border-bottom:none}
+  .aus-row b{font-size:14px; font-weight:800; display:block}
+  .aus-row .subtxt{font-size:11.5px; color:var(--ink-tertiary)}
+
+  .toast{position:fixed; left:50%; bottom:32px; transform:translateX(-50%) translateY(8px); background:var(--ink-primary); color:var(--bg-surface); border-radius:99px; padding:11px 22px; font-size:13px; font-weight:800; opacity:0; transition:.25s; z-index:30; pointer-events:none; white-space:nowrap}
+  .toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="side">
+  <div class="side-top">
+    <div class="wordmark">
+      <span class="logo-mark"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
+      <b>Horas Grupo</b>
+    </div>
+    <button class="collapse-btn" id="collapse" aria-label="Plegar o desplegar el menú">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+  </div>
+  <p class="nav-label">Mi registro</p>
+  <button class="tab on" data-scr="scr-inicio">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>
+    <span>Inicio</span>
+  </button>
+  <button class="tab" data-scr="scr-imputar">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+    <span>Imputar</span>
+  </button>
+  <button class="tab" data-scr="scr-cal">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg>
+    <span>Calendario</span>
+  </button>
+  <div class="side-foot">
+    <button class="icon-btn theme-btn" aria-label="Cambiar modo claro u oscuro"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg></button>
+    <a class="btn sm" style="flex:1" href="panel_administracion.html">Panel admin</a>
+  </div>
+</aside>
+
+<main class="wrap">
+
+  <!-- ================= INICIO ================= -->
+  <section class="screen on" id="scr-inicio">
+    <div class="page-head">
+      <div><h1>Hola, Cristian</h1><p class="sub">Miércoles 2 de septiembre · Wowinx SL</p></div>
+      <div style="display:flex; align-items:center; gap:10px">
+        <button class="btn dark" data-act="ir-imputar-hoy">＋ Imputar hoy</button>
+        <div class="avatar">CH</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <div class="card hero">
+          <div class="top">
+            <span class="big" id="hero-total">0,0 <small>de 7 h hoy</small></span>
+            <span class="state" id="hero-state"></span>
+          </div>
+          <div class="pbar"><i id="hero-bar"></i></div>
+          <div class="kpi3">
+            <div><p class="v mono" id="k-mes">0,0</p><p class="l micro">Mes</p></div>
+            <div><p class="v mono">154,0</p><p class="l micro">Requeridas</p></div>
+            <div><p class="v mono" id="k-bal">0,0</p><p class="l micro">Balance</p></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <div class="card-h">
+            <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/><path d="M12 8v4l3 2"/></svg> Últimos días imputados</h2>
+            <button class="btn sm" data-act="abrir-hist">Ver todo</button>
+          </div>
+          <div id="dias-recientes"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg> Septiembre 2026</h2></div>
+        <div class="card-b">
+          <div class="cal-grid" id="home-cal"></div>
+          <div style="display:flex; gap:14px; margin-top:12px; flex-wrap:wrap">
+            <span class="state"><span class="dot full"></span>Completo</span>
+            <span class="state"><span class="dot hollow"></span>Parcial</span>
+            <span class="state"><span class="dot off"></span>Futuro</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= IMPUTAR ================= -->
+  <section class="screen" id="scr-imputar">
+    <div class="page-head">
+      <div><h1>Imputar</h1><p class="sub">Septiembre 2026</p></div>
+      <div class="avatar">CH</div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <!-- Fila 1 · Fecha -->
+    <div class="card fila">
+      <div class="day-nav" style="padding-bottom:6px">
+        <button class="arrowb" data-act="dia-prev" aria-label="Día anterior">‹</button>
+        <div class="day-mid"><p class="name" style="margin:0" id="day-name">Miércoles 2</p><p class="micro" style="margin:1px 0 0" id="day-tag">Hoy</p></div>
+        <button class="arrowb" data-act="dia-next" aria-label="Día siguiente">›</button>
+      </div>
+      <div class="day-strip">
+        <span class="big" id="day-total">0,0 <small>de 7 h</small></span>
+        <div class="pbar"><i id="day-bar"></i></div>
+        <span class="state" id="day-state"></span>
+      </div>
+    </div>
+
+    <!-- Fila 2 · Imputación del día -->
+    <div id="staged-box"></div>
+    <div class="card fila">
+      <div class="card-h">
+        <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg> <span id="lines-title">Hoy</span></h2>
+        <span class="micro mono" id="lines-total"></span>
+      </div>
+      <div id="dia-tabla"></div>
+      <div class="composer">
+        <select id="c-proy" aria-label="Proyecto"></select>
+        <select id="c-tarea" aria-label="Tarea"></select>
+        <span class="stepper-inline">
+          <button class="hstep" data-act="c-menos" aria-label="Media hora menos">−</button>
+          <span class="hval mono" id="c-horas">1,0 h</span>
+          <button class="hstep" data-act="c-mas" aria-label="Media hora más">+</button>
+        </span>
+        <button class="btn dark" data-act="c-guardar">Añadir</button>
+      </div>
+    </div>
+
+    <!-- Fila 3 · Anteriores imputaciones -->
+    <div class="card fila" style="margin-bottom:0">
+      <div class="card-h">
+        <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/><path d="M12 8v4l3 2"/></svg> Anteriores imputaciones</h2>
+        <button class="btn sm" data-act="abrir-hist">Ver todo</button>
+      </div>
+      <div id="recientes"></div>
+    </div>
+    <p class="micro" style="margin:10px 4px 0">«Reutilizar día» precarga esas líneas sobre el día seleccionado, a falta de ajustar y confirmar. Para repetir líneas sueltas, «Ver todo».</p>
+      </div>
+
+      <!-- Columna derecha · Calendario operativo -->
+      <div>
+        <div class="card cal-sticky">
+          <div class="card-h">
+            <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg> Septiembre 2026</h2>
+            <span class="micro">Clic en un día para imputarlo</span>
+          </div>
+          <div class="card-b">
+            <div class="cal-grid" id="imp-cal"></div>
+            <div style="display:flex; gap:14px; margin-top:12px; flex-wrap:wrap">
+              <span class="state"><span class="dot full"></span>Completo</span>
+              <span class="state"><span class="dot hollow"></span>Parcial</span>
+              <span class="state"><span class="dot off"></span>Futuro</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CALENDARIO ================= -->
+  <section class="screen" id="scr-cal">
+    <div class="page-head">
+      <div><h1>Calendario</h1><p class="sub">Septiembre 2026 · haz clic en un día para imputarlo</p></div>
+      <div style="display:flex; align-items:center; gap:10px">
+        <button class="btn" data-act="abrir-aus">Solicitar ausencia</button>
+        <div class="avatar">CH</div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card"><div class="card-b">
+        <div class="cal-grid" id="tab-cal" style="max-width:560px"></div>
+        <div style="display:flex; gap:16px; margin-top:14px; flex-wrap:wrap">
+          <span class="state"><span class="dot full"></span>Completo</span>
+          <span class="state"><span class="dot hollow"></span>Por completar</span>
+          <span class="state"><span class="dot off"></span>Futuro</span>
+        </div>
+      </div></div>
+      <div class="card">
+        <div class="card-h"><h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M3.8 13.5 22 9l-1 3.8-8.6 2.3-4.6 4.4-2-.5 2.4-3.7-3.6-1.6-1.6 1.2-1.8-.5z"/></svg> Ausencias</h2></div>
+        <div id="aus-list"></div>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+
+<!-- ================= MODAL: HISTÓRICO ================= -->
+<div class="scrim" id="hist-scrim" data-act="cerrar-hist"></div>
+<div class="modal" id="hist-modal" role="dialog" aria-modal="true" aria-label="Imputaciones anteriores">
+  <div class="card-h"><h2>Imputaciones anteriores</h2><button class="btn txt" data-act="cerrar-hist">✕</button></div>
+  <div class="card-b" id="hist-body"></div>
+</div>
+
+<!-- ================= MODAL: AUSENCIA ================= -->
+<div class="scrim" id="aus-scrim" data-act="cerrar-aus"></div>
+<div class="modal" id="aus-modal" style="width:min(440px,94vw)" role="dialog" aria-modal="true" aria-label="Solicitar ausencia">
+  <div class="card-h"><h2>Solicitar ausencia</h2><button class="btn txt" data-act="cerrar-aus">✕</button></div>
+  <div class="card-b">
+    <div class="field"><label for="a-tipo">Tipo</label>
+      <select id="a-tipo"><option>Vacaciones</option><option>Baja médica</option><option>Otro permiso</option></select>
+    </div>
+    <div class="field"><label for="a-desde">Desde (día de septiembre)</label><input id="a-desde" class="mono" type="number" min="1" max="30" value="21"></div>
+    <div class="field"><label for="a-hasta">Hasta (día de septiembre)</label><input id="a-hasta" class="mono" type="number" min="1" max="30" value="25"></div>
+    <p class="micro" style="margin:0 0 14px">La solicitud queda pendiente de aprobación. Al aprobarse, esos días se bloquean.</p>
+    <button class="btn dark" style="width:100%" data-act="aus-enviar">Solicitar ausencia</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">Guardado</div>
+
+<script>
+  // ============ Datos de ejemplo (en producción: Supabase) ============
+  const $ = id => document.getElementById(id);
+  const fmt = n => n.toLocaleString('es-ES',{minimumFractionDigits:1, maximumFractionDigits:1});
+  const CAT_COLOR = { "Desarrollo":"var(--cat-desarrollo)", "Diseño":"var(--cat-diseno)", "Abogados":"var(--cat-abogados)", "Gestión":"var(--cat-gestion)" };
+  const PROYECTOS = [
+    { nombre:"Ximeras", empresa:"Wowinx SL" },
+    { nombre:"Triatix", empresa:"Wowinx SL" },
+    { nombre:"Launcher", empresa:"Wowinx SL" },
+    { nombre:"Web corporativa", empresa:"Málaga CF SAD" },
+    { nombre:"Interno", empresa:"Wowinx SL" },
+  ];
+  const TAREAS = [
+    { cat:"Desarrollo", subs:["Backend","Frontend","QA","Soporte"] },
+    { cat:"Diseño", subs:["Maquetación","Branding","UX"] },
+    { cat:"Gestión", subs:["Reuniones","Administración"] },
+  ];
+  const REQ = 7, YEAR = 2026, MONTH = 8, HOY = 2;
+  const DOWN = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+  const nDias = new Date(YEAR, MONTH+1, 0).getDate();
+  const DIAS = [];
+  for (let d=1; d<=nDias; d++){ const w = new Date(YEAR, MONTH, d).getDay(); DIAS.push({ d, dow:w, lab: w>=1 && w<=5 }); }
+
+  const days = {}; DIAS.forEach(x=>days[x.d]=[]);
+  days[1] = [
+    { proyecto:"Ximeras", empresa:"Wowinx SL", cat:"Desarrollo", sub:"Backend", horas:4 },
+    { proyecto:"Web corporativa", empresa:"Málaga CF SAD", cat:"Diseño", sub:"Maquetación", horas:3 },
+  ];
+  const ausencias = [ { tipo:"Vacaciones", desde:21, hasta:25, estado:"pendiente" } ];
+
+  let selDay = HOY;
+  let staged = null;   // { origen, lineas }
+  let cHoras = 1;
+  let stSel = { p:0, t:'Desarrollo|Backend', h:1 };   // composer del precargado
+
+  const totalDia = d => days[d].reduce((s,l)=>s+l.horas,0);
+  const reqDia = d => DIAS[d-1].lab ? REQ : 0;
+  const labAdy = (d,dir)=>{ let p=d+dir; while(p>=1 && p<=nDias && !DIAS[p-1].lab) p+=dir; return (p>=1 && p<=nDias)?p:null; };
+  const diasAus = () => { const s=new Set(); ausencias.forEach(a=>{ for(let d=a.desde; d<=a.hasta; d++) s.add(d); }); return s; };
+  function historial(){ const h=[]; for(let d=nDias; d>=1; d--) for(let i=days[d].length-1; i>=0; i--) h.push({...days[d][i], dia:d}); return h; }
+
+  function dotDe(d){
+    const t = totalDia(d), r = reqDia(d);
+    if (!r) return '';
+    if (t >= r) return '<span class="dot full"></span>';
+    if (d <= HOY) return '<span class="dot hollow"></span>';
+    return '<span class="dot off"></span>';
+  }
+  function pintaEstado(el, t, r){
+    if (!r){ el.innerHTML=''; return; }
+    const f = r-t;
+    el.innerHTML = f>0 ? '<span class="dot hollow"></span>te quedan '+fmt(f)+' h'
+      : f===0 ? '<span class="dot full"></span>día completo'
+      : '<span class="dot full"></span><s>'+fmt(-f)+' h de más</s>';
+  }
+  function pintaCal(el){
+    if (!el) return;
+    const off = (new Date(YEAR,MONTH,1).getDay()+6)%7;
+    const aus = diasAus();
+    let s = ["L","M","X","J","V","S","D"].map(w=>`<span class="wd micro">${w}</span>`).join("") + "<span></span>".repeat(off);
+    DIAS.forEach(x=>{
+      s += `<button class="cal-day ${x.d===selDay?'sel':''} ${aus.has(x.d)?'aus':''}" data-act="ir-dia" data-d="${x.d}" ${x.lab?'':'disabled'}>${x.d}${dotDe(x.d)||'<span class="dot" style="background:transparent"></span>'}</button>`;
+    });
+    el.innerHTML = s;
+  }
+  const lineaTxt = l => `<span class="cat-dot" style="background:${CAT_COLOR[l.cat]||'var(--ink-disabled)'}"></span><span class="txt">${l.proyecto} · ${l.sub}</span>`;
+  const filaDia = (x, aHoy) => `
+      <div class="dia-row">
+        <div class="fecha"><b>${DOWN[x.dow]} ${x.d} sep</b><span class="mono">${fmt(totalDia(x.d))} h</span></div>
+        <div class="lineas">${days[x.d].map(l=>`<div class="linea-mini">${lineaTxt(l)}<span class="mono">${fmt(l.horas)} h</span></div>`).join('')}</div>
+        <button class="btn sm" data-act="reutilizar" data-d="${x.d}"${aHoy?' data-hoy="1"':''}>Reutilizar día</button>
+      </div>`;
+
+  // ============ Renders ============
+  function renderInicio(){
+    const t = totalDia(HOY), r = reqDia(HOY);
+    $('hero-total').innerHTML = fmt(t)+' <small>de '+r+' h hoy</small>';
+    pintaEstado($('hero-state'), t, r);
+    $('hero-bar').style.width = r ? Math.min(100, t/r*100)+'%' : '0%';
+    const imp = DIAS.reduce((s,x)=>s+totalDia(x.d),0);
+    const reqAcum = DIAS.filter(x=>x.d<=HOY).reduce((s,x)=>s+reqDia(x.d),0);
+    $('k-mes').textContent = fmt(imp);
+    const bal = imp-reqAcum;
+    $('k-bal').textContent = (bal>0?'+':'')+fmt(bal);
+
+    const con = DIAS.filter(x=>days[x.d].length).sort((a,b)=>b.d-a.d).slice(0,4);
+    $('dias-recientes').innerHTML = con.length ? con.map(x=>filaDia(x,true)).join('')
+      : '<p class="empty-day">Todavía no hay días imputados</p>';
+    pintaCal($('home-cal'));
+  }
+
+  function renderImputar(){
+    const t = totalDia(selDay), r = reqDia(selDay);
+    $('day-name').textContent = DOWN[DIAS[selDay-1].dow]+' '+selDay;
+    $('day-tag').textContent = selDay===HOY ? 'Hoy' : (selDay>HOY ? 'Futuro' : 'Pasado');
+    $('day-total').innerHTML = fmt(t)+' <small>de '+r+' h</small>';
+    pintaEstado($('day-state'), t, r);
+    $('day-bar').style.width = r ? Math.min(100, t/r*100)+'%' : '0%';
+    document.querySelector('[data-act="dia-prev"]').disabled = !labAdy(selDay,-1);
+    document.querySelector('[data-act="dia-next"]').disabled = !labAdy(selDay, 1);
+    pintaCal($('imp-cal'));
+
+    // Precargado
+    if (staged){
+      const tot = staged.lineas.reduce((s,l)=>s+l.horas,0);
+      $('staged-box').innerHTML = `
+        <div class="staged">
+          <div class="head"><b>Precargado del ${staged.origen} sep → ${DOWN[DIAS[selDay-1].dow]} ${selDay}</b><span class="mono">${fmt(tot)} h</span></div>
+          ${staged.lineas.map((l,i)=>`
+            <div class="staged-line">${lineaTxt(l)}
+              <button class="hstep" data-act="st-menos" data-i="${i}" aria-label="Media hora menos">−</button>
+              <span class="hval mono">${fmt(l.horas)} h</span>
+              <button class="hstep" data-act="st-mas" data-i="${i}" aria-label="Media hora más">+</button>
+            </div>`).join('')}
+          <div class="composer" style="padding:12px 0 0; margin-top:6px">
+            <select id="st-proy" aria-label="Proyecto de la nueva línea">${optsProy(stSel.p)}</select>
+            <select id="st-tarea" aria-label="Tarea de la nueva línea">${optsTarea(stSel.t)}</select>
+            <span class="stepper-inline">
+              <button class="hstep" data-act="st-c-menos" aria-label="Media hora menos">−</button>
+              <span class="hval mono">${fmt(stSel.h)} h</span>
+              <button class="hstep" data-act="st-c-mas" aria-label="Media hora más">+</button>
+            </span>
+            <button class="btn" data-act="st-c-add">＋ Añadir al lote</button>
+          </div>
+          <div class="btns">
+            <button class="btn" data-act="st-descartar">Descartar</button>
+            <button class="btn dark" data-act="st-confirmar">Confirmar ${fmt(tot)} h</button>
+          </div>
+        </div>`;
+    } else {
+      $('staged-box').innerHTML = '';
+    }
+
+    // Tabla del día
+    $('lines-title').textContent = selDay===HOY ? 'Hoy' : DOWN[DIAS[selDay-1].dow]+' '+selDay+' sep';
+    $('lines-total').textContent = days[selDay].length ? fmt(t)+' h' : '';
+    $('dia-tabla').innerHTML = days[selDay].length ? `
+      <table>
+        <thead><tr><th>Proyecto · Tarea</th><th>Empresa</th><th class="r">Horas</th><th></th></tr></thead>
+        <tbody>${days[selDay].map((l,i)=>`
+          <tr>
+            <td><span class="cat-dot" style="background:${CAT_COLOR[l.cat]}"></span> <b style="font-weight:800">${l.proyecto} · ${l.sub}</b><span class="subtxt">${l.cat}</span></td>
+            <td style="color:var(--ink-secondary)">${l.empresa}</td>
+            <td class="r">
+              <button class="hstep" data-act="ln-menos" data-i="${i}" aria-label="Media hora menos">−</button>
+              <span class="hval mono">${fmt(l.horas)} h</span>
+              <button class="hstep" data-act="ln-mas" data-i="${i}" aria-label="Media hora más">+</button>
+            </td>
+            <td class="r"><button class="rm" data-act="ln-borrar" data-i="${i}" aria-label="Eliminar">✕</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`
+      : '<p class="empty-day">No has imputado nada este día — añade la primera línea aquí abajo</p>';
+
+    // Recientes agrupadas
+    const rec = DIAS.filter(x=>days[x.d].length && x.d!==selDay).sort((a,b)=>b.d-a.d).slice(0,3);
+    $('recientes').innerHTML = rec.length ? rec.map(x=>filaDia(x,false)).join('')
+      : '<p class="empty-day">Todavía no hay imputaciones</p>';
+  }
+
+  function renderCal(){
+    pintaCal($('tab-cal'));
+    $('aus-list').innerHTML = ausencias.length ? ausencias.map(a=>`
+      <div class="aus-row">
+        <span><b>${a.tipo}</b><span class="subtxt mono">${a.desde}–${a.hasta} sep · ${a.hasta-a.desde+1} días</span></span>
+        <span class="state"><span class="dot ${a.estado==='aprobada'?'full':'hollow'}"></span>${a.estado==='aprobada'?'Aprobada':'Pendiente'}</span>
+      </div>`).join('')
+      : '<p class="empty-day">Sin ausencias solicitadas</p>';
+  }
+
+  const optsProy = sel => PROYECTOS.map((p,i)=>`<option value="${i}"${i===sel?' selected':''}>${p.nombre} — ${p.empresa}</option>`).join('');
+  const optsTarea = sel => TAREAS.map(g=>`<optgroup label="${g.cat}">${g.subs.map(s=>{const v=g.cat+'|'+s; return `<option value="${v}"${v===sel?' selected':''}>${s}</option>`;}).join('')}</optgroup>`).join('');
+  function renderComposer(){
+    $('c-proy').innerHTML = optsProy(0);
+    $('c-tarea').innerHTML = optsTarea('Desarrollo|Backend');
+  }
+  function renderAll(){ renderInicio(); renderImputar(); renderCal(); }
+
+  function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),1800); }
+  function irA(id){
+    document.querySelectorAll('.side .tab').forEach(x=>x.classList.toggle('on', x.dataset.scr===id));
+    document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id===id));
+  }
+  const clamp = h => Math.min(12, Math.max(.5, h));
+
+  // ============ Acciones (delegación: un solo listener, imposible perder el binding) ============
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]');
+    if (!b) return;
+    const act = b.dataset.act, i = +b.dataset.i, d = +b.dataset.d;
+    switch (act){
+      case 'ir-imputar-hoy': selDay = HOY; irA('scr-imputar'); renderImputar(); break;
+      case 'ir-dia': selDay = d; irA('scr-imputar'); renderImputar(); break;
+      case 'dia-prev': { const p=labAdy(selDay,-1); if(p){ selDay=p; renderImputar(); } break; }
+      case 'dia-next': { const p=labAdy(selDay, 1); if(p){ selDay=p; renderImputar(); } break; }
+
+      case 'reutilizar':
+        staged = { origen:d, lineas: days[d].map(l=>({...l})) };
+        stSel.h = 1;
+        if (b.dataset.hoy) selDay = HOY;
+        irA('scr-imputar'); renderImputar();
+        toast('Día '+d+' precargado: revisa y confirma');
+        break;
+      case 'st-menos': staged.lineas[i].horas = clamp(staged.lineas[i].horas-.5); renderImputar(); break;
+      case 'st-mas':   staged.lineas[i].horas = clamp(staged.lineas[i].horas+.5); renderImputar(); break;
+      case 'st-descartar': staged = null; renderImputar(); break;
+      case 'st-c-menos': stSel.h = clamp(stSel.h-.5); renderImputar(); break;
+      case 'st-c-mas':   stSel.h = clamp(stSel.h+.5); renderImputar(); break;
+      case 'st-c-add': {
+        const p = PROYECTOS[stSel.p];
+        const [cat, sub] = stSel.t.split('|');
+        staged.lineas.push({ proyecto:p.nombre, empresa:p.empresa, cat, sub, horas:stSel.h });
+        renderImputar();
+        toast('Añadida al lote · '+p.nombre+' · '+fmt(stSel.h)+' h');
+        break;
+      }
+      case 'st-confirmar': {
+        const tot = staged.lineas.reduce((s,l)=>s+l.horas,0);
+        staged.lineas.forEach(l=>days[selDay].push({...l}));
+        staged = null; renderAll();
+        toast('Confirmado · '+fmt(tot)+' h en el '+selDay+' sep');
+        break;
+      }
+
+      case 'ln-menos': days[selDay][i].horas = clamp(days[selDay][i].horas-.5); renderAll(); break;
+      case 'ln-mas':   days[selDay][i].horas = clamp(days[selDay][i].horas+.5); renderAll(); break;
+      case 'ln-borrar': days[selDay].splice(i,1); renderAll(); break;
+
+      case 'c-menos': cHoras = clamp(cHoras-.5); $('c-horas').textContent = fmt(cHoras)+' h'; break;
+      case 'c-mas':   cHoras = clamp(cHoras+.5); $('c-horas').textContent = fmt(cHoras)+' h'; break;
+      case 'c-guardar': {
+        const p = PROYECTOS[+$('c-proy').value];
+        const [cat, sub] = $('c-tarea').value.split('|');
+        days[selDay].push({ proyecto:p.nombre, empresa:p.empresa, cat, sub, horas:cHoras });
+        renderAll();
+        toast('Guardado · '+fmt(cHoras)+' h en '+p.nombre);
+        break;
+      }
+
+      case 'usar': {
+        const l = days[d][i];
+        days[selDay].push({...l});
+        renderAll();
+        toast('Guardado · '+fmt(l.horas)+' h en '+l.proyecto+' · '+selDay+' sep');
+        break;
+      }
+
+      case 'abrir-hist': {
+        const h = historial();
+        if (!h.length){ toast('Todavía no hay imputaciones'); break; }
+        let html = '', dAct = null;
+        h.forEach((l,idx)=>{
+          if (l.dia !== dAct){ dAct = l.dia; html += `<p class="micro hist-date">${DOWN[DIAS[l.dia-1].dow]} ${l.dia} sep · <span class="mono">${fmt(totalDia(l.dia))} h</span></p>`; }
+          html += `<div class="hist-row"><span class="txt">${lineaTxt(l)}<span class="subtxt">${l.empresa} · ${l.cat}</span></span><span class="mono">${fmt(l.horas)} h</span><button class="btn sm" data-act="usar" data-d="${l.dia}" data-i="${days[l.dia].indexOf ? days[l.dia].findIndex(x=>x===l) : 0}">Usar</button></div>`;
+        });
+        $('hist-body').innerHTML = html;
+        $('hist-scrim').classList.add('on'); $('hist-modal').classList.add('on');
+        break;
+      }
+      case 'cerrar-hist': $('hist-scrim').classList.remove('on'); $('hist-modal').classList.remove('on'); break;
+
+      case 'abrir-aus': $('aus-scrim').classList.add('on'); $('aus-modal').classList.add('on'); break;
+      case 'cerrar-aus': $('aus-scrim').classList.remove('on'); $('aus-modal').classList.remove('on'); break;
+      case 'aus-enviar': {
+        const desde = Math.min(+$('a-desde').value, +$('a-hasta').value);
+        const hasta = Math.max(+$('a-desde').value, +$('a-hasta').value);
+        ausencias.push({ tipo:$('a-tipo').value, desde, hasta, estado:'pendiente' });
+        $('aus-scrim').classList.remove('on'); $('aus-modal').classList.remove('on');
+        renderAll();
+        toast('Solicitud enviada · '+$('a-tipo').value+' · '+desde+'–'+hasta+' sep');
+        break;
+      }
+    }
+  });
+
+  // Nota: al usar «Usar» desde el histórico, si un día repite la misma combinación,
+  // findIndex apunta a la primera; a efectos de repetirla el resultado es idéntico.
+
+  document.addEventListener('change', e => {
+    if (e.target.id === 'st-proy') stSel.p = +e.target.value;
+    if (e.target.id === 'st-tarea') stSel.t = e.target.value;
+  });
+  document.querySelectorAll('.side .tab').forEach(b=>b.addEventListener('click', ()=>{ irA(b.dataset.scr); if(b.dataset.scr==='scr-imputar') renderImputar(); }));
+  $('collapse').addEventListener('click', ()=>document.querySelector('.side').classList.toggle('mini'));
+  const setTheme = t => document.documentElement.dataset.theme = t;
+  setTheme(matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.querySelectorAll('.theme-btn').forEach(b=>b.addEventListener('click', ()=>setTheme(document.documentElement.dataset.theme==='dark' ? 'light' : 'dark')));
+
+  renderComposer();
+  renderAll();
+</script>
+</body>
+</html>

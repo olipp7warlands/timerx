@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Horas Grupo · Admin móvil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F6F4; --bg-surface:#FFFFFF; --bg-subtle:#EFEFEC;
+    --border:#E9E9E6; --border-strong:#D8D8D4;
+    --ink-primary:#2E2E2B; --ink-secondary:#5C5C58; --ink-tertiary:#8A8A85; --ink-disabled:#C4C4C0;
+    --accent:#3A3A36; --on-accent:#FFFFFF; --scrim:rgba(30,30,28,.35);
+    --cat-desarrollo:#5E7A8C; --cat-diseno:#8C7A5E; --cat-abogados:#7C6480; --cat-gestion:#6E8B72;
+    --sans:"Nunito",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --sombra:0 2px 12px rgba(30,30,28,.06);
+  }
+  html[data-theme="dark"]{
+    --bg:#141413; --bg-surface:#1D1D1B; --bg-subtle:#262623;
+    --border:#2C2C29; --border-strong:#3E3E3A;
+    --ink-primary:#F0F0ED; --ink-secondary:#C8C8C4; --ink-tertiary:#8F8F8A; --ink-disabled:#4C4C48;
+    --accent:#F0F0ED; --on-accent:#1B1B19; --scrim:rgba(0,0,0,.55);
+    --cat-desarrollo:#7FA0B4; --cat-diseno:#B4A07F; --cat-abogados:#A487A9; --cat-gestion:#8FB196;
+    --sombra:none;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; height:100%}
+  body{background:var(--bg); color:var(--ink-primary); font-family:var(--sans); font-size:14.5px; line-height:1.45; font-weight:600; display:flex; justify-content:center}
+  button{font:inherit; cursor:pointer; color:inherit; background:none; border:none; padding:0}
+  button:focus-visible{outline:2px solid var(--ink-primary); outline-offset:2px}
+  svg{display:block}
+  .mono{font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:500}
+  .micro{font-size:12.5px; font-weight:800; color:var(--ink-tertiary)}
+  .sec-label{display:flex; align-items:center; gap:8px; font-size:15.5px; font-weight:800; margin:22px 0 10px}
+  .sec-label svg{color:var(--ink-secondary); flex-shrink:0}
+
+  .app{width:100%; max-width:430px; min-height:100dvh; background:var(--bg); display:flex; flex-direction:column; position:relative; overflow:hidden}
+  .screen{flex:1; overflow-y:auto; padding:20px 18px 44px; display:none}
+  .screen.on{display:block}
+  .app-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px}
+  .app-head h1{margin:0; font-weight:800; font-size:23px}
+  .app-head .sub{margin:2px 0 0; font-size:12.5px; color:var(--ink-tertiary)}
+  .head-actions{display:flex; align-items:center; gap:8px}
+  .icon-btn{width:36px; height:36px; border-radius:50%; display:grid; place-items:center; color:var(--ink-secondary); background:var(--bg-surface); box-shadow:var(--sombra); border:1px solid var(--border)}
+  .avatar{width:36px; height:36px; border-radius:50%; background:var(--accent); color:var(--on-accent); display:grid; place-items:center; font-size:12px; font-weight:800}
+
+  .dot{width:7px; height:7px; border-radius:50%; flex-shrink:0}
+  .dot.full{background:var(--ink-primary)}
+  .dot.hollow{border:1.5px solid var(--ink-primary)}
+  .dot.off{background:var(--ink-disabled)}
+  .state{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--ink-secondary)}
+  .cat-dot{width:7px; height:7px; border-radius:50%; flex-shrink:0; display:inline-block}
+
+  .card{border:1px solid var(--border); border-radius:18px; background:var(--bg-surface); box-shadow:var(--sombra)}
+  .nav-card{padding:12px 14px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .nav-card .name{font-size:16px; font-weight:800; text-align:center}
+  .nav-card .tag{margin:1px 0 0; text-align:center}
+  .arrow{width:38px; height:38px; border:1px solid var(--border); border-radius:14px; display:grid; place-items:center; color:var(--ink-secondary); font-size:18px; background:var(--bg-subtle); flex-shrink:0}
+  .arrow:disabled{opacity:.35}
+
+  .kpis{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px}
+  .kpi{background:var(--bg-surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--sombra); padding:12px 14px}
+  .kpi p{margin:0}
+  .kpi .v{font-size:21px; font-weight:800; font-family:var(--mono)}
+  .kpi .v small{font-size:11.5px; color:var(--ink-tertiary); font-family:var(--sans); font-weight:700}
+  .kpi .l{font-size:11.5px; color:var(--ink-tertiary); font-weight:800; margin-top:2px}
+  .kpi .state{margin-top:7px; font-size:11px}
+  .pbar{height:8px; background:var(--bg-subtle); margin-top:9px; border-radius:99px; overflow:hidden}
+  .pbar i{display:block; height:100%; background:var(--ink-primary); border-radius:99px}
+
+  .card-h{display:flex; justify-content:space-between; align-items:center; padding:13px 15px; border-bottom:1px solid var(--border)}
+  .card-h h2{margin:0; font-size:14.5px; font-weight:800}
+  .card-b{padding:6px 15px 13px}
+  .item{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px}
+  .item:last-child{border-bottom:none}
+  .item .note{font-size:11px; color:var(--ink-tertiary)}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; background:var(--bg-surface); border:1px solid var(--border-strong); border-radius:99px; padding:7px 13px; font-size:12px; font-weight:800}
+  .btn:active{background:var(--bg-subtle)}
+  .btn.dark{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+  .btn.txt{border:none; color:var(--ink-tertiary); padding:7px 8px}
+
+  .hbar{display:flex; align-items:center; gap:10px; padding:7px 0}
+  .hbar .n{width:106px; font-size:12px; font-weight:700}
+  .hbar .track{flex:1; height:9px; border-radius:99px; background:var(--bg-subtle); overflow:hidden}
+  .hbar .track i{display:block; height:100%; background:var(--ink-primary); border-radius:99px}
+  .hbar .mono{width:60px; text-align:right; font-size:11.5px}
+
+  .queso-wrap{display:flex; align-items:center; gap:16px; padding:4px 0}
+  .donut{width:118px; height:118px; border-radius:50%; position:relative; flex-shrink:0}
+  .donut::after{content:""; position:absolute; inset:26%; background:var(--bg-surface); border-radius:50%}
+  .leg{list-style:none; margin:0; padding:0; font-size:12px; font-weight:700; flex:1}
+  .leg li{display:flex; align-items:center; gap:7px; padding:2.5px 0}
+  .leg .sw{width:9px; height:9px; border-radius:3px; flex-shrink:0}
+  .leg .mono{margin-left:auto; font-size:11px; color:var(--ink-secondary)}
+
+  .aus-card{background:var(--bg-surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--sombra); padding:12px 14px; margin-bottom:10px}
+  .aus-card .top{display:flex; justify-content:space-between; align-items:center; gap:10px}
+  .aus-card b{font-size:14px; font-weight:800}
+  .aus-card .desc{display:block; font-size:11.5px; color:var(--ink-tertiary); margin-top:2px}
+  .aus-card .acts{display:flex; gap:8px; margin-top:10px}
+  .aus-card .acts .btn{flex:1}
+  .tachado, .tachado b, .tachado .desc{color:var(--ink-tertiary)}
+  .tachado b, .tachado .fechas{text-decoration:line-through}
+
+  .mas-row{width:100%; text-align:left; background:var(--bg-surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--sombra); padding:13px 15px; margin-bottom:8px; display:flex; align-items:center; gap:12px; font-size:14px; font-weight:700}
+  .mas-row svg{color:var(--ink-secondary); flex-shrink:0}
+  .mas-row .r{margin-left:auto; color:var(--ink-disabled)}
+
+  .scrim{position:absolute; inset:0; background:var(--scrim); z-index:11; opacity:0; pointer-events:none; transition:opacity .2s}
+  .scrim.on{opacity:1; pointer-events:auto}
+  .drawer{
+    position:absolute; left:0; top:0; bottom:0; z-index:12; width:272px;
+    background:var(--bg-surface); border-right:1px solid var(--border);
+    padding:20px 12px calc(16px + env(safe-area-inset-bottom));
+    transform:translateX(-105%); transition:transform .22s;
+    display:flex; flex-direction:column; overflow-y:auto;
+  }
+  .drawer.on{transform:none}
+  .wordmark{display:flex; align-items:center; gap:9px; font-weight:800; font-size:17px; padding:0 8px 12px}
+  .logo-mark{width:30px; height:30px; border-radius:10px; background:var(--accent); color:var(--on-accent); display:grid; place-items:center; flex-shrink:0}
+  .nav-label{font-size:11px; font-weight:800; color:var(--ink-tertiary); padding:12px 12px 5px; margin:0}
+  .ditem{
+    display:flex; align-items:center; gap:11px; width:100%; text-align:left;
+    color:var(--ink-tertiary); border-radius:12px; position:relative;
+    padding:9px 12px; font-size:13.5px; font-weight:800; margin-bottom:2px;
+  }
+  .ditem svg{flex-shrink:0}
+  .ditem.on{color:var(--ink-primary); background:var(--bg-subtle)}
+  .ditem.on::before{content:""; position:absolute; left:-12px; top:8px; bottom:8px; width:3px; border-radius:0 3px 3px 0; background:var(--ink-primary)}
+  .drawer-foot{margin-top:auto; padding:14px 6px 0; border-top:1px solid var(--border)}
+  .sec-label{display:flex; align-items:center; gap:8px; font-size:15.5px; font-weight:800; margin:24px 0 10px}
+
+  .toast{position:absolute; left:50%; bottom:40px; transform:translateX(-50%) translateY(8px); background:var(--ink-primary); color:var(--bg-surface); border-radius:99px; padding:10px 20px; font-size:12.5px; font-weight:800; opacity:0; transition:.25s; z-index:20; pointer-events:none; white-space:nowrap}
+  .toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== INICIO (día) ===== -->
+  <section class="screen on" id="scr-inicio">
+    <div class="app-head">
+      <div style="display:flex; gap:12px; align-items:flex-start"><button class="icon-btn" data-drawer aria-label="Abrir menú"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><div><h1>Administración</h1><p class="sub">Horas Grupo · Wowinx SL</p></div></div>
+      <div class="head-actions">
+        <button class="icon-btn theme-btn" aria-label="Cambiar modo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg></button>
+        <div class="avatar">CH</div>
+      </div>
+    </div>
+
+    <div class="card nav-card">
+      <button class="arrow" id="d-prev" aria-label="Día anterior">‹</button>
+      <div><p class="name" id="d-name">Miércoles 2 de septiembre</p><p class="micro tag" id="d-tag">Hoy</p></div>
+      <button class="arrow" id="d-next" aria-label="Día siguiente">›</button>
+    </div>
+    <div class="kpis" id="kpis-dia"></div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-h"><h2>Pendientes de imputar</h2><button class="btn">Recordar</button></div>
+      <div class="card-b" id="dia-pend"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Ausentes</h2><button class="btn" onclick="secActiva='Ausencias'; irA('scr-aus'); pintaDrawer()">Ausencias ›</button></div>
+      <div class="card-b" id="dia-aus"></div>
+    </div>
+  
+    <p class="sec-label"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg> Resumen del mes</p>
+    <div class="card nav-card">
+      <button class="arrow" id="m-prev" aria-label="Mes anterior">‹</button>
+      <div><p class="name" id="m-name">Septiembre 2026</p><p class="micro tag" id="m-tag">Mes en curso</p></div>
+      <button class="arrow" id="m-next" aria-label="Mes siguiente">›</button>
+    </div>
+    <div class="kpis" id="kpis-mes"></div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-h"><h2>Horas por empresa</h2></div>
+      <div class="card-b" id="mes-emp"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-h"><h2>Horas por proyecto</h2></div>
+      <div class="card-b" id="mes-proy"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Refacturación estimada</h2></div>
+      <div class="card-b" id="mes-ref"></div>
+    </div>
+  </section>
+
+  
+
+  <!-- ===== AUSENCIAS ===== -->
+  <section class="screen" id="scr-aus">
+    <div class="app-head">
+      <div style="display:flex; gap:12px; align-items:flex-start"><button class="icon-btn" data-drawer aria-label="Abrir menú"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><div><h1>Ausencias</h1><p class="sub">Solicitudes por resolver</p></div></div>
+      <div class="head-actions">
+        <button class="icon-btn theme-btn" aria-label="Cambiar modo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg></button>
+        <div class="avatar">CH</div>
+      </div>
+    </div>
+    <div id="aus-lista"></div>
+    <p class="micro" style="margin:6px 2px 0">Al aprobar, los días se bloquean en el registro del empleado y descuentan horas requeridas.</p>
+  </section>
+
+  
+
+  <section class="screen" id="scr-otra">
+    <div class="app-head">
+      <div style="display:flex; gap:12px; align-items:flex-start"><button class="icon-btn" data-drawer aria-label="Abrir menú"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><div><h1 id="otra-titulo">Sección</h1><p class="sub">Gestión completa en escritorio</p></div></div>
+      <div class="head-actions"><div class="avatar">CH</div></div>
+    </div>
+    <div class="card" style="padding:18px">
+      <p style="margin:0 0 12px; color:var(--ink-secondary); font-weight:700" id="otra-texto">Esta sección se gestiona desde la versión de escritorio.</p>
+      <a class="btn" href="panel_administracion.html">Abrir panel de escritorio</a>
+    </div>
+  </section>
+
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-label="Menú de secciones">
+    <div class="wordmark">
+      <span class="logo-mark"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
+      <b>Horas Grupo</b>
+    </div>
+    <div id="drawer-nav"></div>
+    <div class="drawer-foot">
+      <a class="btn" style="width:100%" href="panel_administracion.html">Panel de escritorio</a>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast">Hecho</div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const afmt = n => n.toLocaleString('es-ES',{minimumFractionDigits:1, maximumFractionDigits:1});
+  const AHOY = 2, AEMPL = 11, AREQD = 77;
+  const ADN = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+  const ADATA = {
+    1:{ h:63.0, ok:8, aus:1,
+        pend:[["Cosme Hernandez",0,"3B3"],["Daniel Ramírez",5.0,"3B3"]],
+        ausL:[["Andrés Fuentes","Baja médica","3B3"]] },
+    2:{ h:31.5, ok:5, aus:1,
+        pend:[["Cosme Hernandez",0,"3B3"],["Sara Martín",3.0,"3B3"],["Daniel Ramírez",5.0,"3B3"],["Marta Gil",4.5,"Jurídico"],["Enrique Robles",0,"3B3"]],
+        ausL:[["Andrés Fuentes","Baja médica","3B3"]] },
+  };
+  const GRIS = ["var(--ink-primary)","var(--ink-secondary)","var(--ink-tertiary)","var(--ink-disabled)","var(--border-strong)"];
+  const MESES = [
+    { mi:7, nombre:"Agosto", req:1617.0, imp:1612.0, al:11, ausP:0, sinT:0, cerrado:true,
+      emp:[["Wowinx SL",598.0],["Málaga CF SAD",371.0],["Legal Norte SL",295.0]],
+      proy:[["Ximeras",24],["Web corporativa",20],["Asesoría intragrupo",16],["Triatix",14],["Resto",26]],
+      ref:[["Wowinx → Málaga CF","21.470,00 €"],["Wowinx → Legal Norte","5.310,00 €"],["Legal Norte → Wowinx","17.940,00 €"]], tot:"44.720,00 €" },
+    { mi:8, nombre:"Septiembre", req:1694.0, imp:1238.5, al:8, ausP:2, sinT:12.0, cerrado:false,
+      emp:[["Wowinx SL",612.0],["Málaga CF SAD",348.0],["Legal Norte SL",278.5]],
+      proy:[["Ximeras",26],["Web corporativa",22],["Asesoría intragrupo",15],["Triatix",13],["Resto",24]],
+      ref:[["Wowinx → Málaga CF","20.180,00 €"],["Wowinx → Legal Norte","5.790,00 €"],["Legal Norte → Wowinx","18.230,00 €"]], tot:"44.200,00 €" },
+    { mi:9, nombre:"Octubre", req:1617.0, imp:0, al:0, ausP:1, sinT:0, cerrado:false, futuro:true,
+      emp:[], proy:null, ref:[], tot:"0,00 €" },
+  ];
+  let aSel = AHOY, mSel = 1;
+  const labD = d => { const w = new Date(2026,8,d).getDay(); return w>=1 && w<=5; };
+  const aAdj = (d,dir)=>{ let p=d+dir; while(p>=1 && p<=30 && !labD(p)) p+=dir; return (p>=1 && p<=30)?p:null; };
+
+  function renderDia(){
+    const x = ADATA[aSel] || {h:0, ok:0, aus:0};
+    const fut = aSel > AHOY;
+    $('d-name').textContent = ADN[new Date(2026,8,aSel).getDay()]+' '+aSel+' de septiembre';
+    $('d-tag').textContent = aSel===AHOY ? 'Hoy' : (fut ? 'Futuro' : 'Pasado');
+    $('d-prev').disabled = !aAdj(aSel,-1);
+    $('d-next').disabled = !aAdj(aSel, 1);
+    const sin = Math.max(0, AEMPL - x.ok - x.aus);
+    $('kpis-dia').innerHTML = `
+      <div class="kpi"><p class="v">${afmt(x.h)} <small>/ ${afmt(AREQD)} h</small></p><p class="l">Imputadas del día</p><div class="pbar"><i style="width:${Math.min(100,x.h/AREQD*100)}%"></i></div></div>
+      <div class="kpi"><p class="v">${x.ok} <small>de ${AEMPL}</small></p><p class="l">Empleados al día</p><p class="state"><span class="dot ${x.ok===AEMPL?'full':'hollow'}"></span>${fut?'sin actividad':(AEMPL-x.ok)+' por completar'}</p></div>
+      <div class="kpi"><p class="v">${x.aus}</p><p class="l">Con ausencia</p><p class="state"><span class="dot ${x.aus?'full':'off'}"></span>${x.aus?'aprobadas':'ninguna'}</p></div>
+      <div class="kpi"><p class="v">${fut?0:sin}</p><p class="l">Sin imputar nada</p><p class="state"><span class="dot ${(!fut&&sin>0)?'hollow':'off'}"></span>${fut?'día futuro':(sin>0?'recordatorio arriba':'todos al día')}</p></div>`;
+    const pend = x.pend||[], ausL = x.ausL||[];
+    $('dia-pend').innerHTML = fut ? '<p class="item" style="border:none; color:var(--ink-tertiary)">Día futuro: sin pendientes todavía.</p>'
+      : (pend.length ? pend.map(p=>`<div class="item"><span style="font-weight:800">${p[0]}<span class="note"> · ${p[2]}</span></span><span class="mono" style="font-size:12px">${afmt(p[1])} / 7,0 h</span></div>`).join('')
+      : '<p class="item" style="border:none; color:var(--ink-tertiary)">Todos al día.</p>');
+    $('dia-aus').innerHTML = ausL.length
+      ? ausL.map(a=>`<div class="item"><span style="font-weight:800">${a[0]}<span class="note"> · ${a[2]}</span></span><span class="state"><span class="dot full"></span>${a[1]}</span></div>`).join('')
+      : '<p class="item" style="border:none; color:var(--ink-tertiary)">Nadie ausente este día.</p>';
+  }
+
+  function gradGris(items){ let a=0; return "conic-gradient("+items.map((x,i)=>{const s=a; a+=x[1]; return `${GRIS[i%GRIS.length]} ${s}% ${a}%`;}).join(", ")+")"; }
+
+  function renderMes(){
+    const m = MESES[mSel];
+    $('m-name').textContent = m.nombre+' 2026';
+    $('m-tag').textContent = m.cerrado ? 'Cerrado' : (m.futuro ? 'Futuro' : 'Mes en curso');
+    $('m-prev').disabled = mSel===0;
+    $('m-next').disabled = mSel===MESES.length-1;
+    const pct = m.req ? Math.round(m.imp/m.req*100) : 0;
+    $('kpis-mes').innerHTML = `
+      <div class="kpi"><p class="v">${afmt(m.imp)} <small>/ ${afmt(m.req)}</small></p><p class="l">Horas imputadas</p><div class="pbar"><i style="width:${pct}%"></i></div></div>
+      <div class="kpi"><p class="v">${m.al} <small>de ${AEMPL}</small></p><p class="l">Empleados al día</p><p class="state"><span class="dot ${m.al===AEMPL?'full':'hollow'}"></span>${m.futuro?'mes futuro':(m.al===AEMPL?'mes completo':(AEMPL-m.al)+' incompletos')}</p></div>
+      <div class="kpi"><p class="v">${m.ausP}</p><p class="l">Ausencias ${m.futuro?'aprobadas':'pendientes'}</p><p class="state"><span class="dot ${m.ausP?'hollow':'full'}"></span>${m.ausP?(m.futuro?'ya concedidas':'por resolver'):'ninguna'}</p></div>
+      <div class="kpi"><p class="v">${afmt(m.sinT)} <small>h</small></p><p class="l">Sin tarifa</p><p class="state"><span class="dot ${m.sinT?'hollow':'full'}"></span>${m.cerrado?'cerrado':(m.sinT?'bloquea el cierre':'todo valorado')}</p></div>`;
+    const max = Math.max(1, ...m.emp.map(e=>e[1]));
+    $('mes-emp').innerHTML = m.emp.length
+      ? m.emp.map(e=>`<div class="hbar"><span class="n">${e[0]}</span><span class="track"><i style="width:${Math.round(e[1]/max*100)}%"></i></span><span class="mono">${afmt(e[1])} h</span></div>`).join('')
+      : '<p class="item" style="border:none; color:var(--ink-tertiary)">Sin actividad todavía.</p>';
+    $('mes-proy').innerHTML = m.proy
+      ? `<div class="queso-wrap"><div class="donut" style="background:${gradGris(m.proy)}"></div>
+         <ul class="leg">${m.proy.map((x,i)=>`<li><span class="sw" style="background:${GRIS[i%GRIS.length]}"></span>${x[0]}<span class="mono">${x[1]}%</span></li>`).join('')}</ul></div>`
+      : '<p class="item" style="border:none; color:var(--ink-tertiary)">Sin actividad todavía.</p>';
+    $('mes-ref').innerHTML = m.ref.length
+      ? m.ref.map(r=>`<div class="item"><span>${r[0]}</span><span class="mono" style="font-size:12px">${r[1]}</span></div>`).join('')
+        + `<div class="item"><span style="font-weight:800">Total</span><span class="mono" style="font-size:12px; font-weight:800">${m.tot}</span></div>`
+        + `<p class="micro" style="margin:8px 0 2px">${m.cerrado?'Periodo cerrado: importes definitivos.':'Provisional hasta el cierre.'}</p>`
+      : '<p class="item" style="border:none; color:var(--ink-tertiary)">Sin horas valoradas.</p>';
+  }
+
+  // Bandeja de ausencias (interactiva)
+  const SOLIC = [
+    { n:"Leo Silva", tipo:"Vacaciones", f:"21/09 – 09/10", d:15, estado:"pendiente" },
+    { n:"Cristian Haro", tipo:"Vacaciones", f:"21/09 – 25/09", d:5, estado:"pendiente" },
+    { n:"Andrés Fuentes", tipo:"Baja médica", f:"01/09 – 02/09", d:2, estado:"aprobada" },
+    { n:"Enrique Robles", tipo:"Vacaciones", f:"14/09 – 18/09", d:5, estado:"rechazada" },
+  ];
+  function renderAus(){
+    $('aus-lista').innerHTML = SOLIC.map((s,i)=>{
+      const est = s.estado==="pendiente" ? '<span class="state"><span class="dot hollow"></span>Pendiente</span>'
+        : s.estado==="aprobada" ? '<span class="state"><span class="dot full"></span>Aprobada</span>'
+        : '<span class="state" style="color:var(--ink-tertiary)">Rechazada</span>';
+      return `<div class="aus-card ${s.estado==='rechazada'?'tachado':''}">
+        <div class="top">
+          <span><b>${s.n}</b><span class="desc">${s.tipo} · <span class="fechas mono">${s.f}</span> · ${s.d} días</span></span>
+          ${est}
+        </div>
+        ${s.estado==="pendiente" ? `<div class="acts"><button class="btn txt" data-r="${i}">Rechazar</button><button class="btn dark" data-a="${i}">Aprobar</button></div>` : ''}
+      </div>`;
+    }).join('');
+    $('aus-lista').querySelectorAll('[data-a]').forEach(b=>b.addEventListener('click', ()=>{
+      SOLIC[+b.dataset.a].estado = "aprobada"; renderAus(); toast("Ausencia aprobada");
+    }));
+    $('aus-lista').querySelectorAll('[data-r]').forEach(b=>b.addEventListener('click', ()=>{
+      SOLIC[+b.dataset.r].estado = "rechazada"; renderAus(); toast("Ausencia rechazada");
+    }));
+  }
+
+  
+
+  function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),1600); }
+  const SECCIONES = [
+    ["General", [["Inicio","scr-inicio",'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/>']]],
+    ["Personas", [
+      ["Usuarios",null,'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'],
+      ["Ausencias","scr-aus",'<path d="M2 22h20"/><path d="M3.8 13.5 22 9l-1 3.8-8.6 2.3-4.6 4.4-2-.5 2.4-3.7-3.6-1.6-1.6 1.2-1.8-.5z"/>'],
+    ]],
+    ["Estructura", [
+      ["Empresas",null,'<path d="M3 21h18"/><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 8h.01M15 8h.01M9 12h.01M15 12h.01M9 16h.01M15 16h.01"/>'],
+      ["Proyectos",null,'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>'],
+      ["Categorías",null,'<path d="M12 2H2v10l9.3 9.3a1.7 1.7 0 0 0 2.4 0l7.6-7.6a1.7 1.7 0 0 0 0-2.4Z"/><path d="M7 7h.01"/>'],
+      ["Calendario",null,'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>'],
+    ]],
+    ["Operación", [
+      ["Control",null,'<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>'],
+      ["Tarifas",null,'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5a4.5 4.5 0 1 0 0 7"/><path d="M7.5 10.8h5M7.5 13.2h5"/>'],
+      ["Refacturaciones",null,'<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 8h8M8 12h8M8 16h5"/>'],
+    ]],
+    ["Sistema", [["Ajustes",null,'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2.1 2.1M17.4 17.4l2.1 2.1M4.5 19.5l2.1-2.1M17.4 6.6l2.1-2.1"/>']]],
+  ];
+  let secActiva = "Inicio";
+  function pintaDrawer(){
+    $('drawer-nav').innerHTML = SECCIONES.map(([g, items]) =>
+      `<p class="nav-label">${g}</p>` + items.map(([n, scr, ico]) =>
+        `<button class="ditem ${n===secActiva?'on':''}" data-n="${n}" data-s="${scr||''}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ico}</svg>
+          <span>${n}</span>
+        </button>`).join('')
+    ).join('');
+    $('drawer-nav').querySelectorAll('.ditem').forEach(b=>b.addEventListener('click', ()=>{
+      secActiva = b.dataset.n;
+      if (b.dataset.s){ irA(b.dataset.s); }
+      else {
+        $('otra-titulo').textContent = b.dataset.n;
+        $('otra-texto').textContent = 'La gestión de «'+b.dataset.n.toLowerCase()+'» (altas, ediciones, exports) vive en la versión de escritorio.';
+        irA('scr-otra');
+      }
+      cerrarDrawer(); pintaDrawer();
+    }));
+  }
+  function abrirDrawer(){ $('drawer').classList.add('on'); $('scrim').classList.add('on'); }
+  function cerrarDrawer(){ $('drawer').classList.remove('on'); $('scrim').classList.remove('on'); }
+  function irA(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id===id)); }
+  document.querySelectorAll('[data-drawer]').forEach(b=>b.addEventListener('click', abrirDrawer));
+  $('scrim').addEventListener('click', cerrarDrawer);
+  pintaDrawer();
+  $('d-prev').addEventListener('click', ()=>{ const p=aAdj(aSel,-1); if(p){ aSel=p; renderDia(); } });
+  $('d-next').addEventListener('click', ()=>{ const p=aAdj(aSel, 1); if(p){ aSel=p; renderDia(); } });
+  $('m-prev').addEventListener('click', ()=>{ if(mSel>0){ mSel--; renderMes(); } });
+  $('m-next').addEventListener('click', ()=>{ if(mSel<MESES.length-1){ mSel++; renderMes(); } });
+
+  const setTheme = t => document.documentElement.dataset.theme = t;
+  setTheme(matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.querySelectorAll('.theme-btn').forEach(b=>b.addEventListener('click', ()=>
+    setTheme(document.documentElement.dataset.theme==='dark' ? 'light' : 'dark')));
+
+  renderDia(); renderMes(); renderAus();
+</script>
+</body>
+</html>

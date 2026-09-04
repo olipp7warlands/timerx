@@ -23,7 +23,7 @@ export function usePerfil() {
 
       const { data } = await supabase
         .from('perfil')
-        .select('*, empresa(*), departamento(*)')
+        .select('*, empresa(*), departamento:departamento!perfil_departamento_id_fkey(*)')
         .eq('id', user.id)
         .single();
 

@@ -1,6 +1,9 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getPerfilServer } from '@/lib/supabase/perfil';
+import { ImputacionTester } from './ImputacionTester';
 
 export default async function DebugPage() {
   const perfil = await getPerfilServer();
@@ -11,6 +14,17 @@ export default async function DebugPage() {
   const { data: proyectos, error } = await supabase
     .from('empleado_proyecto')
     .select('proyecto_id, desde, hasta, proyecto(id, nombre, empresa(nombre))');
+
+  const hoy = new Date();
+  const { data: balanceRows, error: errorBalance } = await supabase.rpc('balance_mes', {
+    p_anio: hoy.getFullYear(),
+    p_mes: hoy.getMonth() + 1,
+  });
+
+  const migracion004 = await readFile(
+    path.join(process.cwd(), 'supabase/migrations/004_balance_mes_y_requeridas_efectivas.sql'),
+    'utf-8'
+  );
 
   return (
     <main className="min-h-screen bg-bg p-8">
@@ -46,6 +60,27 @@ export default async function DebugPage() {
               ))}
             </ul>
           </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head">
+            <h2>Migración 004 — balance_mes()</h2>
+          </div>
+          <div className="card-body space-y-3">
+            <pre className="mono max-h-72 overflow-auto whitespace-pre-wrap rounded-lg bg-subtle p-3 text-xs">{migracion004}</pre>
+            <div>
+              <p className="micro mb-1">Llamada real: balance_mes({hoy.getFullYear()}, {hoy.getMonth() + 1}) para {perfil.nombre}</p>
+              {errorBalance && <p className="text-sm text-red-600">{errorBalance.message}</p>}
+              {balanceRows?.[0] && (
+                <pre className="mono rounded-lg bg-subtle p-3 text-xs">{JSON.stringify(balanceRows[0], null, 2)}</pre>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 className="mb-2 text-sm font-extrabold">Paso 1 — capa compartida (hooks + componentes)</h2>
+          <ImputacionTester empresaId={perfil.empresa_id} />
         </div>
       </div>
     </main>

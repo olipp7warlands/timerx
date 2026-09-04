@@ -43,3 +43,6 @@ next-env.d.ts
 
 # supabase CLI local state
 supabase/.temp
+
+# Claude Code local harness state
+.claude/

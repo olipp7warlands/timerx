@@ -10,7 +10,7 @@ export async function getPerfilServer() {
 
   const { data: perfil } = await supabase
     .from('perfil')
-    .select('*, empresa(*), departamento(*)')
+    .select('*, empresa(*), departamento:departamento!perfil_departamento_id_fkey(*)')
     .eq('id', user.id)
     .single();
 
