@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<title>Horas Grupo · Administración</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F6F4; --bg-surface:#FFFFFF; --bg-subtle:#EFEFEC;
+    --border:#E9E9E6; --border-strong:#D8D8D4;
+    --ink-primary:#2E2E2B; --ink-secondary:#5C5C58; --ink-tertiary:#8A8A85; --ink-disabled:#C4C4C0;
+    --accent:#3A3A36; --on-accent:#FFFFFF;
+    --cat-desarrollo:#5E7A8C; --cat-diseno:#8C7A5E; --cat-abogados:#7C6480; --cat-gestion:#6E8B72;
+    --sans:"Nunito",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --sombra:0 2px 12px rgba(30,30,28,.06);
+  }
+  html[data-theme="dark"]{
+    --bg:#141413; --bg-surface:#1D1D1B; --bg-subtle:#262623;
+    --border:#2C2C29; --border-strong:#3E3E3A;
+    --ink-primary:#F0F0ED; --ink-secondary:#C8C8C4; --ink-tertiary:#8F8F8A; --ink-disabled:#4C4C48;
+    --accent:#F0F0ED; --on-accent:#1B1B19;
+    --cat-desarrollo:#7FA0B4; --cat-diseno:#B4A07F; --cat-abogados:#A487A9; --cat-gestion:#8FB196;
+    --sombra:none;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg); color:var(--ink-primary); font-family:var(--sans); font-size:14px; line-height:1.5; font-weight:600}
+  a{color:inherit; text-decoration:none}
+  button{font:inherit; cursor:pointer; color:inherit; background:none; border:none; padding:0}
+  button:focus-visible,select:focus-visible,input:focus-visible,.tab:focus-visible{outline:2px solid var(--ink-primary); outline-offset:2px}
+  svg{display:block}
+  .mono{font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:500}
+  .micro{font-size:12px; font-weight:800; color:var(--ink-tertiary)}
+
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--bg-surface); color:var(--ink-primary);
+    border:1px solid var(--border-strong); border-radius:99px;
+    padding:9px 16px; font-size:13px; font-weight:800;
+  }
+  .btn:hover{background:var(--bg-subtle)}
+  .btn-primary{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+  .btn-primary:hover{opacity:.9; background:var(--accent)}
+  .btn-sm{padding:6px 12px; font-size:12px}
+  .btn-text{border:none; background:none; color:var(--ink-tertiary); font-size:12px; font-weight:800; padding:6px 8px}
+  .btn-text:hover{color:var(--ink-primary)}
+
+  select,input{
+    background:var(--bg-subtle); color:var(--ink-primary);
+    border:1px solid transparent; border-radius:12px;
+    padding:9px 12px; font:inherit; font-size:13px; font-weight:600; width:100%;
+  }
+  select:focus,input:focus{border-color:var(--ink-primary); background:var(--bg-surface)}
+  input::placeholder{color:var(--ink-disabled)}
+
+  .layout{display:flex; min-height:100vh}
+  .side{
+    width:238px; flex-shrink:0; background:var(--bg-surface); border-right:1px solid var(--border);
+    padding:20px 12px 16px; display:flex; flex-direction:column; gap:2px;
+    position:sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  .wordmark{font-weight:800; font-size:17px; display:flex; align-items:center; gap:9px; padding:0 10px 14px}
+  .wordmark svg{color:var(--ink-secondary); flex-shrink:0}
+  .nav-label{font-size:11px; font-weight:800; color:var(--ink-tertiary); padding:14px 12px 5px}
+  .tab{
+    display:flex; align-items:center; gap:11px; width:100%; text-align:left;
+    color:var(--ink-tertiary); border-radius:12px; position:relative;
+    padding:9px 12px; font-size:13.5px; font-weight:800; margin-bottom:2px;
+  }
+  .tab svg{flex-shrink:0}
+  .tab:hover{color:var(--ink-primary); background:var(--bg-subtle)}
+  .tab[aria-selected="true"]{color:var(--ink-primary); background:var(--bg-subtle)}
+  .tab[aria-selected="true"]::before{
+    content:""; position:absolute; left:-12px; top:8px; bottom:8px; width:3px;
+    border-radius:0 3px 3px 0; background:var(--ink-primary);
+  }
+  .side-foot{margin-top:auto; display:flex; align-items:center; gap:8px; padding:14px 6px 0; border-top:1px solid var(--border)}
+  .side-foot .btn{flex:1; justify-content:center}
+  .icon-btn{
+    width:36px; height:36px; border-radius:50%; border:1px solid var(--border);
+    display:grid; place-items:center; color:var(--ink-secondary); background:var(--bg-surface); box-shadow:var(--sombra); flex-shrink:0;
+  }
+  .wrap{flex:1; min-width:0; padding:24px 30px 56px; max-width:1180px}
+  .side-top{display:flex; align-items:center; justify-content:space-between; padding:0 4px 12px}
+  .side-top .wordmark{padding:0 6px}
+  .collapse-btn{
+    width:28px; height:28px; border-radius:10px; border:1px solid var(--border);
+    display:grid; place-items:center; color:var(--ink-tertiary); background:var(--bg-surface); flex-shrink:0;
+  }
+  .collapse-btn:hover{color:var(--ink-primary); background:var(--bg-subtle)}
+  .side.mini{width:64px; padding:20px 8px 14px}
+  .side.mini .tab span, .side.mini .wordmark, .side.mini .nav-label, .side.mini .side-foot .btn{display:none}
+  .side.mini .tab{justify-content:center; padding:10px}
+  .side.mini .tab[aria-selected="true"]::before{left:-8px}
+  .side.mini .side-foot{justify-content:center}
+  .side.mini .side-top{justify-content:center; padding:0 0 12px}
+  .side.mini .collapse-btn svg{transform:rotate(180deg)}
+
+  /* Home de KPIs */
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px}
+  .kpi{background:var(--bg-surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--sombra); padding:14px 16px}
+  .kpi .v{font-size:24px; font-weight:800; font-variant-numeric:tabular-nums; font-family:var(--mono)}
+  .kpi .v small{font-size:12px; color:var(--ink-tertiary); font-weight:700; font-family:var(--sans)}
+  .kpi .l{font-size:12px; color:var(--ink-tertiary); font-weight:800; margin-top:3px}
+  .kpi .pbar{height:8px; margin-top:11px; background:var(--bg-subtle); border-radius:99px; overflow:hidden}
+  .kpi .pbar i{display:block; height:100%; background:var(--ink-primary); border-radius:99px}
+  .kpi .state{margin-top:9px}
+  .kpi p{margin:0}
+  .sec-label{display:flex; align-items:center; gap:9px; font-size:15.5px; font-weight:800; color:var(--ink-primary); margin:4px 0 12px}
+  .sec-label svg{color:var(--ink-secondary); flex-shrink:0}
+  .home-top{display:grid; grid-template-columns:minmax(0,1fr) 370px; gap:14px; align-items:start; margin-bottom:6px}
+  .kpis-2{grid-template-columns:1fr 1fr}
+  .logo-mark{width:30px; height:30px; border-radius:10px; background:var(--accent); color:var(--on-accent); display:grid; place-items:center; flex-shrink:0}
+  @media (max-width:1000px){ .home-top{grid-template-columns:1fr} }
+  .hbar{display:flex; align-items:center; gap:10px; padding:7px 0}
+  .hbar .n{width:112px; font-size:12.5px; font-weight:700}
+  .hbar .track{flex:1; height:10px; border-radius:99px; background:var(--bg-subtle); overflow:hidden}
+  .hbar .track i{display:block; height:100%; background:var(--ink-primary); border-radius:99px}
+  .hbar .mono{width:66px; text-align:right; font-size:12px}
+  @media (max-width:1100px){ .kpis{grid-template-columns:1fr 1fr} }
+
+  /* Calendario mensual del panel */
+  .acal{display:grid; grid-template-columns:repeat(7,1fr); gap:4px}
+  .acal .wdl{text-align:center; padding:2px 0}
+  .acal .d{
+    aspect-ratio:1; border-radius:10px; border:1px solid var(--border); background:var(--bg-surface);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    font-size:12px; font-weight:800; box-shadow:var(--sombra);
+  }
+  .acal .d .dot{width:5px; height:5px}
+  .acal .d:disabled{opacity:.35; background:transparent; border-color:transparent; box-shadow:none}
+  .acal .d.sel{background:var(--accent); color:var(--on-accent); border-color:var(--accent)}
+  .acal .d.sel .dot.full{background:var(--on-accent)}
+  .acal .d.sel .dot.hollow{border-color:var(--on-accent)}
+
+  /* Quesos (donut) */
+  .queso-wrap{display:flex; align-items:center; gap:20px; flex-wrap:wrap}
+  .donut{width:150px; height:150px; border-radius:50%; position:relative; flex-shrink:0}
+  .donut::after{content:""; position:absolute; inset:24%; background:var(--bg-surface); border-radius:50%}
+  .leg{list-style:none; margin:0; padding:0; font-size:12.5px; font-weight:700}
+  .leg li{display:flex; align-items:center; gap:8px; padding:3px 0}
+  .leg .sw{width:10px; height:10px; border-radius:3px; flex-shrink:0}
+  .leg .mono{margin-left:auto; padding-left:14px; font-size:11.5px; color:var(--ink-secondary)}
+  .day-nav-card{padding:12px 16px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .day-nav-card .arrowb{
+    width:38px; height:38px; border:1px solid var(--border); border-radius:14px;
+    display:grid; place-items:center; color:var(--ink-secondary); font-size:18px; background:var(--bg-subtle);
+  }
+  .day-nav-card .arrowb:disabled{opacity:.35}
+
+  @media (max-width:880px){
+    .side{width:64px; padding:20px 8px 14px}
+    .side .tab span, .wordmark b, .nav-label, .side-foot .btn{display:none}
+    .tab{justify-content:center; padding:10px}
+    .tab[aria-selected="true"]::before{left:-8px}
+    .side-foot{justify-content:center}
+  }
+
+  .panel{display:none}
+  .panel.on{display:block}
+  .split{display:grid; grid-template-columns:300px minmax(0,1fr); gap:18px; align-items:start}
+  .stack > * + *{margin-top:16px}
+
+  .card{background:var(--bg-surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--sombra)}
+  .card-head{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--border)}
+  .card-head h2{margin:0; font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px}
+  .card-head h2 svg{color:var(--ink-secondary)}
+  .card-body{padding:16px 18px 18px}
+  .card-body label{display:block; font-size:12px; font-weight:800; color:var(--ink-tertiary); margin:13px 0 5px}
+  .card-body label:first-child{margin-top:0}
+  .card-body .desc{margin:0; font-size:12px; color:var(--ink-tertiary); font-weight:600}
+  .full{width:100%; justify-content:center; margin-top:16px}
+
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  th{font-weight:800; color:var(--ink-tertiary); text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); font-size:11.5px}
+  td{padding:10px; border-bottom:1px solid var(--border); vertical-align:middle; font-weight:600}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover td{background:var(--bg-subtle)}
+  .r{text-align:right}
+  td .sub{display:block; font-size:11px; color:var(--ink-tertiary); margin-top:1px}
+  .foot{margin:14px 0 0; font-size:12px; color:var(--ink-tertiary); font-weight:600}
+
+  .state{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:800; color:var(--ink-secondary); white-space:nowrap}
+  .dot{width:7px; height:7px; border-radius:50%; flex-shrink:0}
+  .dot.full{background:var(--ink-primary)}
+  .dot.hollow{border:1.5px solid var(--ink-primary)}
+  .dot.off{background:var(--ink-disabled)}
+  .role{
+    display:inline-block; font-size:11px; font-weight:800;
+    background:var(--bg-subtle); border-radius:99px; padding:3px 11px; color:var(--ink-secondary);
+  }
+  .role.solid{background:var(--accent); color:var(--on-accent)}
+
+  .cat-dot{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:8px; vertical-align:1px}
+  .chip{
+    display:inline-flex; align-items:center; font-size:12px; font-weight:700; padding:5px 13px; border-radius:99px;
+    background:var(--bg-subtle); margin:5px 6px 0 0; color:var(--ink-secondary);
+  }
+
+  .group{border:1px solid var(--border); border-radius:16px; padding:13px 16px; margin-bottom:12px; background:var(--bg-surface)}
+  .group:last-child{margin-bottom:0}
+  .group-head{display:flex; justify-content:space-between; align-items:center; gap:10px}
+  .group-head h3{margin:0; font-size:14.5px; font-weight:800}
+  .group-head h3 small{font-family:var(--mono); font-size:11px; color:var(--ink-tertiary); font-weight:400; margin-left:6px}
+  .item{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--border); font-size:13px}
+  .item:first-of-type{margin-top:10px}
+  .item .note{font-size:11px; color:var(--ink-tertiary)}
+
+  .setting{display:flex; justify-content:space-between; align-items:center; gap:14px; padding:14px 0; border-bottom:1px solid var(--border)}
+  .setting:last-child{border-bottom:none}
+  .setting p{margin:0}
+  .setting .name{font-weight:800}
+  .setting .sdesc{font-size:12px; color:var(--ink-tertiary); margin-top:2px; font-weight:600}
+  .switch{width:36px; height:21px; border-radius:99px; background:var(--bg-subtle); border:1px solid var(--border-strong); position:relative; flex-shrink:0; cursor:pointer}
+  .switch::after{content:""; position:absolute; left:2px; top:2px; width:15px; height:15px; border-radius:50%; background:var(--ink-disabled); transition:left .15s}
+  .switch.on{background:var(--accent); border-color:var(--accent)}
+  .switch.on::after{left:17px; background:var(--on-accent)}
+  .mini{width:84px; text-align:center; font-family:var(--mono)}
+
+  @media (max-width:920px){ .split{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<aside class="side">
+  <div class="side-top">
+    <div class="wordmark">
+      <span class="logo-mark"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
+      <b>Horas Grupo</b>
+    </div>
+    <button class="collapse-btn" id="collapse" aria-label="Plegar o desplegar el menú">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+  </div>
+
+  <nav role="tablist" aria-label="Secciones de administración" style="display:contents">
+    <p class="nav-label" style="margin:0; padding-top:0">General</p>
+    <button class="tab" role="tab" aria-selected="true" data-panel="inicio">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Inicio</span>
+    </button>
+
+    <p class="nav-label" style="margin:0">Personas</p>
+    <button class="tab" role="tab" aria-selected="false" data-panel="usuarios">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Usuarios</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="ausencias">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M3.8 13.5 22 9l-1 3.8-8.6 2.3-4.6 4.4-2-.5 2.4-3.7-3.6-1.6-1.6 1.2-1.8-.5z"/></svg>
+      <span>Ausencias</span>
+    </button>
+
+    <p class="nav-label" style="margin:0">Estructura</p>
+    <button class="tab" role="tab" aria-selected="false" data-panel="empresas">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 8h.01M15 8h.01M9 12h.01M15 12h.01M9 16h.01M15 16h.01"/></svg>
+      <span>Empresas</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="proyectos">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>
+      <span>Proyectos</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="categorias">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.3 9.3a1.7 1.7 0 0 0 2.4 0l7.6-7.6a1.7 1.7 0 0 0 0-2.4Z"/><path d="M7 7h.01"/></svg>
+      <span>Categorías</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="calendario">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg>
+      <span>Calendario</span>
+    </button>
+
+    <p class="nav-label" style="margin:0">Operación</p>
+    <button class="tab" role="tab" aria-selected="false" data-panel="control">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
+      <span>Control</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="tarifas">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5a4.5 4.5 0 1 0 0 7"/><path d="M7.5 10.8h5M7.5 13.2h5"/></svg>
+      <span>Tarifas</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="refacturacion">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      <span>Refacturaciones</span>
+    </button>
+
+    <p class="nav-label" style="margin:0">Sistema</p>
+    <button class="tab" role="tab" aria-selected="false" data-panel="ajustes">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+      <span>Ajustes</span>
+    </button>
+  </nav>
+
+  <div class="side-foot">
+    <button class="icon-btn" id="theme" aria-label="Cambiar modo claro u oscuro"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg></button>
+    <a class="btn btn-sm" href="app_movil_empleado.html">App empleado</a>
+  </div>
+</aside>
+
+<main class="wrap">
+
+  <!-- ============ INICIO · KPIs ============ -->
+  <section id="inicio" class="panel on" role="tabpanel">
+    <p class="sec-label">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      Seguimiento del día
+    </p>
+    <div class="card day-nav-card">
+      <button class="arrowb" id="d-prev" aria-label="Día anterior">‹</button>
+      <div style="text-align:center">
+        <p style="margin:0; font-size:16.5px; font-weight:800" id="d-name">Miércoles 2 de septiembre</p>
+        <p class="micro" style="margin:2px 0 0" id="d-tag">Hoy</p>
+      </div>
+      <button class="arrowb" id="d-next" aria-label="Día siguiente">›</button>
+    </div>
+    <div class="home-top">
+      <div>
+        <div class="kpis kpis-2" id="kpis-dia" style="margin-bottom:14px"></div>
+        <div class="kpis kpis-2" style="margin-bottom:0">
+          <div class="card">
+            <div class="card-head" style="padding:12px 16px"><h2>Pendientes de imputar</h2><button class="btn btn-sm">Recordar</button></div>
+            <div class="card-body" style="padding:4px 16px 14px" id="dia-pend"></div>
+          </div>
+          <div class="card">
+            <div class="card-head" style="padding:12px 16px"><h2>Ausentes</h2><button class="btn btn-sm" data-go="ausencias">Ausencias ›</button></div>
+            <div class="card-body" style="padding:4px 16px 14px" id="dia-aus"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h2>Calendario</h2>
+          <span style="display:flex; align-items:center; gap:8px">
+            <button class="collapse-btn" id="cal-prev" aria-label="Mes anterior"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+            <span class="micro" id="cal-mes-label">Septiembre 2026</span>
+            <button class="collapse-btn" id="cal-next" aria-label="Mes siguiente"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+          </span>
+        </div>
+        <div class="card-body">
+          <div class="acal" id="acal-home"></div>
+          <div style="display:flex; gap:14px; margin-top:12px; flex-wrap:wrap">
+            <span class="state"><span class="dot full"></span>Completo</span>
+            <span class="state"><span class="dot hollow"></span>Parcial</span>
+            <span class="state"><span class="dot off"></span>Futuro</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="sec-label" style="margin-top:20px">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg>
+      Resumen del mes
+    </p>
+    <div class="card day-nav-card">
+      <button class="arrowb" id="m-prev" aria-label="Mes anterior">‹</button>
+      <div style="text-align:center">
+        <p style="margin:0; font-size:16.5px; font-weight:800" id="m-name">Septiembre 2026</p>
+        <p class="micro" style="margin:2px 0 0" id="m-tag">Mes en curso</p>
+      </div>
+      <button class="arrowb" id="m-next" aria-label="Mes siguiente">›</button>
+    </div>
+    <div class="kpis" id="kpis-mes"></div>
+
+    <div class="split" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+      <div class="card">
+        <div class="card-head"><h2>Horas por empresa</h2><button class="btn btn-sm" data-go="empresas">Empresas ›</button></div>
+        <div class="card-body" id="mes-emp"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Horas por proyecto</h2><button class="btn btn-sm" data-go="proyectos">Proyectos ›</button></div>
+        <div class="card-body" id="mes-proy"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Refacturación estimada</h2><button class="btn btn-sm" data-go="refacturacion">Refacturaciones ›</button></div>
+        <div class="card-body" style="padding:0 6px 8px" id="mes-ref"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ USUARIOS ============ -->
+  <section id="usuarios" class="panel" role="tabpanel">
+    <div class="split">
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><h2>Invitar usuario</h2></div>
+          <div class="card-body">
+            <label for="u-email">Email</label><input id="u-email" placeholder="nombre@wowinx.com">
+            <label for="u-emp">Empresa empleadora</label>
+            <select id="u-emp"><option>Wowinx SL</option><option>Málaga CF SAD</option><option>Legal Norte SL</option></select>
+            <label for="u-dep">Departamento</label>
+            <select id="u-dep"><option>3B3</option><option>Jurídico</option><option>Diseño</option></select>
+            <label for="u-rol">Rol</label>
+            <select id="u-rol"><option>Empleado</option><option>Responsable</option><option>Admin de empresa</option><option>Admin de grupo</option></select>
+            <label for="u-cat">Categoría por defecto</label>
+            <select id="u-cat"><option>Desarrollo</option><option>Diseño</option><option>Abogados</option><option>Gestión</option></select>
+            <button class="btn btn-primary full">Enviar invitación</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Crear departamento</h2></div>
+          <div class="card-body">
+            <label for="d-nom">Nombre</label><input id="d-nom" placeholder="Tecnología">
+            <label for="d-resp">Responsable</label>
+            <select id="d-resp"><option>Sin responsable asignado</option><option>Cristian Haro</option><option>Sara Martín</option></select>
+            <button class="btn full">Crear departamento</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h2>Usuarios <span class="micro" style="font-weight:700">· 11</span></h2>
+          <input placeholder="Buscar" style="width:190px">
+        </div>
+        <div class="card-body" style="padding:0 6px 8px">
+          <table>
+            <thead><tr><th>Nombre</th><th>Empresa</th><th>Departamento</th><th>Rol</th><th>Categoría</th><th class="r">Acciones</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:800">Cristian Haro</td><td>Wowinx SL</td><td>3B3</td><td><span class="role solid">Admin grupo</span></td><td><span class="cat-dot" style="background:var(--cat-desarrollo)"></span>Desarrollo</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
+              <tr><td style="font-weight:800">Verónica Salguero</td><td>Wowinx SL</td><td>3B3</td><td><span class="role">Empleado</span></td><td><span class="cat-dot" style="background:var(--cat-desarrollo)"></span>Desarrollo</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
+              <tr><td style="font-weight:800">Sara Martín</td><td>Wowinx SL</td><td>3B3</td><td><span class="role">Responsable</span></td><td><span class="cat-dot" style="background:var(--cat-diseno)"></span>Diseño</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
+              <tr><td style="font-weight:800">Ana Ruiz</td><td>Legal Norte SL</td><td>Jurídico</td><td><span class="role">Empleado</span></td><td><span class="cat-dot" style="background:var(--cat-abogados)"></span>Abogados</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
+              <tr><td style="font-weight:800">Andrés Fuentes</td><td>Wowinx SL</td><td>3B3</td><td><span class="role">Empleado</span></td><td><span class="cat-dot" style="background:var(--cat-desarrollo)"></span>Desarrollo</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
+            </tbody>
+          </table>
+          <p class="foot" style="padding:0 12px 10px">El responsable de departamento aprueba ausencias y vigila las imputaciones faltantes de su equipo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EMPRESAS ============ -->
+  <section id="empresas" class="panel" role="tabpanel">
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi"><p class="v">3</p><p class="l">Empresas activas</p><p class="state"><span class="dot full"></span>todas con actividad este mes</p></div>
+      <div class="kpi"><p class="v">626,5 <small>h</small></p><p class="l">Horas intragrupo · septiembre</p><p class="state"><span class="dot full"></span>51% del total imputado</p></div>
+      <div class="kpi"><p class="v">49<small>%</small></p><p class="l">Mayor receptora: Wowinx SL</p><p class="state"><span class="dot hollow"></span>vigilar concentración</p></div>
+    </div>
+    <div class="split">
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><h2>Crear empresa</h2></div>
+          <div class="card-body">
+            <label for="e-nom">Nombre</label><input id="e-nom" placeholder="Wowinx SL">
+            <label for="e-cif">CIF</label><input id="e-cif" class="mono" placeholder="B-12345678">
+            <button class="btn btn-primary full">Crear empresa</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Horas recibidas</h2><span class="micro">Septiembre</span></div>
+          <div class="card-body">
+            <div class="queso-wrap">
+              <div class="donut" style="background:conic-gradient(var(--ink-primary) 0 49%, var(--ink-tertiary) 49% 77%, var(--ink-disabled) 77% 100%)" role="img" aria-label="Reparto de horas por empresa"></div>
+              <ul class="leg">
+                <li><span class="sw" style="background:var(--ink-primary)"></span>Wowinx SL<span class="mono">49%</span></li>
+                <li><span class="sw" style="background:var(--ink-tertiary)"></span>Málaga CF SAD<span class="mono">28%</span></li>
+                <li><span class="sw" style="background:var(--ink-disabled)"></span>Legal Norte SL<span class="mono">23%</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Empresas del grupo</h2></div>
+        <div class="card-body">
+          <div class="group">
+            <div class="group-head"><h3>Wowinx SL <small>B-11223344</small></h3><span class="state"><span class="dot full"></span>Activa</span></div>
+            <div class="item"><span>Proyectos activos</span><span class="mono">4</span></div>
+            <div class="item"><span>Horas recibidas · sep</span><span class="mono">612,0 h</span></div>
+            <div class="item"><span>Refacturación a favor · sep</span><span class="mono">25.970,00 €</span></div>
+          </div>
+          <div class="group">
+            <div class="group-head"><h3>Málaga CF SAD <small>A-99887766</small></h3><span class="state"><span class="dot full"></span>Activa</span></div>
+            <div class="item"><span>Proyectos activos</span><span class="mono">2</span></div>
+            <div class="item"><span>Horas recibidas · sep</span><span class="mono">348,0 h</span></div>
+            <div class="item"><span>Refacturación en contra · sep</span><span class="mono">20.180,00 €</span></div>
+          </div>
+          <div class="group">
+            <div class="group-head"><h3>Legal Norte SL <small>B-55667788</small></h3><span class="state"><span class="dot full"></span>Activa</span></div>
+            <div class="item"><span>Proyectos activos</span><span class="mono">1</span></div>
+            <div class="item"><span>Horas recibidas · sep</span><span class="mono">278,5 h</span></div>
+            <div class="item"><span>Refacturación a favor · sep</span><span class="mono">12.440,00 €</span></div>
+          </div>
+          <p class="foot">La empresa del proyecto es la que recibe el servicio: contra ella se calcula la refacturación.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROYECTOS ============ -->
+  <section id="proyectos" class="panel" role="tabpanel">
+    <div id="proy-det" style="display:none"></div>
+    <div id="proy-lista">
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi"><p class="v">7</p><p class="l">Proyectos activos</p><p class="state"><span class="dot full"></span>en 3 empresas</p></div>
+      <div class="kpi"><p class="v">2</p><p class="l">Sin actividad este mes</p><p class="state"><span class="dot hollow"></span>Masterchef, Launcher</p></div>
+      <div class="kpi"><p class="v">26<small>%</small></p><p class="l">Proyecto top: Ximeras</p><p class="state"><span class="dot full"></span>318,0 h en septiembre</p></div>
+    </div>
+    <div class="split">
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><h2>Crear proyecto</h2></div>
+          <div class="card-body">
+            <label for="p-emp">Empresa</label>
+            <select id="p-emp"><option>Wowinx SL</option><option>Málaga CF SAD</option><option>Legal Norte SL</option></select>
+            <label for="p-nom">Nombre del proyecto</label><input id="p-nom" placeholder="Ximeras">
+            <label for="p-cli">Cliente (opcional)</label><input id="p-cli" placeholder="Corporativo">
+            <button class="btn btn-primary full">Crear proyecto</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Horas por proyecto</h2><span class="micro">Septiembre</span></div>
+          <div class="card-body">
+            <div class="queso-wrap">
+              <div class="donut" style="background:conic-gradient(var(--ink-primary) 0 26%, var(--ink-secondary) 26% 48%, var(--ink-tertiary) 48% 63%, var(--ink-disabled) 63% 76%, var(--border-strong) 76% 100%)" role="img" aria-label="Reparto de horas por proyecto"></div>
+              <ul class="leg">
+                <li><span class="sw" style="background:var(--ink-primary)"></span>Ximeras<span class="mono">26%</span></li>
+                <li><span class="sw" style="background:var(--ink-secondary)"></span>Web corporativa<span class="mono">22%</span></li>
+                <li><span class="sw" style="background:var(--ink-tertiary)"></span>Asesoría intragrupo<span class="mono">15%</span></li>
+                <li><span class="sw" style="background:var(--ink-disabled)"></span>Triatix<span class="mono">13%</span></li>
+                <li><span class="sw" style="background:var(--border-strong)"></span>Resto<span class="mono">24%</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Proyectos</h2><input placeholder="Buscar" style="width:180px"></div>
+        <div class="card-body" style="padding:0 6px 8px">
+          <table>
+            <thead><tr><th>Proyecto</th><th>Empresa</th><th class="r">Horas · sep</th><th class="r">Personas</th><th>Estado</th><th class="r">Acciones</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:800">Ximeras</td><td>Wowinx SL</td><td class="r mono">318,0</td><td class="r mono">5</td><td><span class="state"><span class="dot full"></span>Activo</span></td><td class="r"><button class="btn btn-sm" data-p="Ximeras">Ver</button></td></tr>
+              <tr><td style="font-weight:800">Web corporativa</td><td>Málaga CF SAD</td><td class="r mono">272,0</td><td class="r mono">4</td><td><span class="state"><span class="dot full"></span>Activo</span></td><td class="r"><button class="btn btn-sm" data-p="Web corporativa">Ver</button></td></tr>
+              <tr><td style="font-weight:800">Asesoría intragrupo</td><td>Legal Norte SL</td><td class="r mono">182,0</td><td class="r mono">2</td><td><span class="state"><span class="dot full"></span>Activo</span></td><td class="r"><button class="btn btn-sm" data-p="Asesoría intragrupo">Ver</button></td></tr>
+              <tr><td style="font-weight:800">Triatix</td><td>Wowinx SL</td><td class="r mono">160,5</td><td class="r mono">3</td><td><span class="state"><span class="dot full"></span>Activo</span></td><td class="r"><button class="btn btn-sm" data-p="Triatix">Ver</button></td></tr>
+              <tr><td style="font-weight:800">Interno <span class="sub">no refacturable</span></td><td>Wowinx SL</td><td class="r mono">133,5</td><td class="r mono">9</td><td><span class="state"><span class="dot full"></span>Activo</span></td><td class="r"><button class="btn btn-sm" data-p="Interno">Ver</button></td></tr>
+              <tr><td style="font-weight:800">Masterchef</td><td>Málaga CF SAD</td><td class="r mono" style="color:var(--ink-tertiary)">0,0</td><td class="r mono">0</td><td><span class="state"><span class="dot off"></span>Sin actividad</span></td><td class="r"><button class="btn btn-sm" data-p="Masterchef">Ver</button></td></tr>
+              <tr><td style="font-weight:800">Launcher</td><td>Wowinx SL</td><td class="r mono" style="color:var(--ink-tertiary)">0,0</td><td class="r mono">0</td><td><span class="state"><span class="dot off"></span>Sin actividad</span></td><td class="r"><button class="btn btn-sm" data-p="Launcher">Ver</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  </section>
+
+  <!-- ============ CATEGORÍAS ============ -->
+  <section id="categorias" class="panel" role="tabpanel">
+    <div class="split">
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><h2>Crear categoría</h2></div>
+          <div class="card-body">
+            <label for="c-nom">Nombre</label><input id="c-nom" placeholder="Desarrollo">
+            <button class="btn full">Crear categoría</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Crear subcategoría</h2></div>
+          <div class="card-body">
+            <label for="s-cat">Categoría</label>
+            <select id="s-cat"><option>Abogados</option><option>Desarrollo</option><option>Diseño</option><option>Gestión</option></select>
+            <label for="s-nom">Nombre</label><input id="s-nom" placeholder="Contratos">
+            <button class="btn btn-primary full">Crear subcategoría</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Catálogo</h2></div>
+        <div class="card-body">
+          <div class="group">
+            <div class="group-head"><h3><span class="cat-dot" style="background:var(--cat-desarrollo)"></span>Desarrollo</h3><button class="btn btn-sm">Editar</button></div>
+            <div><span class="chip">Backend</span><span class="chip">Frontend</span><span class="chip">QA</span><span class="chip">Soporte</span></div>
+          </div>
+          <div class="group">
+            <div class="group-head"><h3><span class="cat-dot" style="background:var(--cat-diseno)"></span>Diseño</h3><button class="btn btn-sm">Editar</button></div>
+            <div><span class="chip">Maquetación</span><span class="chip">Branding</span><span class="chip">UX</span></div>
+          </div>
+          <div class="group">
+            <div class="group-head"><h3><span class="cat-dot" style="background:var(--cat-abogados)"></span>Abogados</h3><button class="btn btn-sm">Editar</button></div>
+            <div><span class="chip">Contratos</span><span class="chip">Bajas laborales</span><span class="chip">Mercantil</span><span class="chip">Litigios</span></div>
+          </div>
+          <div class="group">
+            <div class="group-head"><h3><span class="cat-dot" style="background:var(--cat-gestion)"></span>Gestión</h3><button class="btn btn-sm">Editar</button></div>
+            <div><span class="chip">Reuniones</span><span class="chip">Administración</span><span class="chip">RRHH</span></div>
+          </div>
+          <p class="foot">Desactivar una subcategoría la oculta de los selectores sin tocar el histórico de imputaciones.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CALENDARIO ============ -->
+  <section id="calendario" class="panel" role="tabpanel">
+    <div class="split">
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><h2>Jornada</h2></div>
+          <div class="card-body">
+            <label for="j-h">Horas por día laborable</label><input id="j-h" class="mini" value="7">
+            <p class="desc" style="margin-top:10px">Las horas requeridas de cada mes se calculan solas: días laborables por jornada, descontando festivos.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Añadir festivo</h2></div>
+          <div class="card-body">
+            <label for="f-fecha">Fecha</label><input id="f-fecha" class="mono" value="12/10/2026">
+            <label for="f-nom">Nombre</label><input id="f-nom" placeholder="Fiesta Nacional">
+            <label for="f-amb">Ámbito</label>
+            <select id="f-amb"><option>Todo el grupo</option><option>Wowinx SL</option><option>Málaga CF SAD</option><option>Legal Norte SL</option></select>
+            <button class="btn btn-primary full">Añadir festivo</button>
+          </div>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><h2>Vista del mes</h2><span class="micro">Septiembre 2026</span></div>
+          <div class="card-body">
+            <div class="acal" id="acal-sec" style="max-width:430px"></div>
+            <div style="display:flex; gap:14px; margin-top:12px; flex-wrap:wrap">
+              <span class="state"><span class="dot full"></span>Completo</span>
+              <span class="state"><span class="dot hollow"></span>Parcial</span>
+              <span class="state"><span class="dot off"></span>Futuro</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+        <div class="card-head">
+          <h2>Horas requeridas por mes</h2>
+          <select style="width:110px"><option>2026</option><option>2025</option></select>
+        </div>
+        <div class="card-body" style="padding:0 6px 8px">
+          <table>
+            <thead><tr><th>Mes</th><th class="r">Laborables</th><th class="r">Festivos</th><th class="r">Horas requeridas</th></tr></thead>
+            <tbody>
+              <tr><td>Julio</td><td class="r mono">23</td><td class="r mono">0</td><td class="r mono">161,0</td></tr>
+              <tr><td>Agosto</td><td class="r mono">21</td><td class="r mono">1</td><td class="r mono">147,0</td></tr>
+              <tr><td>Septiembre</td><td class="r mono">22</td><td class="r mono">0</td><td class="r mono">154,0</td></tr>
+              <tr><td>Octubre</td><td class="r mono">22</td><td class="r mono">1</td><td class="r mono">147,0</td></tr>
+              <tr><td>Noviembre</td><td class="r mono">21</td><td class="r mono">0</td><td class="r mono">147,0</td></tr>
+              <tr><td>Diciembre</td><td class="r mono">23</td><td class="r mono">3</td><td class="r mono">140,0</td></tr>
+            </tbody>
+          </table>
+          <p class="foot" style="padding:0 12px 10px">Festivos de octubre: <span class="mono">12/10</span> Fiesta Nacional, todo el grupo.</p>
+        </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AUSENCIAS ============ -->
+  <section id="ausencias" class="panel" role="tabpanel">
+    <div class="card">
+      <div class="card-head">
+        <h2>Solicitudes de ausencia</h2>
+        <div style="display:flex; gap:8px">
+          <select style="width:200px"><option>Todos los departamentos</option><option>3B3</option><option>Jurídico</option></select>
+          <select style="width:180px"><option>Pendientes primero</option><option>Más recientes</option></select>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0 6px 8px">
+        <table>
+          <thead><tr><th>Empleado</th><th>Tipo</th><th>Fechas</th><th class="r">Días</th><th>Estado</th><th class="r">Acciones</th></tr></thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:800">Leo Silva</td><td>Vacaciones</td><td class="mono">21/09 – 09/10</td><td class="r mono">15</td>
+              <td><span class="state"><span class="dot hollow"></span>Pendiente</span></td>
+              <td class="r"><button class="btn-text">Rechazar</button> <button class="btn btn-sm btn-primary">Aprobar</button></td>
+            </tr>
+            <tr>
+              <td style="font-weight:800">Cristian Haro</td><td>Vacaciones</td><td class="mono">21/09 – 25/09</td><td class="r mono">5</td>
+              <td><span class="state"><span class="dot hollow"></span>Pendiente</span></td>
+              <td class="r"><button class="btn-text">Rechazar</button> <button class="btn btn-sm btn-primary">Aprobar</button></td>
+            </tr>
+            <tr>
+              <td style="font-weight:800">Andrés Fuentes</td><td>Baja médica</td><td class="mono">01/09 – 02/09</td><td class="r mono">2</td>
+              <td><span class="state"><span class="dot full"></span>Aprobada</span></td>
+              <td class="r"><button class="btn btn-sm">Ver</button></td>
+            </tr>
+            <tr>
+              <td style="color:var(--ink-tertiary)"><s>Enrique Robles</s></td><td style="color:var(--ink-tertiary)"><s>Vacaciones</s></td><td class="mono" style="color:var(--ink-tertiary)"><s>14/09 – 18/09</s></td><td class="r mono" style="color:var(--ink-tertiary)"><s>5</s></td>
+              <td><span class="state" style="color:var(--ink-tertiary)">Rechazada</span></td>
+              <td class="r"><button class="btn btn-sm">Ver</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="foot" style="padding:0 12px 10px">Al aprobarse, los días quedan bloqueados en el registro del empleado y cuentan como ausencia en el informe FTE.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTROL ============ -->
+  <section id="control" class="panel" role="tabpanel">
+    <div class="split">
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><h2>Descargar reporte mensual</h2></div>
+          <div class="card-body">
+            <p class="desc">Excel con horas y FTE, en el formato de vuestra plantilla actual.</p>
+            <label for="r-anio">Año</label><select id="r-anio"><option>2026</option><option>2025</option></select>
+            <label for="r-mes">Mes</label><select id="r-mes"><option>Septiembre</option><option>Agosto</option><option>Julio</option></select>
+            <button class="btn btn-primary full">Descargar Excel</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Imputación directa</h2></div>
+          <div class="card-body">
+            <p class="desc">Registra o edita horas de cualquier empleado en una fecha concreta.</p>
+            <label for="i-emp">Empleado</label>
+            <select id="i-emp"><option>Selecciona empleado</option><option>Cosme Hernandez</option><option>Sara Martín</option></select>
+            <label for="i-fecha">Fecha</label><input id="i-fecha" class="mono" placeholder="dd/mm/aaaa">
+            <button class="btn full">Abrir imputación</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h2>Imputaciones faltantes · Septiembre</h2>
+          <button class="btn btn-sm">Recordar por email</button>
+        </div>
+        <div class="card-body" style="padding:0 6px 8px">
+          <table>
+            <thead><tr><th>Empleado</th><th>Fecha</th><th class="r">Requerido</th><th class="r">Imputado</th><th class="r">Falta</th><th class="r">Acción</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:800">Cosme Hernandez<span class="sub">cosme.hernandez@wowinx.com</span></td><td class="mono">mié 02/09</td><td class="r mono">7,0</td><td class="r mono" style="color:var(--ink-tertiary)">0,0</td><td class="r mono" style="font-weight:800">7,0</td><td class="r"><button class="btn btn-sm">Imputar</button></td></tr>
+              <tr><td style="font-weight:800">Sara Martín<span class="sub">sara.martin@wowinx.com</span></td><td class="mono">mié 02/09</td><td class="r mono">7,0</td><td class="r mono" style="color:var(--ink-tertiary)">3,0</td><td class="r mono" style="font-weight:800">4,0</td><td class="r"><button class="btn btn-sm">Imputar</button></td></tr>
+              <tr><td style="font-weight:800">Cosme Hernandez<span class="sub">cosme.hernandez@wowinx.com</span></td><td class="mono">mar 01/09</td><td class="r mono">7,0</td><td class="r mono" style="color:var(--ink-tertiary)">0,0</td><td class="r mono" style="font-weight:800">7,0</td><td class="r"><button class="btn btn-sm">Imputar</button></td></tr>
+              <tr><td style="font-weight:800">Daniel Ramírez<span class="sub">daniel.ramirez@wowinx.com</span></td><td class="mono">mar 01/09</td><td class="r mono">7,0</td><td class="r mono" style="color:var(--ink-tertiary)">5,0</td><td class="r mono" style="font-weight:800">2,0</td><td class="r"><button class="btn btn-sm">Imputar</button></td></tr>
+            </tbody>
+          </table>
+          <p class="foot" style="padding:0 12px 10px">Solo días laborables sin ausencia aprobada. El cierre de mes exige que esta lista quede vacía.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TARIFAS ============ -->
+  <section id="tarifas" class="panel" role="tabpanel">
+    <div class="split">
+      <div class="card">
+        <div class="card-head"><h2>Nueva tarifa</h2></div>
+        <div class="card-body">
+          <label for="t-amb">Aplicar a</label>
+          <select id="t-amb"><option>Categoría · Desarrollo</option><option>Categoría · Diseño</option><option>Categoría · Abogados</option><option>Empleado concreto</option></select>
+          <label for="t-orig">Empresa origen (opcional)</label>
+          <select id="t-orig"><option>Todas</option><option>Wowinx SL</option><option>Legal Norte SL</option></select>
+          <label for="t-precio">Euros por hora</label><input id="t-precio" class="mono" value="60,00">
+          <label for="t-desde">Vigente desde</label><input id="t-desde" class="mono" value="01/01/2026">
+          <button class="btn btn-primary full">Guardar tarifa</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Tarifas vigentes</h2></div>
+        <div class="card-body" style="padding:0 6px 8px">
+          <table>
+            <thead><tr><th>Ámbito</th><th>Empresa origen</th><th class="r">€/h</th><th>Vigencia</th><th class="r">Acciones</th></tr></thead>
+            <tbody>
+              <tr><td><span class="cat-dot" style="background:var(--cat-desarrollo)"></span>Desarrollo</td><td>Todas</td><td class="r mono">60,00</td><td class="mono">desde 01/01/2026</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
+              <tr><td><span class="cat-dot" style="background:var(--cat-diseno)"></span>Diseño</td><td>Todas</td><td class="r mono">55,00</td><td class="mono">desde 01/01/2026</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
+              <tr><td><span class="cat-dot" style="background:var(--cat-abogados)"></span>Abogados</td><td>Legal Norte SL</td><td class="r mono">95,00</td><td class="mono">desde 01/01/2026</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
+              <tr><td style="font-weight:800">Ana Ruiz<span class="sub">prioridad sobre su categoría</span></td><td>Legal Norte SL</td><td class="r mono">110,00</td><td class="mono">desde 01/06/2026</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
+            </tbody>
+          </table>
+          <p class="foot" style="padding:0 12px 10px">Si un mes tiene horas sin tarifa aplicable, el informe de refacturación lo avisa antes de cerrar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ REFACTURACIONES ============ -->
+  <section id="refacturacion" class="panel" role="tabpanel">
+    <div class="kpis">
+      <div class="kpi"><p class="v">44.200,00 <small>€</small></p><p class="l">Importe estimado · septiembre</p><p class="state"><span class="dot hollow"></span>provisional</p></div>
+      <div class="kpi"><p class="v">614,5 <small>h</small></p><p class="l">Horas valoradas</p><p class="state"><span class="dot full"></span>con tarifa aplicada</p></div>
+      <div class="kpi"><p class="v">12,0 <small>h</small></p><p class="l">Horas sin tarifa</p><p class="state"><span class="dot hollow"></span>bloquean el cierre</p></div>
+      <div class="kpi"><p class="v">Abierto</p><p class="l">Estado del periodo</p><p class="state"><span class="dot hollow"></span>agosto quedó cerrado el 03/09</p></div>
+    </div>
+    <div class="split" style="grid-template-columns:minmax(0,1fr) 300px">
+      <div class="card">
+        <div class="card-head">
+          <h2>Detalle por empresa y categoría</h2>
+          <select style="width:150px"><option>Septiembre 2026</option><option>Agosto 2026</option><option>Julio 2026</option></select>
+        </div>
+        <div class="card-body" style="padding:0 6px 8px">
+          <table>
+            <thead><tr><th>Origen</th><th>Destino</th><th>Categoría</th><th class="r">Horas</th><th class="r">€/h</th><th class="r">Importe</th></tr></thead>
+            <tbody>
+              <tr><td>Wowinx SL</td><td>Málaga CF SAD</td><td><span class="cat-dot" style="background:var(--cat-desarrollo)"></span>Desarrollo</td><td class="r mono">252,0</td><td class="r mono">60,00</td><td class="r mono">15.120,00 €</td></tr>
+              <tr><td>Wowinx SL</td><td>Málaga CF SAD</td><td><span class="cat-dot" style="background:var(--cat-diseno)"></span>Diseño</td><td class="r mono">92,0</td><td class="r mono">55,00</td><td class="r mono">5.060,00 €</td></tr>
+              <tr><td>Wowinx SL</td><td>Legal Norte SL</td><td><span class="cat-dot" style="background:var(--cat-desarrollo)"></span>Desarrollo</td><td class="r mono">96,5</td><td class="r mono">60,00</td><td class="r mono">5.790,00 €</td></tr>
+              <tr><td>Legal Norte SL</td><td>Wowinx SL</td><td><span class="cat-dot" style="background:var(--cat-abogados)"></span>Abogados</td><td class="r mono">158,0</td><td class="r mono">95,00</td><td class="r mono">15.010,00 €</td></tr>
+              <tr><td>Legal Norte SL</td><td>Wowinx SL</td><td><span class="cat-dot" style="background:var(--cat-abogados)"></span>Abogados · Ana Ruiz</td><td class="r mono">16,0</td><td class="r mono">110,00</td><td class="r mono">1.760,00 €</td></tr>
+              <tr><td>Legal Norte SL</td><td>Wowinx SL</td><td><span class="cat-dot" style="background:var(--cat-gestion)"></span>Gestión</td><td class="r mono">8,0</td><td class="r mono">57,50</td><td class="r mono">460,00 €</td></tr>
+              <tr><td style="font-weight:800">Total</td><td></td><td></td><td class="r mono" style="font-weight:800">622,5</td><td></td><td class="r mono" style="font-weight:800">43.200,00 €</td></tr>
+            </tbody>
+          </table>
+          <p class="foot" style="padding:0 12px 10px">Las tarifas por empleado tienen prioridad sobre la de su categoría. El proyecto Interno queda fuera por no refacturable.</p>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><h2>Cierre de mes</h2></div>
+          <div class="card-body">
+            <p class="desc">El cierre bloquea todas las imputaciones del periodo y congela los importes.</p>
+            <label for="cierre-mes">Periodo</label>
+            <select id="cierre-mes"><option>Septiembre 2026</option></select>
+            <button class="btn btn-primary full">Cerrar septiembre</button>
+            <p class="desc" style="margin-top:10px"><span class="dot hollow" style="display:inline-block; vertical-align:0"></span> No se puede cerrar: hay 12,0 h sin tarifa y 3 empleados con días incompletos.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Exportar</h2></div>
+          <div class="card-body">
+            <button class="btn full" style="margin-top:0">Excel de refacturación</button>
+            <button class="btn full" style="margin-top:10px">Excel FTE mensual</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AJUSTES ============ -->
+  <section id="ajustes" class="panel" role="tabpanel">
+    <div class="card" style="max-width:660px">
+      <div class="card-head"><h2>Ajustes globales</h2></div>
+      <div class="card-body">
+        <div class="setting">
+          <div><p class="name">Tope de horas al día</p><p class="sdesc">Máximo imputable por persona y día, sumando todas las líneas.</p></div>
+          <input class="mini" value="12">
+        </div>
+        <div class="setting">
+          <div><p class="name">Descripción obligatoria</p><p class="sdesc">Exigir una nota en cada línea de imputación.</p></div>
+          <button class="switch on" role="switch" aria-checked="true" aria-label="Descripción obligatoria"></button>
+        </div>
+        <div class="setting">
+          <div><p class="name">Bloquear meses cerrados</p><p class="sdesc">Nadie puede editar imputaciones de un mes ya refacturado.</p></div>
+          <button class="switch on" role="switch" aria-checked="true" aria-label="Bloquear meses cerrados"></button>
+        </div>
+        <div class="setting">
+          <div><p class="name">Recordatorio de imputación</p><p class="sdesc">Email diario a quien tenga días laborables sin completar.</p></div>
+          <button class="switch" role="switch" aria-checked="false" aria-label="Recordatorio de imputación"></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+      tab.setAttribute('aria-selected', 'true');
+      document.getElementById(tab.dataset.panel).classList.add('on');
+    });
+  });
+  document.querySelectorAll('.switch').forEach(s => s.addEventListener('click', () => {
+    s.classList.toggle('on');
+    s.setAttribute('aria-checked', s.classList.contains('on'));
+  }));
+  document.getElementById('collapse').addEventListener('click', () =>
+    document.querySelector('.side').classList.toggle('mini'));
+
+  // ===== Home: día seleccionable, meses y calendarios =====
+  const AID = x => document.getElementById(x);
+  const AHOY = 2, AEMPL = 11, AREQD = 77;   // 11 empleados x 7 h
+  const ADATA = {
+    1:{ h:63.0, ok:8, aus:1,
+        pend:[["Cosme Hernandez",0,"3B3"],["Daniel Ramírez",5.0,"3B3"]],
+        ausL:[["Andrés Fuentes","Baja médica","3B3"]] },
+    2:{ h:31.5, ok:5, aus:1,
+        pend:[["Cosme Hernandez",0,"3B3"],["Sara Martín",3.0,"3B3"],["Daniel Ramírez",5.0,"3B3"],["Marta Gil",4.5,"Jurídico"],["Enrique Robles",0,"3B3"]],
+        ausL:[["Andrés Fuentes","Baja médica","3B3"]] },
+  };
+  const ADN = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+  const MESES = [
+    { mi:5, nombre:"Junio", req:1694.0, imp:1694.0, al:11, ausP:0, sinT:0, cerrado:true,
+      emp:[["Wowinx SL",634.0],["Málaga CF SAD",382.0],["Legal Norte SL",301.5]],
+      ref:[["Wowinx SL","Málaga CF SAD","22.640,00 €"],["Wowinx SL","Legal Norte SL","5.480,00 €"],["Legal Norte SL","Wowinx SL","18.660,00 €"]],
+      tot:"46.780,00 €",
+      proy:[["Ximeras",25],["Web corporativa",21],["Asesoría intragrupo",14],["Launcher",12],["Resto",28]] },
+    { mi:6, nombre:"Julio", req:1771.0, imp:1771.0, al:11, ausP:0, sinT:0, cerrado:true,
+      emp:[["Wowinx SL",640.0],["Málaga CF SAD",402.0],["Legal Norte SL",310.0]],
+      ref:[["Wowinx SL","Málaga CF SAD","23.310,00 €"],["Wowinx SL","Legal Norte SL","6.120,00 €"],["Legal Norte SL","Wowinx SL","19.850,00 €"]],
+      tot:"49.280,00 €",
+      proy:[["Ximeras",27],["Web corporativa",19],["Asesoría intragrupo",15],["Masterchef",12],["Resto",27]] },
+    { mi:7, nombre:"Agosto", req:1617.0, imp:1612.0, al:11, ausP:0, sinT:0, cerrado:true,
+      emp:[["Wowinx SL",598.0],["Málaga CF SAD",371.0],["Legal Norte SL",295.0]],
+      ref:[["Wowinx SL","Málaga CF SAD","21.470,00 €"],["Wowinx SL","Legal Norte SL","5.310,00 €"],["Legal Norte SL","Wowinx SL","17.940,00 €"]],
+      tot:"44.720,00 €",
+      proy:[["Ximeras",24],["Web corporativa",20],["Asesoría intragrupo",16],["Triatix",14],["Resto",26]] },
+    { mi:8, nombre:"Septiembre", req:1694.0, imp:1238.5, al:8, ausP:2, sinT:12.0, cerrado:false,
+      emp:[["Wowinx SL",612.0],["Málaga CF SAD",348.0],["Legal Norte SL",278.5]],
+      ref:[["Wowinx SL","Málaga CF SAD","20.180,00 €"],["Wowinx SL","Legal Norte SL","5.790,00 €"],["Legal Norte SL","Wowinx SL","18.230,00 €"]],
+      tot:"44.200,00 €",
+      proy:[["Ximeras",26],["Web corporativa",22],["Asesoría intragrupo",15],["Triatix",13],["Resto",24]] },
+    { mi:9, nombre:"Octubre", req:1617.0, imp:0, al:0, ausP:1, sinT:0, cerrado:false, futuro:true,
+      emp:[["Wowinx SL",0],["Málaga CF SAD",0],["Legal Norte SL",0]],
+      ref:[], tot:"0,00 €", proy:null },
+  ];
+  let aSel = AHOY, mSel = 3;
+  const MSEP = MESES.find(m=>m.mi===8);
+  const GRIS = ["var(--ink-primary)","var(--ink-secondary)","var(--ink-tertiary)","var(--ink-disabled)","var(--border-strong)"];
+  function gradGris(items){
+    let a = 0;
+    return "conic-gradient(" + items.map((x,i)=>{ const s=a; a+=x[1]; return `${GRIS[i%GRIS.length]} ${s}% ${a}%`; }).join(", ") + ")";
+  }
+  const afmt = n => n.toLocaleString('es-ES', {minimumFractionDigits:1, maximumFractionDigits:1});
+  const labM = (mi,d) => { const w = new Date(2026,mi,d).getDay(); return w>=1 && w<=5; };
+  const aAdj = (d,dir) => { let p=d+dir; while(p>=1 && p<=30 && !labM(8,p)) p+=dir; return (p>=1 && p<=30) ? p : null; };
+  function dotM(mi,d){
+    if (!labM(mi,d)) return '';
+    if (mi < 8) return '<span class="dot full"></span>';
+    if (mi > 8) return '<span class="dot off"></span>';
+    const h = (ADATA[d]||{h:0}).h;
+    if (h >= AREQD) return '<span class="dot full"></span>';
+    if (d <= AHOY) return '<span class="dot hollow"></span>';
+    return '<span class="dot off"></span>';
+  }
+  function pintaACal(el, mi){
+    if (!el) return;
+    const nd = new Date(2026, mi+1, 0).getDate();
+    const off = (new Date(2026, mi, 1).getDay()+6)%7;
+    let s = ["L","M","X","J","V","S","D"].map(w=>`<span class="wdl micro">${w}</span>`).join("") + "<span></span>".repeat(off);
+    for (let d=1; d<=nd; d++){
+      const sel = (mi===8 && d===aSel);
+      s += `<button class="d ${sel?'sel':''}" data-d="${d}" ${labM(mi,d)?'':'disabled'}>${d}${dotM(mi,d)||'<span class="dot" style="background:transparent"></span>'}</button>`;
+    }
+    el.innerHTML = s;
+    if (mi === 8) el.querySelectorAll('.d').forEach(b=>b.addEventListener('click', ()=>{ aSel = +b.dataset.d; renderDia(); }));
+  }
+  function renderDia(){
+    const x = ADATA[aSel] || {h:0, ok:0, aus:0};
+    const fut = aSel > AHOY;
+    AID('d-name').textContent = ADN[new Date(2026,8,aSel).getDay()]+' '+aSel+' de septiembre';
+    AID('d-tag').textContent = aSel===AHOY ? 'Hoy' : (fut ? 'Futuro' : 'Pasado');
+    AID('d-prev').disabled = !aAdj(aSel,-1);
+    AID('d-next').disabled = !aAdj(aSel, 1);
+    const sin = Math.max(0, AEMPL - x.ok - x.aus);
+    AID('kpis-dia').innerHTML = `
+      <div class="kpi"><p class="v">${afmt(x.h)} <small>/ ${afmt(AREQD)} h</small></p><p class="l">Horas imputadas del día</p><div class="pbar"><i style="width:${Math.min(100, x.h/AREQD*100)}%"></i></div></div>
+      <div class="kpi"><p class="v">${x.ok} <small>de ${AEMPL}</small></p><p class="l">Empleados al día</p><p class="state"><span class="dot ${x.ok===AEMPL?'full':'hollow'}"></span>${fut ? 'aún sin actividad' : (AEMPL-x.ok)+' por completar'}</p></div>
+      <div class="kpi"><p class="v">${x.aus}</p><p class="l">Con ausencia aprobada</p><p class="state"><span class="dot ${x.aus?'full':'off'}"></span>${x.aus ? 'no computan como faltantes' : 'ninguna'}</p></div>
+      <div class="kpi"><p class="v">${fut ? 0 : sin}</p><p class="l">Sin imputar nada</p><p class="state"><span class="dot ${(!fut && sin>0)?'hollow':'off'}"></span>${fut ? 'día futuro' : (sin>0 ? 'recordatorio en Control' : 'todos al día')}</p></div>`;
+    const pend = x.pend || [], ausL = x.ausL || [];
+    AID('dia-pend').innerHTML = fut
+      ? '<p class="desc" style="padding-top:8px">Día futuro: sin pendientes todavía.</p>'
+      : (pend.length
+        ? pend.map(p=>`<div class="item"><span style="font-weight:800">${p[0]}<span class="note"> · ${p[2]}</span></span><span class="mono">${afmt(p[1])} / 7,0 h</span></div>`).join('')
+        : '<p class="desc" style="padding-top:8px">Todos al día.</p>');
+    AID('dia-aus').innerHTML = ausL.length
+      ? ausL.map(a=>`<div class="item"><span style="font-weight:800">${a[0]}<span class="note"> · ${a[2]}</span></span><span class="state"><span class="dot full"></span>${a[1]}</span></div>`).join('')
+      : '<p class="desc" style="padding-top:8px">Nadie ausente este día.</p>';
+    pintaACal(AID('acal-home'), MESES[mSel].mi);
+    pintaACal(AID('acal-sec'), 8);
+  }
+  function renderMes(){
+    const m = MESES[mSel];
+    AID('m-name').textContent = m.nombre+' 2026';
+    AID('m-tag').textContent = m.cerrado ? 'Cerrado' : (m.futuro ? 'Futuro' : 'Mes en curso');
+    AID('m-prev').disabled = mSel === 0;
+    AID('m-next').disabled = mSel === MESES.length-1;
+    const pct = m.req ? Math.round(m.imp/m.req*100) : 0;
+    AID('kpis-mes').innerHTML = `
+      <div class="kpi"><p class="v">${afmt(m.imp)} <small>/ ${afmt(m.req)} h</small></p><p class="l">Horas imputadas</p><div class="pbar"><i style="width:${pct}%"></i></div></div>
+      <div class="kpi"><p class="v">${m.al} <small>de ${AEMPL}</small></p><p class="l">Empleados al día</p><p class="state"><span class="dot ${m.al===AEMPL?'full':'hollow'}"></span>${m.futuro ? 'mes futuro' : (m.al===AEMPL ? 'mes completo' : (AEMPL-m.al)+' con días sin imputar')}</p></div>
+      <div class="kpi"><p class="v">${m.ausP}</p><p class="l">Ausencias ${m.futuro ? 'aprobadas' : 'pendientes'}</p><p class="state"><span class="dot ${m.ausP?'hollow':'full'}"></span>${m.ausP ? (m.futuro ? 'vacaciones ya concedidas' : 'la más antigua, hace 3 días') : 'ninguna'}</p></div>
+      <div class="kpi"><p class="v">${afmt(m.sinT)} <small>h</small></p><p class="l">Horas sin tarifa</p><p class="state"><span class="dot ${m.sinT?'hollow':'full'}"></span>${m.cerrado ? 'periodo cerrado' : (m.futuro ? 'sin actividad' : (m.sinT ? 'revisar antes del cierre' : 'todo valorado'))}</p></div>`;
+    const max = Math.max(1, ...m.emp.map(e=>e[1]));
+    AID('mes-emp').innerHTML = m.futuro
+      ? '<p class="desc">Sin actividad todavía: el mes no ha empezado.</p>'
+      : m.emp.map(e=>
+        `<div class="hbar"><span class="n">${e[0]}</span><span class="track"><i style="width:${Math.round(e[1]/max*100)}%"></i></span><span class="mono">${afmt(e[1])} h</span></div>`).join('')
+        + '<p class="foot">Horas recibidas por cada empresa destino del grupo.</p>';
+    AID('mes-proy').innerHTML = m.proy
+      ? `<div class="queso-wrap">
+          <div class="donut" style="background:${gradGris(m.proy)}" role="img" aria-label="Reparto de horas por proyecto"></div>
+          <ul class="leg">${m.proy.map((x,i)=>`<li><span class="sw" style="background:${GRIS[i%GRIS.length]}"></span>${x[0]}<span class="mono">${x[1]}%</span></li>`).join('')}</ul>
+        </div>`
+      : '<p class="desc">Sin actividad todavía: el mes no ha empezado.</p>';
+    AID('mes-ref').innerHTML = m.ref.length
+      ? `<table>
+          <thead><tr><th>Origen</th><th>Destino</th><th class="r">Importe</th></tr></thead>
+          <tbody>
+            ${m.ref.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="r mono">${r[2]}</td></tr>`).join('')}
+            <tr><td style="font-weight:800">Total</td><td></td><td class="r mono" style="font-weight:800">${m.tot}</td></tr>
+          </tbody>
+        </table>
+        <p class="foot" style="padding:0 12px 10px">${m.cerrado ? 'Periodo cerrado: importes definitivos.' : 'Provisional hasta el cierre. Detalle en la sección Refacturaciones.'}</p>`
+      : '<p class="desc" style="padding:14px 12px">Sin refacturación: el mes no tiene horas valoradas.</p>';
+    AID('cal-mes-label').textContent = m.nombre+' 2026';
+    pintaACal(AID('acal-home'), m.mi);
+  }
+  AID('d-prev').addEventListener('click', ()=>{ const p=aAdj(aSel,-1); if(p){ aSel=p; renderDia(); } });
+  AID('d-next').addEventListener('click', ()=>{ const p=aAdj(aSel, 1); if(p){ aSel=p; renderDia(); } });
+  AID('m-prev').addEventListener('click', ()=>{ if(mSel>0){ mSel--; renderMes(); } });
+  AID('m-next').addEventListener('click', ()=>{ if(mSel<MESES.length-1){ mSel++; renderMes(); } });
+  AID('cal-prev').addEventListener('click', ()=>{ if(mSel>0){ mSel--; renderMes(); } });
+  AID('cal-next').addEventListener('click', ()=>{ if(mSel<MESES.length-1){ mSel++; renderMes(); } });
+  document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click', ()=>{
+    const t = document.querySelector('.tab[data-panel="'+b.dataset.go+'"]'); if (t) t.click();
+  }));
+  renderDia();
+  renderMes();
+
+  // ===== Ficha de proyecto =====
+  const CATC = { "Desarrollo":"var(--cat-desarrollo)", "Diseño":"var(--cat-diseno)", "Abogados":"var(--cat-abogados)", "Gestión":"var(--cat-gestion)" };
+  const PDET = {
+    "Ximeras": { emp:"Wowinx SL", cli:"Corporativo", h:318.0, acum:2412.0, ref:"2.640,00 €",
+      cats:[["Desarrollo",252.0],["Diseño",42.0],["Abogados",24.0]],
+      deps:[["3B3",294.0],["Jurídico",24.0]],
+      pers:[["Cristian Haro","3B3","Desarrollo",96.0],["Verónica Salguero","3B3","Desarrollo",88.0],["Andrés Fuentes","3B3","Desarrollo",68.0],["Sara Martín","3B3","Diseño",42.0],["Ana Ruiz","Jurídico","Abogados",24.0]],
+      nota:"Solo las horas de Ana Ruiz (Legal Norte SL) son refacturables: el resto del equipo pertenece a la propia Wowinx." },
+    "Web corporativa": { emp:"Málaga CF SAD", cli:"—", h:272.0, acum:1914.0, ref:"15.860,00 €",
+      cats:[["Desarrollo",180.0],["Diseño",92.0]],
+      deps:[["3B3",272.0]],
+      pers:[["Sara Martín","3B3","Diseño",92.0],["Andrés Fuentes","3B3","Desarrollo",64.0],["Cristian Haro","3B3","Desarrollo",60.0],["Leo Silva","3B3","Desarrollo",56.0]],
+      nota:"Todo el equipo es de Wowinx SL: el 100% de las horas se refactura al Málaga CF." },
+    "Asesoría intragrupo": { emp:"Legal Norte SL", cli:"—", h:182.0, acum:1312.0, ref:"1.440,00 €",
+      cats:[["Abogados",158.0],["Desarrollo",24.0]],
+      deps:[["Jurídico",158.0],["3B3",24.0]],
+      pers:[["Ana Ruiz","Jurídico","Abogados",85.5],["Marta Gil","Jurídico","Abogados",72.5],["Verónica Salguero","3B3","Desarrollo",24.0]],
+      nota:"Las horas del equipo jurídico no se refacturan (misma empresa); las de soporte técnico de Wowinx, sí." },
+    "Triatix": { emp:"Wowinx SL", cli:"Corporativo", h:160.5, acum:1204.0, ref:"0,00 €",
+      cats:[["Desarrollo",160.5]],
+      deps:[["3B3",160.5]],
+      pers:[["Cristian Haro","3B3","Desarrollo",70.5],["Verónica Salguero","3B3","Desarrollo",50.0],["Andrés Fuentes","3B3","Desarrollo",40.0]],
+      nota:"Proyecto de Wowinx trabajado por Wowinx: sin refacturación intragrupo." },
+    "Interno": { emp:"Wowinx SL", cli:"—", h:133.5, acum:1088.5, ref:"—",
+      cats:[["Gestión",98.0],["Desarrollo",35.5]],
+      deps:[["3B3",110.0],["Jurídico",23.5]],
+      pers:[["Cristian Haro","3B3","Gestión",22.0],["Sara Martín","3B3","Gestión",20.0],["Ana Ruiz","Jurídico","Gestión",18.0],["Verónica Salguero","3B3","Desarrollo",16.0]],
+      extra:"y 5 personas más",
+      nota:"Marcado como no refacturable: absorbe reuniones y administración de todo el grupo." },
+  };
+  function quesoGrad(cats, total){
+    let acc = 0;
+    return "conic-gradient(" + cats.map(c=>{
+      const a = acc/total*100, b = (acc+c[1])/total*100; acc += c[1];
+      return `${CATC[c[0]]||"var(--ink-disabled)"} ${a}% ${b}%`;
+    }).join(", ") + ")";
+  }
+  function verProyecto(n){
+    const p = PDET[n];
+    const det = AID('proy-det');
+    let html = `<button class="btn btn-sm" id="p-volver">‹ Volver a proyectos</button>
+      <div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin:16px 0 12px">
+        <h2 style="margin:0; font-size:20px; font-weight:800">${n}</h2>
+        <span class="micro">${p ? p.emp+' · Cliente: '+p.cli : ''}</span>
+      </div>`;
+    if (!p || !p.h){
+      html += `<div class="card"><div class="card-body"><p class="desc">Sin actividad registrada en septiembre. Cuando el proyecto reciba imputaciones, aquí verás sus horas, personas y departamentos.</p></div></div>`;
+    } else {
+      const maxD = Math.max(...p.deps.map(d=>d[1]));
+      html += `
+      <div class="kpis">
+        <div class="kpi"><p class="v">${afmt(p.h)} <small>h</small></p><p class="l">Horas · septiembre</p><p class="state"><span class="dot full"></span>${Math.round(p.h/MSEP.imp*100)}% del mes del grupo</p></div>
+        <div class="kpi"><p class="v">${afmt(p.acum)} <small>h</small></p><p class="l">Acumulado 2026</p><p class="state"><span class="dot full"></span>desde enero</p></div>
+        <div class="kpi"><p class="v">${p.pers.length}${p.extra ? ' <small>+5</small>' : ''}</p><p class="l">Personas este mes</p><p class="state"><span class="dot full"></span>${p.deps.length} departamento${p.deps.length>1?'s':''}</p></div>
+        <div class="kpi"><p class="v">${p.ref}</p><p class="l">Refacturable · septiembre</p><p class="state"><span class="dot ${p.ref==="0,00 €"||p.ref==="—"?'off':'full'}"></span>${p.ref==="0,00 €"||p.ref==="—" ? 'sin refacturación' : 'con tarifas vigentes'}</p></div>
+      </div>
+      <div class="split" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); margin-bottom:16px">
+        <div class="card">
+          <div class="card-head"><h2>Horas por categoría</h2><span class="micro">Septiembre</span></div>
+          <div class="card-body">
+            <div class="queso-wrap">
+              <div class="donut" style="background:${quesoGrad(p.cats, p.h)}" role="img" aria-label="Horas por categoría"></div>
+              <ul class="leg">${p.cats.map(c=>`<li><span class="sw" style="background:${CATC[c[0]]||'var(--ink-disabled)'}"></span>${c[0]}<span class="mono">${afmt(c[1])} h · ${Math.round(c[1]/p.h*100)}%</span></li>`).join('')}</ul>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Departamentos</h2><span class="micro">Septiembre</span></div>
+          <div class="card-body">
+            ${p.deps.map(d=>`<div class="hbar"><span class="n">${d[0]}</span><span class="track"><i style="width:${Math.round(d[1]/maxD*100)}%"></i></span><span class="mono">${afmt(d[1])} h</span></div>`).join('')}
+            <p class="foot">${p.nota}</p>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Personas en el proyecto</h2><span class="micro">Septiembre</span></div>
+        <div class="card-body" style="padding:0 6px 8px">
+          <table>
+            <thead><tr><th>Nombre</th><th>Departamento</th><th>Categoría</th><th class="r">Horas</th><th class="r">% del proyecto</th></tr></thead>
+            <tbody>
+              ${p.pers.map(x=>`<tr><td style="font-weight:800">${x[0]}</td><td>${x[1]}</td><td><span class="cat-dot" style="background:${CATC[x[2]]||'var(--ink-disabled)'}"></span>${x[2]}</td><td class="r mono">${afmt(x[3])}</td><td class="r mono">${Math.round(x[3]/p.h*100)}%</td></tr>`).join('')}
+            </tbody>
+          </table>
+          ${p.extra ? '<p class="foot" style="padding:0 12px 10px">'+p.extra+' con menos de 15 h cada una.</p>' : ''}
+        </div>
+      </div>`;
+    }
+    det.innerHTML = html;
+    det.style.display = 'block';
+    AID('proy-lista').style.display = 'none';
+    AID('p-volver').addEventListener('click', ()=>{
+      det.style.display = 'none';
+      AID('proy-lista').style.display = 'block';
+    });
+  }
+  document.querySelectorAll('#proyectos [data-p]').forEach(b=>b.addEventListener('click', ()=>verProyecto(b.dataset.p)));
+
+  const setTheme = t => document.documentElement.dataset.theme = t;
+  setTheme(matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.getElementById('theme').addEventListener('click', () =>
+    setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+</script>
+
+</body>
+</html>
