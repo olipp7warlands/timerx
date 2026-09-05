@@ -51,6 +51,11 @@ export function rangoDias(inicio: string, fin: string): string {
   return `${di.toLocaleDateString('es-ES', opts)} – ${df.toLocaleDateString('es-ES', opts)}`;
 }
 
+/** Total de horas de un día excluyendo rechazadas (mismo criterio que balance_mes()). */
+export function sumaHoras(lineas: { horas: number; estado: string }[]): number {
+  return lineas.filter((l) => l.estado !== 'rechazada').reduce((s, l) => s + l.horas, 0);
+}
+
 export type EstadoDia = 'completo' | 'incompleto' | 'futuro' | 'no-laborable';
 
 /** Réplica de dotDe(): estado visual del punto del calendario. */

@@ -1,5 +1,5 @@
 import { CatDot } from './CatDot';
-import { fmt, nombreDia } from '@/lib/horas/calendario';
+import { fmt, nombreDia, sumaHoras } from '@/lib/horas/calendario';
 import type { ImputacionLinea } from '@/hooks/useImputacionesMes';
 
 interface FilaDiaProps {
@@ -11,7 +11,7 @@ interface FilaDiaProps {
 
 /** fecha+total | líneas | slot de acción — mismo módulo que "Últimos días imputados" (Inicio) y "Anteriores imputaciones" (Imputar) en ambos mocks. */
 export function FilaDia({ fecha, dow, lineas, accion }: FilaDiaProps) {
-  const total = lineas.reduce((s, l) => s + l.horas, 0);
+  const total = sumaHoras(lineas);
   const dia = Number(fecha.slice(-2));
 
   return (
