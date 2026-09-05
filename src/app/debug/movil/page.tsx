@@ -1,15 +1,17 @@
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getPerfilServer } from '@/lib/supabase/perfil';
 import { EmpleadoApp } from '@/components/empleado/EmpleadoApp';
 
 /**
- * Solo para verificación visual del Paso 2 en este entorno, donde la pantalla
- * del navegador automatizado está fija a 1536px y no se puede emular un
- * viewport móvil real. Fuerza el ancho a 390px vía CSS -- el componente
- * renderizado es el mismo EmpleadoApp real (mismos hooks, mismos datos), no
- * una versión de prueba distinta. Borrar cuando ya no haga falta.
+ * Solo para verificación visual en este entorno, donde la pantalla del
+ * navegador automatizado está fija a 1536px y no se puede emular un viewport
+ * móvil real. Fuerza el ancho a 390px vía CSS -- el componente renderizado es
+ * el mismo EmpleadoApp real (mismos hooks, mismos datos), no una versión de
+ * prueba distinta. Nunca accesible en producción (ver PLAN.md F6).
  */
 export default async function DebugMovilPage() {
+  if (process.env.NODE_ENV === 'production') notFound();
+
   const perfil = await getPerfilServer();
   if (!perfil) redirect('/login');
 

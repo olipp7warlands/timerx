@@ -1,11 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getPerfilServer } from '@/lib/supabase/perfil';
 import { ImputacionTester } from './ImputacionTester';
 
 export default async function DebugPage() {
+  // Página de verificación interna: nunca accesible en producción (ver PLAN.md F6).
+  if (process.env.NODE_ENV === 'production') notFound();
+
   const perfil = await getPerfilServer();
   if (!perfil) redirect('/login');
 
