@@ -5,7 +5,7 @@ import { BottomSheet } from '../compartido/BottomSheet';
 import { CatDot } from '../compartido/CatDot';
 import { Stepper } from '../compartido/Stepper';
 import { CalendarGrid } from '../compartido/CalendarGrid';
-import { fmt, rangoDias } from '@/lib/horas/calendario';
+import { SelectorRangoFechas, type RangoFechas } from '../compartido/SelectorRangoFechas';
 import type { EmpleadoCtx } from '../types';
 
 export type Paso = 'tipo' | 'proyecto' | 'tarea' | 'horas' | 'austipo' | 'ausdias';
@@ -78,7 +78,7 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
   const [state, dispatch] = useReducer(reducer, { pila: [], actual: 'tipo', sel: {}, horas: 1 });
   const [multiDias, setMultiDias] = useState<Set<string>>(new Set());
   const [mostrarCalMulti, setMostrarCalMulti] = useState(false);
-  const [rangoAus, setRangoAus] = useState<{ inicio: string | null; fin: string | null }>({ inicio: null, fin: null });
+  const [rangoAus, setRangoAus] = useState<RangoFechas>({ inicio: null, fin: null });
 
   useEffect(() => {
     if (abierto) {
@@ -98,14 +98,6 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
       if (copia.has(fecha) && copia.size > 1) copia.delete(fecha);
       else copia.add(fecha);
       return copia;
-    });
-  }
-
-  function toqueRango(fecha: string) {
-    setRangoAus((r) => {
-      if (!r.inicio || (r.inicio && r.fin)) return { inicio: fecha, fin: null };
-      if (fecha < r.inicio) return { inicio: fecha, fin: r.inicio };
-      return { ...r, fin: fecha };
     });
   }
 
@@ -256,14 +248,7 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
 
       {state.actual === 'ausdias' && (
         <div className="space-y-4">
-          <p className="text-xs text-ink-tertiary">
-            Primer toque = inicio, segundo toque = fin. Seleccionado: {rangoAus.inicio ? rangoDias(rangoAus.inicio, rangoAus.fin ?? rangoAus.inicio) : 'ninguno'}.
-          </p>
-          <CalendarGrid dias={ctx.dias} estadoDia={() => 'no-laborable'} claseExtra={(d) => {
-            if (!rangoAus.inicio) return '';
-            const fin = rangoAus.fin ?? rangoAus.inicio;
-            return d.fecha >= rangoAus.inicio && d.fecha <= fin ? 'bg-accent text-on-accent border-accent' : '';
-          }} onClickDia={toqueRango} />
+          <SelectorRangoFechas dias={ctx.dias} rango={rangoAus} onChange={setRangoAus} />
           <p className="micro">La solicitud queda pendiente de aprobación.</p>
           <button type="button" className="btn btn-primary w-full justify-center" onClick={solicitarAusencia} disabled={!rangoAus.inicio}>
             Solicitar ausencia
