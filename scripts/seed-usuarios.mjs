@@ -62,7 +62,12 @@ const USUARIOS = [
   { id: '10000000-0000-0000-0000-000000000007', email: 'oliver.perez+cosme@sirtana.net', nombre: 'Cosme Hernandez', rol: 'empleado', empresa_id: EMPRESA.wowinx },
   { id: '10000000-0000-0000-0000-000000000008', email: 'oliver.perez+daniel@sirtana.net', nombre: 'Daniel Ramírez', rol: 'empleado', empresa_id: EMPRESA.wowinx },
   { id: '10000000-0000-0000-0000-000000000009', email: 'oliver.perez+marta@sirtana.net', nombre: 'Marta Gil', rol: 'empleado', empresa_id: EMPRESA.legal_norte },
-  { id: '10000000-0000-0000-0000-000000000010', email: 'oliver.perez+enrique@sirtana.net', nombre: 'Enrique Robles', rol: 'admin_empresa', empresa_id: EMPRESA.malaga_cf },
+  // Enrique Robles es un EMPLEADO de Málaga CF SAD (el mock lo usa como moroso:
+  // vacaciones rechazadas, filas de faltantes). PLAN.md sección 6 pide "Enrique
+  // Robles + 1 admin_empresa Málaga" -- son DOS personas distintas, no la misma.
+  { id: '10000000-0000-0000-0000-000000000010', email: 'oliver.perez+enrique@sirtana.net', nombre: 'Enrique Robles', rol: 'empleado', empresa_id: EMPRESA.malaga_cf },
+  // El admin_empresa de Málaga que pedía PLAN.md, sin nombre propio en el plan original.
+  { id: '10000000-0000-0000-0000-000000000011', email: 'oliver.perez+marina@sirtana.net', nombre: 'Marina Ortega', rol: 'admin_empresa', empresa_id: EMPRESA.malaga_cf },
 ];
 
 for (const u of USUARIOS) {
