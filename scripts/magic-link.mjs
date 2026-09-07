@@ -20,10 +20,11 @@ const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process
 });
 
 const email = process.argv[2];
+const redirectTo = process.argv[3] || 'http://localhost:3002';
 const { data, error } = await supabaseAdmin.auth.admin.generateLink({
   type: 'magiclink',
   email,
-  options: { redirectTo: 'http://localhost:3002' },
+  options: { redirectTo },
 });
 if (error) {
   console.error(error.message);

@@ -93,6 +93,20 @@ Replicar `panel_administracion.html`:
 - **Layout móvil (`admin_movil.html`)**: sin tabbar — **drawer lateral** (hamburguesa en cabecera) con las 11 secciones agrupadas (General/Personas/Estructura/Operación/Sistema), activo con franja de 3 px. Home = bloque del día (KPIs 2×2 + pendientes con Recordar + ausentes) seguido del **Resumen del mes completo** (navegador ‹›, KPIs, barras por empresa, queso de proyectos en grises, refacturación con total). Ausencias funcional (aprobar/rechazar). Las secciones de gestión (Usuarios, Empresas, Proyectos, Categorías, Calendario, Control, Tarifas, Refacturaciones, Ajustes) muestran pantalla de remisión al escritorio: en móvil el admin vigila y aprueba, no configura.
 - **Hecho cuando**: cada card de ambos mocks muestra datos reales y las acciones (aprobar ausencia, crear tarifa, festivo) persisten.
 
+### F3.5 · Despliegue de demo (Railway) — hecho antes de F4
+
+Objetivo: app accesible desde un móvil real y enseñable, contra el Supabase real (Timerx), sin tocar el dataset de seed.
+
+**URL pública**: `https://timerx-production.up.railway.app`
+
+- **Proyecto Railway**: ya existía un proyecto `timerx` (servicio `timerx`, entorno `production`) conectado a `olipp7warlands/timerx` rama `main` con autodeploy — no se creó nada nuevo, solo se enlazó el repo local (`railway link`) y se completó lo que faltaba: variables, dominio, cabeceras. Build con Railpack (autodetecta Node/Next.js vía `railpackInfo` — sin Dockerfile ni `railway.toml`; no hizo falta tocar puerto/host, Next.js escucha en `$PORT` automáticamente bajo Railpack).
+- **Variables** (`railway variable set`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. Ninguna es "solo servidor" a nivel Railway — esa distinción la hace Next.js en build: solo `NEXT_PUBLIC_*` se inlinea en los chunks de cliente. Verificado con `grep` del valor literal de `SUPABASE_SERVICE_ROLE_KEY` sobre `.next/static` tras un build local con las mismas variables → **cero coincidencias en todo `.next`, ni siquiera en chunks de servidor** (Next.js lee `process.env` en runtime, nunca inlinea vars sin el prefijo). Como control de que el método de búsqueda era válido, el mismo `grep` con el valor de `NEXT_PUBLIC_SUPABASE_ANON_KEY` sí aparece en un chunk de cliente, como corresponde.
+- **Dominio**: generado con `railway domain` (no existía ninguno todavía). Tras fijar las variables `NEXT_PUBLIC_*` hizo falta un **redeploy** (`railway redeploy`) porque esas variables se compilan en build time, no en runtime — el deployment ya "SUCCESS" en el repo no las tenía.
+- **Supabase Auth**: `site_url` cambiado a la URL de Railway (antes `http://localhost:3000`) y `additional_redirect_urls` con los puertos locales (`3000`, `3002`, `127.0.0.1:3000`) para que el desarrollo local siga funcionando con `redirectTo` explícito. Aplicado vía `supabase config pull` + `supabase config push`, con un `supabase/config.toml` **deliberadamente mínimo** (solo declara `project_id` y `[auth].site_url`/`additional_redirect_urls`): un primer `config pull` completo trajo toda la configuración remota (storage, realtime, pooler, mfa, sms...) y el diff previo a pushear reveló que habría **desactivado Twilio SMS** (activo en remoto) como efecto colateral de plantillas por defecto de `supabase init` — se recortó el archivo a solo lo que esta tarea necesita gestionar, así ningún push futuro puede tocar configuración ajena sin declararla explícitamente primero.
+- **Cabecera `X-Powered-By: Next.js`**: detectada al auditar cabeceras del despliegue real, eliminada con `poweredByHeader: false` en `next.config.ts`. Resto de cabeceras revisadas en `/`, `/admin`, `/login` — nada más que exponer.
+- **Verificaciones contra el despliegue real** (no local): `/debug`, `/debug/movil`, `/debug/movil-admin` → 404 (`curl` directo al dominio público); magic link de Andrés generado con `redirectTo` al dominio de Railway, sesión establecida y home real cargando datos reales; intento de imputar en un día ya al tope (12 h) rechazado por el trigger sin insertar fila — confirmado por SQL antes/después, dataset de seed intacto; `/admin` gated en el dominio real para Andrés (→ `/`) y Cristian (panel completo).
+- **No se tocaron datos**: ninguna de las pruebas anteriores dejó una imputación, ausencia ni fila nueva en el seed — es el escenario que se enseña.
+
 ### F4 · Cierre y exports (1 día)
 - `cerrar_periodo()` con precondiciones (sin faltantes, sin horas sin tarifa) y UI de bloqueo con motivos.
 - Exports `exceljs`: FTE mensual (formato exacto del Excel del cliente) y refacturación. Endpoints server-side.
@@ -102,8 +116,9 @@ Replicar `panel_administracion.html`:
 
 ### F6 · Recordatorios y pulido (1 día)
 - Cron Railway diario: `faltantes(hoy-5, hoy)` → email Resend si `ajuste.recordatorio_email`.
-- QA móvil real, estados vacíos, accesibilidad (focus visible, aria de las hojas), deploy Railway + dominio.
-- **Verificación de despliegue**: `/debug`, `/debug/movil` y `/debug/movil-admin` (páginas de verificación interna, F2 en adelante) devuelven 404 en el build de producción (`NODE_ENV=production`) — confirmarlo explícitamente contra el despliegue de Railway antes de dar F6 por cerrada, no solo en local.
+- QA móvil real, estados vacíos, accesibilidad (focus visible, aria de las hojas).
+- Despliegue base (Railway + dominio + variables) ya hecho en **F3.5**, contra el Supabase de demo — revisar antes de dar F6 por cerrada si el destino final de producción es el mismo proyecto Supabase/Railway o uno nuevo (credenciales, dominio propio, `additional_redirect_urls` de producción real en vez de las de demo/local).
+- **Verificación de despliegue**: `/debug`, `/debug/movil` y `/debug/movil-admin` devuelven 404 en el build de producción — ya confirmado en F3.5 contra el propio despliegue de Railway; repetir si cambia el servicio o el dominio de destino.
 
 ## 6. Seed de desarrollo
 

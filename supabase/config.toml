@@ -1,0 +1,17 @@
+# For detailed configuration reference documentation, visit:
+# https://supabase.com/docs/guides/local-development/cli/config
+#
+# Deliberately minimal: this file only declares the two auth settings the F3.5
+# Railway demo deploy needs to manage (site_url, additional_redirect_urls).
+# Every other section (storage, realtime, pooler, mfa, rate limits, sms...)
+# is left undeclared on purpose so `supabase config push` can never touch
+# settings this project didn't ask it to manage -- a full `config pull` here
+# surfaced several fields that silently differed from sane project defaults
+# (e.g. sms.twilio.enabled=true remotely), and pushing that back would have
+# changed them by accident.
+project_id = "TimerX"
+
+[auth]
+enabled = true
+site_url = "https://timerx-production.up.railway.app"
+additional_redirect_urls = ["http://localhost:3000", "http://localhost:3002", "http://127.0.0.1:3000"]
