@@ -44,6 +44,11 @@ Copiar los tokens tal cual a `globals.css` / config de Tailwind:
 - **Delegación de eventos**: toda la interacción de listas re-renderizables pasa por atributos `data-act` y un manejador delegado (en React: handlers en el contenedor o por render declarativo, jamás bindings imperativos que se pierdan al repintar). Este patrón resolvió el bug de "Confirmar" del prototipo y es norma.
 - **Estado de formularios sobrevive al re-render**: los selects/steppers del composer del precargado conservan su valor cuando el bloque se repinta (en React sale gratis con estado controlado; no usar `defaultValue` no controlado en estos casos).
 - Quesos = `conic-gradient`; barras = divs; sin librería de gráficos. Cifras siempre en IBM Plex Mono con `tabular-nums` y formato es-ES (coma decimal).
+- **Todo cambio en policies o funciones `security definer` re-ejecuta las verificaciones de alcance de los roles NO afectados por el cambio** (mínimo: un empleado normal, un admin_empresa, admin_grupo), con salida SQL. Un fix de RLS sin retest de regresión no cierra checkpoint.
+
+### 3.2 Divergencias deliberadas del mock (decisiones cerradas, no deuda)
+- **Selector de rango de fechas en ausencias**: dos toques explícitos (primero = inicio, segundo = fin, tercero reinicia), nunca colapsar una selección multi-día suelta a min→max. El mock no distingue el gesto; se fija esta interacción como norma para evitar ambigüedad sobre qué días quedan seleccionados.
+- **Campo "Cliente" en alta de proyecto** (`panel_administracion.html`, sección Proyectos): se omite. La tabla `proyecto` no tiene esa columna y no se añade — el "cliente" de un proyecto en este modelo YA es su empresa del grupo (`proyecto.empresa_id`, la destinataria de horas y de refacturación); un campo de texto libre duplicaría ese dato y podría contradecirlo. Si en el futuro hace falta un cliente externo al grupo, es un modelo de datos distinto (tabla `cliente`), no un texto suelto.
 
 ## 4. Reglas de negocio (resumen ejecutable)
 
