@@ -229,6 +229,7 @@ export type Database = {
         Row: {
           aprobado_en: string | null
           aprobado_por: string | null
+          creada_por: string | null
           created_at: string
           descripcion: string | null
           empleado_id: string
@@ -244,6 +245,7 @@ export type Database = {
         Insert: {
           aprobado_en?: string | null
           aprobado_por?: string | null
+          creada_por?: string | null
           created_at?: string
           descripcion?: string | null
           empleado_id: string
@@ -259,6 +261,7 @@ export type Database = {
         Update: {
           aprobado_en?: string | null
           aprobado_por?: string | null
+          creada_por?: string | null
           created_at?: string
           descripcion?: string | null
           empleado_id?: string
@@ -275,6 +278,13 @@ export type Database = {
           {
             foreignKeyName: "imputacion_aprobado_por_fkey"
             columns: ["aprobado_por"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "imputacion_creada_por_fkey"
+            columns: ["creada_por"]
             isOneToOne: false
             referencedRelation: "perfil"
             referencedColumns: ["id"]
@@ -747,6 +757,7 @@ export type Database = {
       }
     }
     Functions: {
+      admin_puede_ver_empresa: { Args: { p_empresa: string }; Returns: boolean }
       aprobar_ausencia: { Args: { p_id: string }; Returns: undefined }
       aprobar_imputaciones: { Args: { p_ids: string[] }; Returns: number }
       auth_empresa: { Args: never; Returns: string }
@@ -768,6 +779,10 @@ export type Database = {
       cerrar_periodo: {
         Args: { p_anio: number; p_empresa: string; p_mes: number }
         Returns: undefined
+      }
+      empleado_trabaja_en_empresa: {
+        Args: { p_empleado: string; p_empresa: string }
+        Returns: boolean
       }
       empresa_de_proyecto: { Args: { p_proyecto: string }; Returns: string }
       enviar_imputaciones: { Args: { p_ids: string[] }; Returns: number }
@@ -817,6 +832,17 @@ export type Database = {
         Args: { p_anio: number; p_empresa: string; p_mes: number }
         Returns: number
       }
+      imputar_directo: {
+        Args: {
+          p_descripcion?: string
+          p_empleado: string
+          p_fecha: string
+          p_horas: number
+          p_proyecto: string
+          p_subcategoria: string
+        }
+        Returns: string
+      }
       jornada_horas: { Args: never; Returns: number }
       periodo_cerrado: {
         Args: { p_empresa: string; p_fecha: string }
@@ -843,6 +869,8 @@ export type Database = {
         }
         Returns: number
       }
+      resumen_dia: { Args: { p_fecha: string }; Returns: Json }
+      resumen_mes: { Args: { p_anio: number; p_mes: number }; Returns: Json }
       solicitar_ausencia: {
         Args: {
           p_comentario?: string
