@@ -115,9 +115,15 @@ export function TarifasEscritorio({ info }: { info: AdminInfo }) {
               {tarifas.map((t) => (
                 <tr key={t.id} className="hover:bg-subtle">
                   <td className="border-b border-border px-2.5 py-2.5">
-                    {t.empleadoNombre ? (
+                    {t.empleadoId ? (
                       <>
-                        <span className="font-extrabold">{t.empleadoNombre}</span>
+                        {t.empleadoNombre ? (
+                          <span className="font-extrabold">{t.empleadoNombre}</span>
+                        ) : (
+                          <span className="font-extrabold text-ink-tertiary" title="Tarifa personal fuera de tu ámbito">
+                            Empleado de otra empresa
+                          </span>
+                        )}
                         <span className="block text-[11px] text-ink-tertiary">prioridad sobre su categoría</span>
                       </>
                     ) : (
