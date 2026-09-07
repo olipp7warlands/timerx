@@ -1,14 +1,17 @@
+import { redirect } from 'next/navigation';
 import { getPerfilServer } from '@/lib/supabase/perfil';
+import { AdminApp } from '@/components/admin/AdminApp';
 
 export default async function AdminPage() {
   const perfil = await getPerfilServer();
+  if (!perfil || !['admin_grupo', 'admin_empresa'].includes(perfil.rol)) redirect('/');
 
   return (
-    <div className="p-8">
-      <h1 className="text-lg font-extrabold">Panel de administración</h1>
-      <p className="text-sm text-ink-tertiary">
-        Sesión: {perfil?.nombre} ({perfil?.rol})
-      </p>
-    </div>
+    <AdminApp
+      rol={perfil.rol as 'admin_grupo' | 'admin_empresa'}
+      empresaId={perfil.empresa_id}
+      empresaNombre={perfil.empresa?.nombre ?? ''}
+      nombre={perfil.nombre}
+    />
   );
 }

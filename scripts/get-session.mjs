@@ -30,4 +30,4 @@ const { data: sessionData, error: verifyError } = await anon.auth.verifyOtp({
   token_hash: linkData.properties.hashed_token,
 });
 if (verifyError) { console.error(verifyError.message); process.exit(1); }
-console.log(sessionData.session.access_token);
+console.log(JSON.stringify({ access_token: sessionData.session.access_token, refresh_token: sessionData.session.refresh_token }));
