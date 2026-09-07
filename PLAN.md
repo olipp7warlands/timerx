@@ -103,7 +103,7 @@ Replicar `panel_administracion.html`:
 ### F6 · Recordatorios y pulido (1 día)
 - Cron Railway diario: `faltantes(hoy-5, hoy)` → email Resend si `ajuste.recordatorio_email`.
 - QA móvil real, estados vacíos, accesibilidad (focus visible, aria de las hojas), deploy Railway + dominio.
-- **Verificación de despliegue**: `/debug` y `/debug/movil` (páginas de verificación interna, F2 en adelante) devuelven 404 en el build de producción (`NODE_ENV=production`) — confirmarlo explícitamente contra el despliegue de Railway antes de dar F6 por cerrada, no solo en local.
+- **Verificación de despliegue**: `/debug`, `/debug/movil` y `/debug/movil-admin` (páginas de verificación interna, F2 en adelante) devuelven 404 en el build de producción (`NODE_ENV=production`) — confirmarlo explícitamente contra el despliegue de Railway antes de dar F6 por cerrada, no solo en local.
 
 ## 6. Seed de desarrollo
 

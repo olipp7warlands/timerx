@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { GRUPOS_SECCIONES } from '../secciones';
 import type { AdminInfo, SeccionAdmin } from '../types';
 import { InicioEscritorio } from './InicioEscritorio';
 import { UsuariosEscritorio } from './UsuariosEscritorio';
@@ -14,40 +15,6 @@ import { ControlEscritorio } from './ControlEscritorio';
 import { TarifasEscritorio } from './TarifasEscritorio';
 import { RefacturacionEscritorio } from './RefacturacionEscritorio';
 import { AjustesEscritorio } from './AjustesEscritorio';
-
-interface Grupo {
-  etiqueta: string;
-  items: { id: SeccionAdmin; etiqueta: string }[];
-}
-
-const GRUPOS: Grupo[] = [
-  { etiqueta: 'General', items: [{ id: 'inicio', etiqueta: 'Inicio' }] },
-  {
-    etiqueta: 'Personas',
-    items: [
-      { id: 'usuarios', etiqueta: 'Usuarios' },
-      { id: 'ausencias', etiqueta: 'Ausencias' },
-    ],
-  },
-  {
-    etiqueta: 'Estructura',
-    items: [
-      { id: 'empresas', etiqueta: 'Empresas' },
-      { id: 'proyectos', etiqueta: 'Proyectos' },
-      { id: 'categorias', etiqueta: 'Categorías' },
-      { id: 'calendario', etiqueta: 'Calendario' },
-    ],
-  },
-  {
-    etiqueta: 'Operación',
-    items: [
-      { id: 'control', etiqueta: 'Control' },
-      { id: 'tarifas', etiqueta: 'Tarifas' },
-      { id: 'refacturacion', etiqueta: 'Refacturaciones' },
-    ],
-  },
-  { etiqueta: 'Sistema', items: [{ id: 'ajustes', etiqueta: 'Ajustes' }] },
-];
 
 interface Props {
   info: AdminInfo;
@@ -73,7 +40,7 @@ export function ShellEscritorioAdmin({ info, seccion, setSeccion }: Props) {
           </button>
         </div>
 
-        {GRUPOS.map((g) => (
+        {GRUPOS_SECCIONES.map((g) => (
           <div key={g.etiqueta}>
             {!mini && <p className="micro px-2 pb-1 pt-3 first:pt-0">{g.etiqueta}</p>}
             {g.items.map((item) => (
