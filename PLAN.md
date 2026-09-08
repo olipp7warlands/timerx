@@ -119,6 +119,7 @@ Objetivo: app accesible desde un móvil real y enseñable, contra el Supabase re
 - QA móvil real, estados vacíos, accesibilidad (focus visible, aria de las hojas).
 - Despliegue base (Railway + dominio + variables) ya hecho en **F3.5**, contra el Supabase de demo — revisar antes de dar F6 por cerrada si el destino final de producción es el mismo proyecto Supabase/Railway o uno nuevo (credenciales, dominio propio, `additional_redirect_urls` de producción real en vez de las de demo/local).
 - **Verificación de despliegue**: `/debug`, `/debug/movil` y `/debug/movil-admin` devuelven 404 en el build de producción — ya confirmado en F3.5 contra el propio despliegue de Railway; repetir si cambia el servicio o el dominio de destino.
+- **Contraseña compartida (`Horas2026!`) es SOLO para la demo** (`scripts/set-passwords.mjs`) — sirve para poder enseñar la app desde un móvil real sin depender de magic links. En producción real: alta exclusivamente por invitación (`inviteUserByEmail`, sección Usuarios) + contraseña personal que cada usuario define y puede resetear por su cuenta — nunca una credencial compartida entre cuentas. El registro sigue cerrado en ambos flujos de login: `signInWithOtp` usa `shouldCreateUser:false` y `signInWithPassword` nunca crea usuarios (Supabase solo autentica contra cuentas ya existentes) — un email no invitado no puede entrar por ninguna de las dos vías.
 
 ## 6. Seed de desarrollo
 

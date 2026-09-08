@@ -8,7 +8,8 @@ import { LineaImputacion } from '../compartido/LineaImputacion';
 import { ListaConUsar } from '../compartido/ListaConUsar';
 import { BottomSheet } from '../compartido/BottomSheet';
 import { CalendarGrid } from '../compartido/CalendarGrid';
-import { diaAdyacenteLaborable, estadoDia, fmt, nombreDia, sumaHoras } from '@/lib/horas/calendario';
+import { AvisoAusenciaDia } from '../compartido/AvisoAusenciaDia';
+import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, diaAdyacenteLaborable, estadoDia, fmt, nombreDia, sumaHoras } from '@/lib/horas/calendario';
 import { IconCalendario, IconHoy, IconHistorial, IconArchivo } from '@/components/ui/icons';
 import type { PasoInicial } from './NuevaImputacionSheet';
 import type { EmpleadoCtx } from '../types';
@@ -39,6 +40,9 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
 
   const totalStaged = ctx.staged?.lineas.reduce((s, l) => s + l.horas, 0) ?? 0;
 
+  const ausenciaDia = ausenciaEnFecha(ctx.selDay, ctx.ausencias);
+  const bloqueadoPorAusencia = ausenciaDia?.estado === 'aprobada';
+
   return (
     <div className="space-y-4 pt-2">
       <div className="card space-y-3 p-4">
@@ -65,7 +69,9 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
         <ProgressBar horas={totalDia} requeridas={reqDia} />
       </div>
 
-      {ctx.staged && (
+      <AvisoAusenciaDia ausencia={ausenciaDia} />
+
+      {ctx.staged && !bloqueadoPorAusencia && (
         <div className="card space-y-3 border-dashed p-4">
           <div className="flex items-center justify-between">
             <b className="text-sm">Precargado del {Number(ctx.staged.origen.slice(-2))}</b>
@@ -114,6 +120,10 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
               />
             ))}
           </div>
+        ) : bloqueadoPorAusencia ? (
+          <div className="card flex flex-col items-center gap-3 p-6 text-center">
+            <p className="text-sm font-extrabold text-ink-secondary">No puedes añadir horas: tienes una ausencia aprobada este día.</p>
+          </div>
         ) : (
           <div className="card flex flex-col items-center gap-3 p-6 text-center">
             <p className="text-sm text-ink-tertiary">No has imputado nada.</p>
@@ -148,7 +158,13 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
         <CalendarGrid
           dias={ctx.dias}
           estadoDia={(d) => estadoDia(d.fecha, d.laborable, sumaHoras(ctx.porDia[d.fecha] ?? []), jornada, ctx.fechaHoy)}
-          claseExtra={(d) => (d.fecha === ctx.selDay ? 'bg-accent text-on-accent border-accent' : '')}
+          claseExtra={(d) =>
+            ausenciaEnFecha(d.fecha, ctx.ausencias)
+              ? CLASE_AUSENCIA_DIA
+              : d.fecha === ctx.selDay
+                ? 'bg-accent text-on-accent border-accent'
+                : ''
+          }
           onClickDia={(fecha) => {
             ctx.setSelDay(fecha);
             setPickerAbierto(false);

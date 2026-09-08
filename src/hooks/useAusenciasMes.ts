@@ -23,12 +23,20 @@ export function useAusenciasMes(anio: number, mes: number) {
   const recargar = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     const desde = `${anio}-${String(mes).padStart(2, '0')}-01`;
     const hasta = new Date(anio, mes, 0).toISOString().slice(0, 10);
 
     const { data } = await supabase
       .from('ausencia')
       .select('id, tipo, fecha_inicio, fecha_fin, estado, comentario')
+      .eq('perfil_id', user.id)
       .lte('fecha_inicio', hasta)
       .gte('fecha_fin', desde)
       .order('fecha_inicio', { ascending: false });

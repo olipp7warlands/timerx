@@ -9,7 +9,7 @@ import { useProyectosAsignados } from '@/hooks/useProyectosAsignados';
 import { useCategoriasTareas } from '@/hooks/useCategoriasTareas';
 import { useBalanceMes } from '@/hooks/useBalanceMes';
 import { useMaxHorasDia } from '@/hooks/useMaxHorasDia';
-import { fmt } from '@/lib/horas/calendario';
+import { ausenciaEnFecha, fmt } from '@/lib/horas/calendario';
 import { ToastProvider, useToast } from './compartido/Toast';
 import { ShellMovil } from './movil/ShellMovil';
 import { ShellEscritorio } from './escritorio/ShellEscritorio';
@@ -40,7 +40,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
   const { dias, loading: diasLoading } = useDiasMes(anio, mes, empresaId);
   const { porDia, insertar, insertarLote, ajustarHoras, eliminar } = useImputacionesMes(anio, mes);
   const { ausencias, solicitar } = useAusenciasMes(anio, mes);
-  const { proyectos } = useProyectosAsignados();
+  const { paraFechas: proyectosParaFechas } = useProyectosAsignados();
   const { grupos } = useCategoriasTareas();
   const { balance } = useBalanceMes(anio, mes);
   const { maxHorasDia } = useMaxHorasDia();
@@ -63,6 +63,20 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
 
   async function confirmarStaged() {
     if (!staged || staged.lineas.length === 0) return;
+
+    const ausenciaDia = ausenciaEnFecha(selDay, ausencias);
+    if (ausenciaDia?.estado === 'aprobada') {
+      toast('No puedes imputar: tienes una ausencia aprobada este día.', 'error');
+      return;
+    }
+
+    const disponibles = proyectosParaFechas([selDay]);
+    const invalidas = staged.lineas.filter((l) => !disponibles.some((p) => p.id === l.proyectoId));
+    if (invalidas.length > 0) {
+      toast(`Ya no estás asignado a: ${invalidas.map((l) => l.proyectoNombre).join(', ')}`, 'error');
+      return;
+    }
+
     const lineas: NuevaLinea[] = staged.lineas.map((l) => ({
       proyectoId: l.proyectoId,
       subcategoriaId: l.subcategoriaId,
@@ -92,6 +106,15 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
   }
 
   async function usarLinea(linea: ImputacionLinea, destino: string) {
+    const ausenciaDia = ausenciaEnFecha(destino, ausencias);
+    if (ausenciaDia?.estado === 'aprobada') {
+      toast('No puedes imputar: tienes una ausencia aprobada este día.', 'error');
+      return;
+    }
+    if (!proyectosParaFechas([destino]).some((p) => p.id === linea.proyectoId)) {
+      toast(`Ya no estás asignado a ${linea.proyectoNombre}`, 'error');
+      return;
+    }
     const { error } = await insertar({
       proyectoId: linea.proyectoId,
       subcategoriaId: linea.subcategoriaId,
@@ -165,7 +188,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
     diasLoading,
     porDia,
     ausencias,
-    proyectos,
+    proyectosParaFechas,
     grupos,
     balance,
     maxHorasDia,

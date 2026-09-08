@@ -42,7 +42,7 @@ export interface EmpleadoCtx {
   diasLoading: boolean;
   porDia: Record<string, ImputacionLinea[]>;
   ausencias: Ausencia[];
-  proyectos: ProyectoAsignado[];
+  proyectosParaFechas: (fechas: string[]) => ProyectoAsignado[];
   grupos: GrupoTareas[];
   balance: BalanceMes | null;
   maxHorasDia: number | null;

@@ -3,22 +3,9 @@
 import { useState } from 'react';
 import { CalendarGrid } from '../compartido/CalendarGrid';
 import { ModalAusencia } from './ModalAusencia';
-import { estadoDia, sumaHoras, rangoDias } from '@/lib/horas/calendario';
+import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, ETIQUETA_ESTADO_AUSENCIA, ETIQUETA_TIPO_AUSENCIA, estadoDia, sumaHoras, rangoDias } from '@/lib/horas/calendario';
 import { IconAvion } from '@/components/ui/icons';
 import type { EmpleadoCtx } from '../types';
-
-const ETIQUETA_ESTADO: Record<string, string> = {
-  pendiente: 'Pendiente',
-  aprobada: 'Aprobada',
-  rechazada: 'Rechazada',
-  cancelada: 'Cancelada',
-};
-
-const ETIQUETA_TIPO: Record<string, string> = {
-  vacaciones: 'Vacaciones',
-  baja_medica: 'Baja médica',
-  otro_permiso: 'Otro permiso',
-};
 
 export function CalendarioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
   const [ausenciaAbierta, setAusenciaAbierta] = useState(false);
@@ -30,6 +17,7 @@ export function CalendarioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
         <CalendarGrid
           dias={ctx.dias}
           estadoDia={(d) => estadoDia(d.fecha, d.laborable, sumaHoras(ctx.porDia[d.fecha] ?? []), jornada, ctx.fechaHoy)}
+          claseExtra={(d) => (ausenciaEnFecha(d.fecha, ctx.ausencias) ? CLASE_AUSENCIA_DIA : '')}
           onClickDia={(fecha) => {
             ctx.setSelDay(fecha);
             ctx.setTab('imputar');
@@ -64,10 +52,10 @@ export function CalendarioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
           {ctx.ausencias.map((a) => (
             <div key={a.id} className="flex items-center justify-between py-3 text-sm">
               <span>
-                <b>{ETIQUETA_TIPO[a.tipo] ?? a.tipo}</b>
+                <b>{ETIQUETA_TIPO_AUSENCIA[a.tipo] ?? a.tipo}</b>
                 <span className="micro block">{rangoDias(a.fechaInicio, a.fechaFin)}</span>
               </span>
-              <span className="micro">{ETIQUETA_ESTADO[a.estado] ?? a.estado}</span>
+              <span className="micro">{ETIQUETA_ESTADO_AUSENCIA[a.estado] ?? a.estado}</span>
             </div>
           ))}
         </div>

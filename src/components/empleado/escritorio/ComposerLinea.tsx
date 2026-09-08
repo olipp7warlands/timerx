@@ -28,7 +28,7 @@ export function ComposerLinea({ proyectos, grupos, maxHorasDia, etiquetaBoton = 
   const [horas, setHoras] = useState(1);
 
   useEffect(() => {
-    if (!proyectoId && proyectos[0]) setProyectoId(proyectos[0].id);
+    if (!proyectos.some((p) => p.id === proyectoId)) setProyectoId(proyectos[0]?.id ?? '');
   }, [proyectos, proyectoId]);
 
   useEffect(() => {

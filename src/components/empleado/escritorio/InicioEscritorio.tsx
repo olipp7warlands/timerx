@@ -5,7 +5,7 @@ import { ProgressBar } from '../compartido/ProgressBar';
 import { FilaDia } from '../compartido/FilaDia';
 import { CalendarGrid } from '../compartido/CalendarGrid';
 import { ModalHistorico } from './ModalHistorico';
-import { fmt, estadoDia, sumaHoras, formatoMesAnio } from '@/lib/horas/calendario';
+import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, fmt, estadoDia, sumaHoras, formatoMesAnio } from '@/lib/horas/calendario';
 import { IconHistorial, IconCalendario } from '@/components/ui/icons';
 import type { EmpleadoCtx } from '../types';
 
@@ -95,6 +95,7 @@ export function InicioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
         <CalendarGrid
           dias={ctx.dias}
           estadoDia={(d) => estadoDia(d.fecha, d.laborable, sumaHoras(ctx.porDia[d.fecha] ?? []), jornada, ctx.fechaHoy)}
+          claseExtra={(d) => (ausenciaEnFecha(d.fecha, ctx.ausencias) ? CLASE_AUSENCIA_DIA : '')}
           onClickDia={(fecha) => {
             ctx.setSelDay(fecha);
             ctx.setTab('imputar');

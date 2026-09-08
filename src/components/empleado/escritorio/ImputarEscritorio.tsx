@@ -9,7 +9,8 @@ import { CalendarGrid } from '../compartido/CalendarGrid';
 import { ComposerLinea } from './ComposerLinea';
 import { PrecargadoEscritorio } from './PrecargadoEscritorio';
 import { ModalHistorico } from './ModalHistorico';
-import { diaAdyacenteLaborable, estadoDia, fmt, formatoMesAnio, nombreDia, sumaHoras } from '@/lib/horas/calendario';
+import { AvisoAusenciaDia } from '../compartido/AvisoAusenciaDia';
+import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, diaAdyacenteLaborable, estadoDia, fmt, formatoMesAnio, nombreDia, sumaHoras } from '@/lib/horas/calendario';
 import { IconCalendario, IconHistorial, IconHoy } from '@/components/ui/icons';
 import type { EmpleadoCtx } from '../types';
 
@@ -37,6 +38,10 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
     .sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
     .slice(0, 3);
 
+  const ausenciaDia = ausenciaEnFecha(ctx.selDay, ctx.ausencias);
+  const bloqueadoPorAusencia = ausenciaDia?.estado === 'aprobada';
+  const proyectosDia = ctx.proyectosParaFechas([ctx.selDay]);
+
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-6">
       <div className="space-y-4">
@@ -63,7 +68,9 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
           </div>
         </div>
 
-        <PrecargadoEscritorio ctx={ctx} />
+        <AvisoAusenciaDia ausencia={ausenciaDia} />
+
+        {!bloqueadoPorAusencia && <PrecargadoEscritorio ctx={ctx} />}
 
         <div className="card">
           <div className="card-head">
@@ -74,7 +81,9 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
             {lineasHoy.length > 0 && <span className="mono text-sm">{fmt(totalDia)} h</span>}
           </div>
           <div className="card-body space-y-1">
-            {lineasHoy.length === 0 && <p className="py-2 text-sm text-ink-tertiary">No has imputado nada este día — añade la primera línea aquí abajo.</p>}
+            {lineasHoy.length === 0 && !bloqueadoPorAusencia && (
+              <p className="py-2 text-sm text-ink-tertiary">No has imputado nada este día — añade la primera línea aquí abajo.</p>
+            )}
             {lineasHoy.map((l) => {
               const editable = l.estado === 'borrador' || l.estado === 'rechazada';
               return (
@@ -102,7 +111,13 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
                 </div>
               );
             })}
-            <ComposerLinea proyectos={ctx.proyectos} grupos={ctx.grupos} maxHorasDia={ctx.maxHorasDia} onAnadir={(l) => ctx.guardarHoras({ proyectoId: l.proyectoId, subcategoriaId: l.subcategoriaId, horas: l.horas, fecha: ctx.selDay })} />
+            {bloqueadoPorAusencia ? (
+              <p className="py-2 text-sm font-extrabold text-ink-secondary">No puedes añadir horas: tienes una ausencia aprobada este día.</p>
+            ) : proyectosDia.length === 0 ? (
+              <p className="py-2 text-sm text-ink-tertiary">No tienes proyectos asignados para este día. Habla con tu administrador.</p>
+            ) : (
+              <ComposerLinea proyectos={proyectosDia} grupos={ctx.grupos} maxHorasDia={ctx.maxHorasDia} onAnadir={(l) => ctx.guardarHoras({ proyectoId: l.proyectoId, subcategoriaId: l.subcategoriaId, horas: l.horas, fecha: ctx.selDay })} />
+            )}
           </div>
         </div>
 
@@ -145,7 +160,13 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
         <CalendarGrid
           dias={ctx.dias}
           estadoDia={(d) => estadoDia(d.fecha, d.laborable, sumaHoras(ctx.porDia[d.fecha] ?? []), jornada, ctx.fechaHoy)}
-          claseExtra={(d) => (d.fecha === ctx.selDay ? 'bg-accent text-on-accent border-accent' : '')}
+          claseExtra={(d) =>
+            ausenciaEnFecha(d.fecha, ctx.ausencias)
+              ? CLASE_AUSENCIA_DIA
+              : d.fecha === ctx.selDay
+                ? 'bg-accent text-on-accent border-accent'
+                : ''
+          }
           onClickDia={(fecha) => ctx.setSelDay(fecha)}
         />
         <div className="mt-3 flex gap-4 text-xs text-ink-tertiary">

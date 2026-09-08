@@ -9,7 +9,7 @@ import { NuevaImputacionSheet, type PasoInicial } from './NuevaImputacionSheet';
 import { HistorialSheet } from './HistorialSheet';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { IconCasa, IconReloj, IconCalendario, IconMas } from '@/components/ui/icons';
-import { formatoDiaLargo } from '@/lib/horas/calendario';
+import { ausenciaEnFecha, formatoDiaLargo } from '@/lib/horas/calendario';
 
 const TABS: { id: EmpleadoCtx['tab']; etiqueta: string; Icono: typeof IconCasa }[] = [
   { id: 'inicio', etiqueta: 'Inicio', Icono: IconCasa },
@@ -36,6 +36,8 @@ export function ShellMovil(ctx: EmpleadoCtx) {
     }
     abrirHoja('tipo', false);
   }
+
+  const fabBloqueado = ctx.tab === 'imputar' && ausenciaEnFecha(ctx.selDay, ctx.ausencias)?.estado === 'aprobada';
 
   const iniciales = ctx.nombre
     .split(' ')
@@ -69,9 +71,11 @@ export function ShellMovil(ctx: EmpleadoCtx) {
 
       <button
         type="button"
-        onClick={abrirFab}
+        onClick={fabBloqueado ? undefined : abrirFab}
+        disabled={fabBloqueado}
+        title={fabBloqueado ? 'Tienes una ausencia aprobada este día' : undefined}
         aria-label="Nueva imputación"
-        className="fixed right-4 z-[5] flex items-center gap-2 rounded-full bg-accent px-[22px] py-[15px] text-sm font-extrabold text-on-accent shadow-[0_6px_18px_rgba(30,30,28,.22)]"
+        className="fixed right-4 z-[5] flex items-center gap-2 rounded-full bg-accent px-[22px] py-[15px] text-sm font-extrabold text-on-accent shadow-[0_6px_18px_rgba(30,30,28,.22)] disabled:opacity-40"
         style={{ bottom: 'calc(88px + env(safe-area-inset-bottom))' }}
       >
         <IconMas />

@@ -12,6 +12,7 @@ interface Props {
 export function PrecargadoEscritorio({ ctx }: Props) {
   if (!ctx.staged) return null;
   const total = ctx.staged.lineas.reduce((s, l) => s + l.horas, 0);
+  const proyectosDia = ctx.proyectosParaFechas([ctx.selDay]);
 
   return (
     <div className="card space-y-3 border-dashed p-4">
@@ -30,7 +31,11 @@ export function PrecargadoEscritorio({ ctx }: Props) {
           <Stepper value={l.horas} max={ctx.maxHorasDia ?? 12} onChange={(h) => ctx.ajustarLineaStaged(i, h)} />
         </div>
       ))}
-      <ComposerLinea proyectos={ctx.proyectos} grupos={ctx.grupos} maxHorasDia={ctx.maxHorasDia} etiquetaBoton="＋ Añadir al lote" onAnadir={ctx.anadirLineaStaged} />
+      {proyectosDia.length === 0 ? (
+        <p className="text-sm text-ink-tertiary">No tienes proyectos asignados para este día. Habla con tu administrador.</p>
+      ) : (
+        <ComposerLinea proyectos={proyectosDia} grupos={ctx.grupos} maxHorasDia={ctx.maxHorasDia} etiquetaBoton="＋ Añadir al lote" onAnadir={ctx.anadirLineaStaged} />
+      )}
       <div className="flex gap-2 pt-1">
         <button type="button" className="btn flex-1 justify-center" onClick={ctx.descartarStaged}>
           Descartar

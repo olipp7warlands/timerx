@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { ProgressBar } from '../compartido/ProgressBar';
 import { FilaDia } from '../compartido/FilaDia';
 import { CalendarGrid } from '../compartido/CalendarGrid';
-import { fmt, estadoDia, sumaHoras } from '@/lib/horas/calendario';
+import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, fmt, estadoDia, sumaHoras } from '@/lib/horas/calendario';
 import { IconHistorial, IconChevronLeft, IconChevronRight, IconCalendario, IconReloj } from '@/components/ui/icons';
 import type { EmpleadoCtx } from '../types';
 
@@ -122,6 +122,7 @@ export function InicioMovil({ ctx }: Props) {
           <CalendarGrid
             dias={ctx.dias}
             estadoDia={(d) => estadoDia(d.fecha, d.laborable, sumaHoras(ctx.porDia[d.fecha] ?? []), jornada, ctx.fechaHoy)}
+            claseExtra={(d) => (ausenciaEnFecha(d.fecha, ctx.ausencias) ? CLASE_AUSENCIA_DIA : '')}
             onClickDia={(fecha) => {
               ctx.setSelDay(fecha);
               ctx.setTab('imputar');

@@ -27,7 +27,8 @@ function ImputacionTesterInterno({ empresaId }: { empresaId: string }) {
   const { dias, loading: loadingDias } = useDiasMes(anio, mes, empresaId);
   const { porDia, insertar, insertarLote, ajustarHoras, eliminar } = useImputacionesMes(anio, mes);
   const { ausencias, solicitar } = useAusenciasMes(anio, mes);
-  const { proyectos } = useProyectosAsignados();
+  const { paraFechas } = useProyectosAsignados();
+  const proyectos = paraFechas([fechaHoy]);
   const { grupos } = useCategoriasTareas();
   const { maxHorasDia } = useMaxHorasDia();
 

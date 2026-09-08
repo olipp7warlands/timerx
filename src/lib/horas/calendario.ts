@@ -1,3 +1,5 @@
+import type { Ausencia } from '@/hooks/useAusenciasMes';
+
 export interface DiaMes {
   fecha: string; // 'YYYY-MM-DD'
   dow: number; // 0=domingo … 6=sábado
@@ -94,4 +96,29 @@ export function estadoDia(fecha: string, laborable: boolean, horasImputadas: num
   if (horasImputadas >= horasRequeridas) return 'completo';
   if (fecha <= hoyISO) return 'incompleto';
   return 'futuro';
+}
+
+export const ETIQUETA_TIPO_AUSENCIA: Record<string, string> = {
+  vacaciones: 'Vacaciones',
+  baja_medica: 'Baja médica',
+  otro_permiso: 'Otro permiso',
+};
+
+export const ETIQUETA_ESTADO_AUSENCIA: Record<string, string> = {
+  pendiente: 'Pendiente',
+  aprobada: 'Aprobada',
+  rechazada: 'Rechazada',
+  cancelada: 'Cancelada',
+};
+
+/** Réplica de .cal-day.aus del mock: background/color planos, sin sombra de card. */
+export const CLASE_AUSENCIA_DIA = 'bg-subtle text-ink-tertiary shadow-none';
+
+/**
+ * La ausencia (pendiente o aprobada) que cubre esa fecha, si hay alguna.
+ * trg_ausencia_validar (002) impide solapes pendiente/aprobada del mismo
+ * perfil, así que como mucho hay una.
+ */
+export function ausenciaEnFecha(fecha: string, ausencias: Ausencia[]): Ausencia | undefined {
+  return ausencias.find((a) => (a.estado === 'pendiente' || a.estado === 'aprobada') && fecha >= a.fechaInicio && fecha <= a.fechaFin);
 }

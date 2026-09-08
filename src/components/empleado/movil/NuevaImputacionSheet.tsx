@@ -6,6 +6,7 @@ import { CatDot } from '../compartido/CatDot';
 import { Stepper } from '../compartido/Stepper';
 import { CalendarGrid } from '../compartido/CalendarGrid';
 import { SelectorRangoFechas, type RangoFechas } from '../compartido/SelectorRangoFechas';
+import { ausenciaEnFecha, CLASE_AUSENCIA_DIA } from '@/lib/horas/calendario';
 import type { EmpleadoCtx } from '../types';
 
 export type Paso = 'tipo' | 'proyecto' | 'tarea' | 'horas' | 'austipo' | 'ausdias';
@@ -91,6 +92,7 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
   }, [abierto, pasoInicial]);
 
   const crumbs = [state.sel.tipoAusenciaEtiqueta, state.sel.proyectoNombre, state.sel.subcategoriaNombre].filter(Boolean).join(' › ');
+  const proyectosDia = ctx.proyectosParaFechas([ctx.selDay]);
 
   function toggleDiaMulti(fecha: string) {
     setMultiDias((s) => {
@@ -152,7 +154,10 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
 
       {state.actual === 'proyecto' && (
         <div className="space-y-2">
-          {ctx.proyectos.map((p) => (
+          {proyectosDia.length === 0 && (
+            <p className="p-4 text-sm text-ink-tertiary">No tienes proyectos asignados para este día. Habla con tu administrador.</p>
+          )}
+          {proyectosDia.map((p) => (
             <button
               key={p.id}
               type="button"
@@ -218,7 +223,17 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
                   <CalendarGrid
                     dias={ctx.dias}
                     estadoDia={() => 'no-laborable'}
-                    claseExtra={(d) => (multiDias.has(d.fecha) ? 'bg-accent text-on-accent border-accent' : '')}
+                    claseExtra={(d) =>
+                      ausenciaEnFecha(d.fecha, ctx.ausencias)
+                        ? CLASE_AUSENCIA_DIA
+                        : multiDias.has(d.fecha)
+                          ? 'bg-accent text-on-accent border-accent'
+                          : ''
+                    }
+                    deshabilitadoExtra={(d) =>
+                      ausenciaEnFecha(d.fecha, ctx.ausencias)?.estado === 'aprobada' ||
+                      (!!state.sel.proyectoId && !ctx.proyectosParaFechas([d.fecha]).some((p) => p.id === state.sel.proyectoId))
+                    }
                     onClickDia={toggleDiaMulti}
                   />
                 </div>

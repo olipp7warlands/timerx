@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useFaltantesAdmin } from '@/hooks/admin/useFaltantesAdmin';
 import { useImputarDirecto } from '@/hooks/admin/useImputarDirecto';
 import { useUsuarios } from '@/hooks/admin/useUsuarios';
 import { useProyectosAdmin } from '@/hooks/admin/useProyectosAdmin';
+import { useAsignacionesEmpleado } from '@/hooks/admin/useAsignacionesEmpleado';
 import { useCategorias } from '@/hooks/admin/useCategorias';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { fmt } from '@/lib/horas/calendario';
@@ -22,12 +23,22 @@ export function ControlEscritorio() {
   const toast = useToast();
 
   const [form, setForm] = useState({ empleadoId: '', proyectoId: '', subcategoriaId: '', fecha: '', horas: '' });
+  const { proyectoIdsParaFecha } = useAsignacionesEmpleado(form.empleadoId);
 
   const subcategorias = categorias.flatMap((c) => c.subcategorias.map((s) => ({ ...s, categoriaNombre: c.nombre })));
+  const idsVigentes = proyectoIdsParaFecha(form.fecha);
+  const proyectosDisponibles = proyectos.filter((p) => idsVigentes.includes(p.id));
 
   function abrirImputacion(empleadoId: string, fecha: string) {
     setForm({ empleadoId, proyectoId: '', subcategoriaId: '', fecha, horas: '' });
   }
+
+  useEffect(() => {
+    if (form.proyectoId && !idsVigentes.includes(form.proyectoId)) {
+      setForm((f) => ({ ...f, proyectoId: '' }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.empleadoId, form.fecha]);
 
   async function guardarImputacion() {
     if (!form.empleadoId || !form.proyectoId || !form.subcategoriaId || !form.fecha || !form.horas) {
@@ -69,14 +80,18 @@ export function ControlEscritorio() {
               ))}
             </select>
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Proyecto</label>
-            <select className="input" value={form.proyectoId} onChange={(e) => setForm((f) => ({ ...f, proyectoId: e.target.value }))}>
-              <option value="">Selecciona proyecto</option>
-              {proyectos.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre} · {p.empresaNombre}
-                </option>
-              ))}
-            </select>
+            {form.empleadoId && proyectosDisponibles.length === 0 ? (
+              <p className="text-xs text-ink-tertiary">Este empleado no tiene proyectos asignados para esta fecha.</p>
+            ) : (
+              <select className="input" value={form.proyectoId} onChange={(e) => setForm((f) => ({ ...f, proyectoId: e.target.value }))}>
+                <option value="">Selecciona proyecto</option>
+                {proyectosDisponibles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre} · {p.empresaNombre}
+                  </option>
+                ))}
+              </select>
+            )}
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Subcategoría</label>
             <select className="input" value={form.subcategoriaId} onChange={(e) => setForm((f) => ({ ...f, subcategoriaId: e.target.value }))}>
               <option value="">Selecciona subcategoría</option>
