@@ -6,6 +6,14 @@ import { createClient } from '@/lib/supabase/client';
 
 type Modo = 'password' | 'enlace';
 
+/** "Signups not allowed for otp" (shouldCreateUser:false contra un email no dado de alta) -> mensaje accionable. */
+function mensajeError(mensaje: string): string {
+  if (/signups? not allowed/i.test(mensaje)) {
+    return 'Este correo no está dado de alta. Pide acceso a tu administrador.';
+  }
+  return mensaje;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [modo, setModo] = useState<Modo>('password');
@@ -23,7 +31,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      setError(error.message);
+      setError(mensajeError(error.message));
       setEstado('error');
       return;
     }
@@ -40,11 +48,11 @@ export default function LoginPage() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback`, shouldCreateUser: false },
     });
 
     if (error) {
-      setError(error.message);
+      setError(mensajeError(error.message));
       setEstado('error');
       return;
     }

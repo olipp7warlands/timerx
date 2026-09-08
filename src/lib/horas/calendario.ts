@@ -37,6 +37,36 @@ export function nombreDia(dow: number): string {
   return DOW_NOMBRES[dow];
 }
 
+const MES_NOMBRES = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+];
+
+function capitalizar(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/**
+ * "Miércoles 7 de septiembre" -- capitalización española exacta del mock:
+ * día de la semana en mayúscula, mes en minúscula, sin coma ni año. Usar
+ * siempre esto en vez de toLocaleDateString + la clase `capitalize` de
+ * Tailwind, que capitaliza CADA palabra (title-case) y rompe "de".
+ */
+export function formatoDiaLargo(fechaISO: string): string {
+  const d = new Date(fechaISO + 'T00:00:00');
+  return `${nombreDia(d.getDay())} ${d.getDate()} de ${MES_NOMBRES[d.getMonth()]}`;
+}
+
+/** "Septiembre 2026" -- mes capitalizado, año, sin "de" (distinto de formatoDiaLargo). */
+export function formatoMesAnio(anio: number, mes: number): string {
+  return `${capitalizar(MES_NOMBRES[mes - 1])} ${anio}`;
+}
+
+/** "Septiembre" -- solo el mes capitalizado, sin año. */
+export function formatoMes(mes: number): string {
+  return capitalizar(MES_NOMBRES[mes - 1]);
+}
+
 /** Formato es-ES con 1 decimal fijo, coma decimal (mismo criterio que los mocks). */
 export function fmt(n: number): string {
   return n.toLocaleString('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 });

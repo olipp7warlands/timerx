@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { useFichaProyecto } from '@/hooks/admin/useFichaProyecto';
 import { Donut } from '../compartido/Donut';
 import { Hbar } from '../compartido/Hbar';
-import { fmt } from '@/lib/horas/calendario';
+import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { ProyectoAdmin } from '@/hooks/admin/useProyectosAdmin';
 
 const CAT_COLOR: Record<string, string> = {
@@ -16,7 +16,7 @@ const CAT_COLOR: Record<string, string> = {
 
 export function FichaProyectoEscritorio({ proyecto, anio, mes, onVolver }: { proyecto: ProyectoAdmin; anio: number; mes: number; onVolver: () => void }) {
   const { ficha, loading } = useFichaProyecto(proyecto.id, anio, mes);
-  const nombreMes = useMemo(() => new Date(anio, mes - 1).toLocaleDateString('es-ES', { month: 'long' }), [anio, mes]);
+  const nombreMes = useMemo(() => formatoMes(mes), [mes]);
 
   return (
     <div>
@@ -25,7 +25,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, onVolver }: { pro
       </button>
       <div className="my-4 flex flex-wrap items-baseline gap-3">
         <h2 className="text-xl font-extrabold">{proyecto.nombre}</h2>
-        <span className="micro capitalize">
+        <span className="micro">
           {proyecto.empresaNombre} · {nombreMes}
         </span>
       </div>
@@ -36,7 +36,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, onVolver }: { pro
         <div className="card">
           <div className="card-body">
             <p className="text-sm text-ink-tertiary">
-              Sin actividad registrada en {nombreMes}. Cuando el proyecto reciba imputaciones, aquí verás sus horas, personas y departamentos.
+              Sin actividad registrada en {nombreMes.toLowerCase()}. Cuando el proyecto reciba imputaciones, aquí verás sus horas, personas y departamentos.
             </p>
           </div>
         </div>
@@ -47,7 +47,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, onVolver }: { pro
               <p className="mono text-2xl font-extrabold">
                 {fmt(ficha.horasMes)} <small className="text-xs text-ink-tertiary">h</small>
               </p>
-              <p className="micro mt-1 capitalize">Horas · {nombreMes}</p>
+              <p className="micro mt-1">Horas · {nombreMes}</p>
             </div>
             <div className="card p-4">
               <p className="mono text-2xl font-extrabold">
@@ -61,7 +61,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, onVolver }: { pro
             </div>
             <div className="card p-4">
               <p className="mono text-2xl font-extrabold">{ficha.refacturableMes.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</p>
-              <p className="micro mt-1 capitalize">Refacturable · {nombreMes}</p>
+              <p className="micro mt-1">Refacturable · {nombreMes}</p>
             </div>
           </div>
 

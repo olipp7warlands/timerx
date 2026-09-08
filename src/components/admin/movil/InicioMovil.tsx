@@ -7,7 +7,8 @@ import { useHorasPorEmpresaYProyecto } from '@/hooks/admin/useHorasPorEmpresaYPr
 import { useRefacturacion } from '@/hooks/admin/useRefacturacion';
 import { Hbar } from '../compartido/Hbar';
 import { Donut } from '../compartido/Donut';
-import { fmt } from '@/lib/horas/calendario';
+import { fmt, formatoDiaLargo, formatoMesAnio } from '@/lib/horas/calendario';
+import { IconCalendario } from '@/components/ui/icons';
 
 const GRISES = ['var(--ink-primary)', 'var(--ink-secondary)', 'var(--ink-tertiary)', 'var(--ink-disabled)', 'var(--border-strong)'];
 
@@ -37,8 +38,8 @@ export function InicioMovil() {
     });
   }
 
-  const nombreDia = new Date(fechaDia + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-  const nombreMes = new Date(anioMes.anio, anioMes.mes - 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+  const nombreDia = formatoDiaLargo(fechaDia);
+  const nombreMes = formatoMesAnio(anioMes.anio, anioMes.mes);
   const totalRefact = refact.reduce((s, l) => s + l.importe, 0);
 
   return (
@@ -48,7 +49,7 @@ export function InicioMovil() {
           ‹
         </button>
         <div className="text-center">
-          <p className="text-base font-extrabold capitalize">{nombreDia}</p>
+          <p className="text-base font-extrabold">{nombreDia}</p>
           <p className="micro mt-0.5">{fechaDia === hoy ? 'Hoy' : ''}</p>
         </div>
         <button type="button" className="grid h-[38px] w-[38px] place-items-center rounded-2xl border border-border bg-subtle text-lg" onClick={() => setFechaDia((f) => sumarDias(f, 1))}>
@@ -105,12 +106,15 @@ export function InicioMovil() {
         </div>
       </div>
 
-      <p className="sec-label mb-2.5 mt-6 text-[15.5px] font-extrabold">Resumen del mes</p>
+      <p className="sec-label mb-2.5 mt-6 flex items-center gap-2 text-[15.5px] font-extrabold">
+        <IconCalendario size={17} />
+        Resumen del mes
+      </p>
       <div className="card mb-3 flex items-center justify-between gap-2.5 p-3">
         <button type="button" className="grid h-[38px] w-[38px] place-items-center rounded-2xl border border-border bg-subtle text-lg" onClick={() => cambiarMes(-1)}>
           ‹
         </button>
-        <p className="text-base font-extrabold capitalize">{nombreMes}</p>
+        <p className="text-base font-extrabold">{nombreMes}</p>
         <button type="button" className="grid h-[38px] w-[38px] place-items-center rounded-2xl border border-border bg-subtle text-lg" onClick={() => cambiarMes(1)}>
           ›
         </button>

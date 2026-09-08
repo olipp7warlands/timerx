@@ -9,6 +9,7 @@ import { ListaConUsar } from '../compartido/ListaConUsar';
 import { BottomSheet } from '../compartido/BottomSheet';
 import { CalendarGrid } from '../compartido/CalendarGrid';
 import { diaAdyacenteLaborable, estadoDia, fmt, nombreDia, sumaHoras } from '@/lib/horas/calendario';
+import { IconCalendario, IconHoy, IconHistorial, IconArchivo } from '@/components/ui/icons';
 import type { PasoInicial } from './NuevaImputacionSheet';
 import type { EmpleadoCtx } from '../types';
 
@@ -45,11 +46,14 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
           <button type="button" disabled={!prev} className="text-xl disabled:opacity-30" onClick={() => prev && ctx.setSelDay(prev)}>
             ‹
           </button>
-          <button type="button" className="text-center" onClick={() => setPickerAbierto(true)}>
-            <p className="text-sm font-extrabold">
-              {diaSel ? `${nombreDia(diaSel.dow)} ${Number(diaSel.fecha.slice(-2))}` : ''}
-            </p>
-            <p className="micro">{ctx.selDay === ctx.fechaHoy ? 'Hoy' : ''}</p>
+          <button type="button" className="flex items-center gap-1.5 text-center" onClick={() => setPickerAbierto(true)}>
+            <span>
+              <p className="text-sm font-extrabold">
+                {diaSel ? `${nombreDia(diaSel.dow)} ${Number(diaSel.fecha.slice(-2))}` : ''}
+              </p>
+              <p className="micro">{ctx.selDay === ctx.fechaHoy ? 'Hoy' : ''}</p>
+            </span>
+            <IconCalendario />
           </button>
           <button type="button" disabled={!next} className="text-xl disabled:opacity-30" onClick={() => next && ctx.setSelDay(next)}>
             ›
@@ -94,6 +98,10 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
       )}
 
       <div>
+        <p className="mb-2 flex items-center gap-2 text-sm font-extrabold">
+          <IconHoy />
+          {ctx.selDay === ctx.fechaHoy ? 'Hoy' : `${nombreDia(diaSel?.dow ?? 0)} ${Number(ctx.selDay.slice(-2))}`}
+        </p>
         {lineasHoy.length > 0 ? (
           <div className="card divide-y divide-border px-4">
             {lineasHoy.map((l) => (
@@ -118,8 +126,12 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
 
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold">Últimas imputaciones</h2>
-          <button type="button" className="btn-text" onClick={onAbrirHistorial}>
+          <h2 className="flex items-center gap-2 text-sm font-extrabold">
+            <IconHistorial />
+            Últimas imputaciones
+          </h2>
+          <button type="button" className="btn-text flex items-center gap-1.5" onClick={onAbrirHistorial}>
+            <IconArchivo size={14} />
             Imputaciones anteriores
           </button>
         </div>

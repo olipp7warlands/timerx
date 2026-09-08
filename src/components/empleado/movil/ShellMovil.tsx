@@ -8,11 +8,13 @@ import { CalendarioMovil } from './CalendarioMovil';
 import { NuevaImputacionSheet, type PasoInicial } from './NuevaImputacionSheet';
 import { HistorialSheet } from './HistorialSheet';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { IconCasa, IconReloj, IconCalendario, IconMas } from '@/components/ui/icons';
+import { formatoDiaLargo } from '@/lib/horas/calendario';
 
-const TABS: { id: EmpleadoCtx['tab']; etiqueta: string }[] = [
-  { id: 'inicio', etiqueta: 'Inicio' },
-  { id: 'imputar', etiqueta: 'Imputar' },
-  { id: 'calendario', etiqueta: 'Calendario' },
+const TABS: { id: EmpleadoCtx['tab']; etiqueta: string; Icono: typeof IconCasa }[] = [
+  { id: 'inicio', etiqueta: 'Inicio', Icono: IconCasa },
+  { id: 'imputar', etiqueta: 'Imputar', Icono: IconReloj },
+  { id: 'calendario', etiqueta: 'Calendario', Icono: IconCalendario },
 ];
 
 export function ShellMovil(ctx: EmpleadoCtx) {
@@ -35,18 +37,30 @@ export function ShellMovil(ctx: EmpleadoCtx) {
     abrirHoja('tipo', false);
   }
 
+  const iniciales = ctx.nombre
+    .split(' ')
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
   return (
-    <div className="min-h-screen bg-bg pb-20">
+    <div className="min-h-screen bg-bg pb-[calc(96px+env(safe-area-inset-bottom))]">
       <header className="flex items-center justify-between px-5 pb-2 pt-5">
         <div>
           <p className="text-base font-extrabold">Hola, {ctx.nombre.split(' ')[0]}</p>
-          <p className="micro">{ctx.empresaNombre}</p>
+          <p className="micro">
+            {formatoDiaLargo(ctx.fechaHoy)} · {ctx.empresaNombre}
+          </p>
         </div>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <div className="grid h-9 w-9 place-items-center rounded-full bg-accent text-xs font-extrabold text-on-accent">{iniciales}</div>
+        </div>
       </header>
 
       <div className="px-5">
-        {ctx.tab === 'inicio' && <InicioMovil ctx={ctx} onAbrirHistorial={() => setHistorialAbierto(true)} />}
+        {ctx.tab === 'inicio' && <InicioMovil ctx={ctx} />}
         {ctx.tab === 'imputar' && (
           <ImputarMovil ctx={ctx} onAbrirHoja={abrirHoja} onAbrirHistorial={() => setHistorialAbierto(true)} />
         )}
@@ -57,19 +71,27 @@ export function ShellMovil(ctx: EmpleadoCtx) {
         type="button"
         onClick={abrirFab}
         aria-label="Nueva imputación"
-        className="fixed bottom-24 right-5 grid h-14 w-14 place-items-center rounded-full bg-accent text-2xl text-on-accent shadow-[var(--sombra)]"
+        className="fixed right-4 z-[5] flex items-center gap-2 rounded-full bg-accent px-[22px] py-[15px] text-sm font-extrabold text-on-accent shadow-[0_6px_18px_rgba(30,30,28,.22)]"
+        style={{ bottom: 'calc(88px + env(safe-area-inset-bottom))' }}
       >
-        +
+        <IconMas />
+        Imputar
       </button>
 
-      <nav className="fixed inset-x-0 bottom-0 flex border-t border-border bg-surface">
+      <nav
+        className="fixed inset-x-0 bottom-0 z-[5] flex gap-1 border-t border-border bg-surface px-2 pt-2"
+        style={{ paddingBottom: 'calc(10px + env(safe-area-inset-bottom))' }}
+      >
         {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => ctx.setTab(t.id)}
-            className={`flex-1 py-3 text-xs font-extrabold ${t.id === ctx.tab ? 'text-ink-primary' : 'text-ink-tertiary'}`}
+            className={`flex flex-1 flex-col items-center gap-1 rounded-2xl py-1.5 text-[10px] font-extrabold ${
+              t.id === ctx.tab ? 'bg-subtle text-ink-primary' : 'text-ink-tertiary'
+            }`}
           >
+            <t.Icono size={20} />
             {t.etiqueta}
           </button>
         ))}

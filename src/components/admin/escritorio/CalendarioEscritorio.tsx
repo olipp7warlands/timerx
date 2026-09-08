@@ -5,10 +5,8 @@ import { useCalendarioAdmin } from '@/hooks/admin/useCalendarioAdmin';
 import { useDiasMes } from '@/hooks/useDiasMes';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { CalendarGrid } from '@/components/empleado/compartido/CalendarGrid';
-import { fmt } from '@/lib/horas/calendario';
+import { fmt, formatoMesAnio, formatoMes } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
-
-const NOMBRES_MES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
 export function CalendarioEscritorio({ info }: { info: AdminInfo }) {
   const hoy = new Date();
@@ -92,7 +90,7 @@ export function CalendarioEscritorio({ info }: { info: AdminInfo }) {
         <div className="card p-4">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-extrabold">Vista del mes</h2>
-            <span className="micro capitalize">{hoy.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</span>
+            <span className="micro">{formatoMesAnio(anioActual, hoy.getMonth() + 1)}</span>
           </div>
           <CalendarGrid dias={dias} estadoDia={(d) => (!d.laborable ? 'no-laborable' : d.fecha > hoy.toISOString().slice(0, 10) ? 'futuro' : 'incompleto')} onClickDia={() => {}} />
         </div>
@@ -117,7 +115,7 @@ export function CalendarioEscritorio({ info }: { info: AdminInfo }) {
               <tbody>
                 {mesesRequeridos.map((m) => (
                   <tr key={m.mes} className="hover:bg-subtle">
-                    <td className="border-b border-border px-2.5 py-2.5">{NOMBRES_MES[m.mes - 1]}</td>
+                    <td className="border-b border-border px-2.5 py-2.5">{formatoMes(m.mes)}</td>
                     <td className="mono border-b border-border px-2.5 py-2.5 text-right">{m.laborables}</td>
                     <td className="mono border-b border-border px-2.5 py-2.5 text-right">{m.festivos}</td>
                     <td className="mono border-b border-border px-2.5 py-2.5 text-right">{fmt(m.horasRequeridas)}</td>

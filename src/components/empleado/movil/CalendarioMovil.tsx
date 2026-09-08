@@ -1,5 +1,6 @@
 import { CalendarGrid } from '../compartido/CalendarGrid';
 import { estadoDia, sumaHoras, rangoDias } from '@/lib/horas/calendario';
+import { IconAvion } from '@/components/ui/icons';
 import type { EmpleadoCtx } from '../types';
 
 const ETIQUETA_ESTADO: Record<string, string> = {
@@ -43,7 +44,10 @@ export function CalendarioMovil({ ctx }: { ctx: EmpleadoCtx }) {
       </div>
 
       <div>
-        <h2 className="mb-2 text-sm font-extrabold">Mis ausencias</h2>
+        <h2 className="mb-2 flex items-center gap-2 text-sm font-extrabold">
+          <IconAvion />
+          Mis ausencias
+        </h2>
         {ctx.ausencias.length === 0 ? (
           <div className="card p-4 text-sm text-ink-tertiary">Sin ausencias solicitadas.</div>
         ) : (

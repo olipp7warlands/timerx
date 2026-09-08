@@ -9,7 +9,8 @@ import { useDiasMes } from '@/hooks/useDiasMes';
 import { CalendarGrid } from '@/components/empleado/compartido/CalendarGrid';
 import { Kpi } from '../compartido/Kpi';
 import { Donut } from '../compartido/Donut';
-import { fmt } from '@/lib/horas/calendario';
+import { fmt, formatoDiaLargo, formatoMesAnio } from '@/lib/horas/calendario';
+import { IconHoy, IconCalendario } from '@/components/ui/icons';
 import type { AdminInfo } from '../types';
 
 const GRISES = ['var(--ink-primary)', 'var(--ink-secondary)', 'var(--ink-tertiary)', 'var(--ink-disabled)', 'var(--border-strong)'];
@@ -43,19 +44,22 @@ export function InicioEscritorio({ info }: { info: AdminInfo }) {
     });
   }
 
-  const nombreMes = new Date(anioMes.anio, anioMes.mes - 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-  const nombreDia = new Date(fechaDia + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  const nombreMes = formatoMesAnio(anioMes.anio, anioMes.mes);
+  const nombreDia = formatoDiaLargo(fechaDia);
 
   return (
     <div className="space-y-8">
       <div>
-        <p className="sec-label mb-3 text-[15.5px] font-extrabold">Seguimiento del día</p>
+        <p className="sec-label mb-3 flex items-center gap-2 text-[15.5px] font-extrabold">
+          <IconHoy size={17} />
+          Seguimiento del día
+        </p>
         <div className="card day-nav-card mb-3.5 flex items-center justify-between p-3 px-4">
           <button type="button" className="grid h-9 w-9 place-items-center rounded-2xl border border-border bg-subtle text-lg" onClick={() => setFechaDia((f) => sumarDias(f, -1))}>
             ‹
           </button>
           <div className="text-center">
-            <p className="text-[16.5px] font-extrabold capitalize">{nombreDia}</p>
+            <p className="text-[16.5px] font-extrabold">{nombreDia}</p>
             <p className="micro mt-0.5">{fechaDia === hoy ? 'Hoy' : ''}</p>
           </div>
           <button type="button" className="grid h-9 w-9 place-items-center rounded-2xl border border-border bg-subtle text-lg" onClick={() => setFechaDia((f) => sumarDias(f, 1))}>
@@ -116,7 +120,7 @@ export function InicioEscritorio({ info }: { info: AdminInfo }) {
                 <button type="button" className="collapse-btn grid h-6 w-6 place-items-center rounded-md border border-border text-ink-tertiary" onClick={() => cambiarMes(-1)}>
                   ‹
                 </button>
-                <span className="micro capitalize">{nombreMes}</span>
+                <span className="micro">{nombreMes}</span>
                 <button type="button" className="collapse-btn grid h-6 w-6 place-items-center rounded-md border border-border text-ink-tertiary" onClick={() => cambiarMes(1)}>
                   ›
                 </button>
@@ -139,13 +143,16 @@ export function InicioEscritorio({ info }: { info: AdminInfo }) {
       </div>
 
       <div>
-        <p className="sec-label mb-3 text-[15.5px] font-extrabold">Resumen del mes</p>
+        <p className="sec-label mb-3 flex items-center gap-2 text-[15.5px] font-extrabold">
+          <IconCalendario size={17} />
+          Resumen del mes
+        </p>
         <div className="card day-nav-card mb-3.5 flex items-center justify-between p-3 px-4">
           <button type="button" className="grid h-9 w-9 place-items-center rounded-2xl border border-border bg-subtle text-lg" onClick={() => cambiarMes(-1)}>
             ‹
           </button>
           <div className="text-center">
-            <p className="text-[16.5px] font-extrabold capitalize">{nombreMes}</p>
+            <p className="text-[16.5px] font-extrabold">{nombreMes}</p>
           </div>
           <button type="button" className="grid h-9 w-9 place-items-center rounded-2xl border border-border bg-subtle text-lg" onClick={() => cambiarMes(1)}>
             ›

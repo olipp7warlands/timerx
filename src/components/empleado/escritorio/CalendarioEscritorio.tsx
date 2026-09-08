@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CalendarGrid } from '../compartido/CalendarGrid';
 import { ModalAusencia } from './ModalAusencia';
 import { estadoDia, sumaHoras, rangoDias } from '@/lib/horas/calendario';
+import { IconAvion } from '@/components/ui/icons';
 import type { EmpleadoCtx } from '../types';
 
 const ETIQUETA_ESTADO: Record<string, string> = {
@@ -48,7 +49,10 @@ export function CalendarioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
       </div>
 
       <div className="card-head flex items-center justify-between rounded-t-[18px] bg-surface px-4 py-3">
-        <h2 className="text-sm font-extrabold">Mis ausencias</h2>
+        <h2 className="flex items-center gap-2 text-sm font-extrabold">
+          <IconAvion />
+          Mis ausencias
+        </h2>
         <button type="button" className="btn btn-sm" onClick={() => setAusenciaAbierta(true)}>
           Solicitar ausencia
         </button>

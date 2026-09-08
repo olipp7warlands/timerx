@@ -5,7 +5,8 @@ import { ProgressBar } from '../compartido/ProgressBar';
 import { FilaDia } from '../compartido/FilaDia';
 import { CalendarGrid } from '../compartido/CalendarGrid';
 import { ModalHistorico } from './ModalHistorico';
-import { fmt, estadoDia, sumaHoras } from '@/lib/horas/calendario';
+import { fmt, estadoDia, sumaHoras, formatoMesAnio } from '@/lib/horas/calendario';
+import { IconHistorial, IconCalendario } from '@/components/ui/icons';
 import type { EmpleadoCtx } from '../types';
 
 export function InicioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
@@ -51,7 +52,10 @@ export function InicioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
 
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-extrabold">Últimos días imputados</h2>
+            <h2 className="flex items-center gap-2 text-sm font-extrabold">
+              <IconHistorial />
+              Últimos días imputados
+            </h2>
             <button type="button" className="btn-text" onClick={() => setHistoricoAbierto(true)}>
               Ver todo
             </button>
@@ -76,8 +80,9 @@ export function InicioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
 
       <div className="card sticky top-8 p-4">
         <div className="mb-3">
-          <h2 className="text-sm font-extrabold">
-            {new Date(ctx.anio, ctx.mes - 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+          <h2 className="flex items-center gap-2 text-sm font-extrabold">
+            <IconCalendario />
+            {formatoMesAnio(ctx.anio, ctx.mes)}
           </h2>
         </div>
         <CalendarGrid

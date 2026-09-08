@@ -7,7 +7,7 @@ import { useRefacturacion } from '@/hooks/admin/useRefacturacion';
 import { useProyectosAdmin } from '@/hooks/admin/useProyectosAdmin';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { Donut } from '../compartido/Donut';
-import { fmt } from '@/lib/horas/calendario';
+import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
 
 const GRISES = ['var(--ink-primary)', 'var(--ink-secondary)', 'var(--ink-tertiary)', 'var(--ink-disabled)', 'var(--border-strong)'];
@@ -63,7 +63,7 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
           <div className="card">
             <div className="card-head">
               <h2 className="text-sm font-extrabold">Horas recibidas</h2>
-              <span className="micro capitalize">{new Date(anio, mes - 1).toLocaleDateString('es-ES', { month: 'long' })}</span>
+              <span className="micro">{formatoMes(mes)}</span>
             </div>
             <div className="card-body">
               <Donut total={totalHoras} segmentos={porEmpresa.map((e, i) => ({ etiqueta: e.empresaNombre, valor: e.horas, color: GRISES[i % GRISES.length] }))} />

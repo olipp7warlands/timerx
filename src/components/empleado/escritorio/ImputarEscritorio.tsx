@@ -9,7 +9,8 @@ import { CalendarGrid } from '../compartido/CalendarGrid';
 import { ComposerLinea } from './ComposerLinea';
 import { PrecargadoEscritorio } from './PrecargadoEscritorio';
 import { ModalHistorico } from './ModalHistorico';
-import { diaAdyacenteLaborable, estadoDia, fmt, nombreDia, sumaHoras } from '@/lib/horas/calendario';
+import { diaAdyacenteLaborable, estadoDia, fmt, formatoMesAnio, nombreDia, sumaHoras } from '@/lib/horas/calendario';
+import { IconCalendario, IconHistorial, IconHoy } from '@/components/ui/icons';
 import type { EmpleadoCtx } from '../types';
 
 const ESTADO_ETIQUETA: Record<string, string> = {
@@ -66,7 +67,10 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
 
         <div className="card">
           <div className="card-head">
-            <h2>{ctx.selDay === ctx.fechaHoy ? 'Hoy' : `${nombreDia(diaSel?.dow ?? 0)} ${Number(ctx.selDay.slice(-2))}`}</h2>
+            <h2 className="flex items-center gap-2">
+              <IconHoy />
+              {ctx.selDay === ctx.fechaHoy ? 'Hoy' : `${nombreDia(diaSel?.dow ?? 0)} ${Number(ctx.selDay.slice(-2))}`}
+            </h2>
             {lineasHoy.length > 0 && <span className="mono text-sm">{fmt(totalDia)} h</span>}
           </div>
           <div className="card-body space-y-1">
@@ -104,7 +108,10 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
 
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-extrabold">Anteriores imputaciones</h2>
+            <h2 className="flex items-center gap-2 text-sm font-extrabold">
+              <IconHistorial />
+              Anteriores imputaciones
+            </h2>
             <button type="button" className="btn-text" onClick={() => setHistoricoAbierto(true)}>
               Ver todo
             </button>
@@ -129,8 +136,9 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
 
       <div className="card sticky top-8 p-4">
         <div className="mb-3">
-          <h2 className="text-sm font-extrabold">
-            {new Date(ctx.anio, ctx.mes - 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+          <h2 className="flex items-center gap-2 text-sm font-extrabold">
+            <IconCalendario />
+            {formatoMesAnio(ctx.anio, ctx.mes)}
           </h2>
           <p className="micro">Clic en un día para imputarlo</p>
         </div>

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRefacturacion } from '@/hooks/admin/useRefacturacion';
 import { useToast } from '@/components/empleado/compartido/Toast';
+import { formatoMes } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
 
 const CAT_COLOR: Record<string, string> = {
@@ -121,7 +122,7 @@ export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
             <div className="card-body">
               <p className="text-xs text-ink-tertiary">El cierre bloquea todas las imputaciones del periodo y congela los importes.</p>
               <button type="button" className="btn btn-primary full" disabled={cerrando} onClick={onCerrar}>
-                {cerrando ? 'Cerrando…' : `Cerrar ${new Date(anio, mes - 1).toLocaleDateString('es-ES', { month: 'long' })}`}
+                {cerrando ? 'Cerrando…' : `Cerrar ${formatoMes(mes).toLowerCase()}`}
               </button>
             </div>
           </div>

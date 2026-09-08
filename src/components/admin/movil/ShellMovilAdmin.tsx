@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { IconMenu, IconReloj } from '@/components/ui/icons';
 import { GRUPOS_SECCIONES, SECCIONES_MOVIL_FUNCIONALES } from '../secciones';
 import type { AdminInfo, SeccionAdmin } from '../types';
 import { InicioMovil } from './InicioMovil';
@@ -47,7 +48,7 @@ export function ShellMovilAdmin({ info, seccion, setSeccion }: Props) {
             onClick={() => setDrawerAbierto(true)}
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-surface text-ink-secondary shadow-[var(--sombra)]"
           >
-            ☰
+            <IconMenu />
           </button>
           <div>
             <h1 className="text-[23px] font-extrabold leading-tight">{ETIQUETAS[seccion]}</h1>
@@ -74,7 +75,9 @@ export function ShellMovilAdmin({ info, seccion, setSeccion }: Props) {
         aria-label="Menú de secciones"
       >
         <div className="flex items-center gap-2 px-2 pb-3 text-[17px] font-extrabold">
-          <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[10px] bg-accent text-on-accent">●</span>
+          <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[10px] bg-accent text-on-accent">
+            <IconReloj size={17} />
+          </span>
           Horas Grupo
         </div>
         {GRUPOS_SECCIONES.map((g) => (
@@ -88,11 +91,12 @@ export function ShellMovilAdmin({ info, seccion, setSeccion }: Props) {
                   setSeccion(item.id);
                   setDrawerAbierto(false);
                 }}
-                className={`relative w-full rounded-xl px-3 py-2 text-left text-sm font-extrabold ${
+                className={`relative flex items-center gap-2.5 w-full rounded-xl px-3 py-2 text-left text-sm font-extrabold ${
                   item.id === seccion ? 'bg-subtle text-ink-primary' : 'text-ink-tertiary'
                 }`}
               >
                 {item.id === seccion && <span className="absolute -left-3 top-2 bottom-2 w-[3px] rounded-r bg-ink-primary" />}
+                <item.Icono />
                 {item.etiqueta}
               </button>
             ))}
