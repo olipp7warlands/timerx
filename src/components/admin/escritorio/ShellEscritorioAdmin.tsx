@@ -79,7 +79,7 @@ export function ShellEscritorioAdmin({ info, seccion, setSeccion }: Props) {
       </aside>
 
       <main className="min-w-0 flex-1 p-8">
-        {seccion === 'inicio' && <InicioEscritorio info={info} />}
+        {seccion === 'inicio' && <InicioEscritorio info={info} onIrA={setSeccion} />}
         {seccion === 'usuarios' && <UsuariosEscritorio info={info} />}
         {seccion === 'ausencias' && <AusenciasEscritorio />}
         {seccion === 'empresas' && <EmpresasEscritorio info={info} />}

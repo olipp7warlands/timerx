@@ -153,7 +153,7 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
             <span className="h-[7px] w-[7px] rounded-full bg-ink-primary" /> Completo
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-[7px] w-[7px] rounded-full border border-ink-primary" /> Por completar
+            <span className="h-[7px] w-[7px] rounded-full border border-ink-primary" /> Parcial
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-[7px] w-[7px] rounded-full bg-ink-disabled" /> Futuro

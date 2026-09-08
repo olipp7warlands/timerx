@@ -11,7 +11,7 @@ import { Kpi } from '../compartido/Kpi';
 import { Donut } from '../compartido/Donut';
 import { fmt, formatoDiaLargo, formatoMesAnio } from '@/lib/horas/calendario';
 import { IconHoy, IconCalendario } from '@/components/ui/icons';
-import type { AdminInfo } from '../types';
+import type { AdminInfo, SeccionAdmin } from '../types';
 
 const GRISES = ['var(--ink-primary)', 'var(--ink-secondary)', 'var(--ink-tertiary)', 'var(--ink-disabled)', 'var(--border-strong)'];
 
@@ -21,7 +21,7 @@ function sumarDias(fecha: string, delta: number) {
   return d.toISOString().slice(0, 10);
 }
 
-export function InicioEscritorio({ info }: { info: AdminInfo }) {
+export function InicioEscritorio({ info, onIrA }: { info: AdminInfo; onIrA: (s: SeccionAdmin) => void }) {
   const hoy = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const [fechaDia, setFechaDia] = useState(hoy);
   const [anioMes, setAnioMes] = useState(() => {
@@ -77,6 +77,9 @@ export function InicioEscritorio({ info }: { info: AdminInfo }) {
               <div className="card">
                 <div className="card-head py-3 px-4">
                   <h2 className="text-sm font-extrabold">Pendientes de imputar</h2>
+                  <button type="button" className="btn btn-sm" disabled title="Disponible al activar recordatorios">
+                    Recordar
+                  </button>
                 </div>
                 <div className="space-y-2 px-4 pb-3.5 pt-1">
                   {(dia?.pendientes ?? []).length === 0 ? (
@@ -96,6 +99,9 @@ export function InicioEscritorio({ info }: { info: AdminInfo }) {
               <div className="card">
                 <div className="card-head py-3 px-4">
                   <h2 className="text-sm font-extrabold">Ausentes</h2>
+                  <button type="button" className="btn btn-sm" onClick={() => onIrA('ausencias')}>
+                    Ausencias ›
+                  </button>
                 </div>
                 <div className="space-y-2 px-4 pb-3.5 pt-1">
                   {(dia?.ausentes ?? []).length === 0 ? (
@@ -169,6 +175,9 @@ export function InicioEscritorio({ info }: { info: AdminInfo }) {
           <div className="card">
             <div className="card-head">
               <h2 className="text-sm font-extrabold">Horas por empresa</h2>
+              <button type="button" className="btn btn-sm" onClick={() => onIrA('empresas')}>
+                Empresas ›
+              </button>
             </div>
             <div className="card-body">
               <Donut total={porEmpresa.reduce((s, e) => s + e.horas, 0)} segmentos={porEmpresa.map((e, i) => ({ etiqueta: e.empresaNombre, valor: e.horas, color: GRISES[i % GRISES.length] }))} />
@@ -177,6 +186,9 @@ export function InicioEscritorio({ info }: { info: AdminInfo }) {
           <div className="card">
             <div className="card-head">
               <h2 className="text-sm font-extrabold">Horas por proyecto</h2>
+              <button type="button" className="btn btn-sm" onClick={() => onIrA('proyectos')}>
+                Proyectos ›
+              </button>
             </div>
             <div className="card-body">
               <Donut
@@ -188,6 +200,9 @@ export function InicioEscritorio({ info }: { info: AdminInfo }) {
           <div className="card">
             <div className="card-head">
               <h2 className="text-sm font-extrabold">Refacturación estimada</h2>
+              <button type="button" className="btn btn-sm" onClick={() => onIrA('refacturacion')}>
+                Refacturaciones ›
+              </button>
             </div>
             <div className="card-body">
               <p className="mono text-2xl font-extrabold">

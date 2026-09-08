@@ -3,7 +3,7 @@ import { ProgressBar } from '../compartido/ProgressBar';
 import { FilaDia } from '../compartido/FilaDia';
 import { CalendarGrid } from '../compartido/CalendarGrid';
 import { fmt, estadoDia, sumaHoras } from '@/lib/horas/calendario';
-import { IconHistorial, IconChevronLeft, IconChevronRight, IconCalendario } from '@/components/ui/icons';
+import { IconHistorial, IconChevronLeft, IconChevronRight, IconCalendario, IconReloj } from '@/components/ui/icons';
 import type { EmpleadoCtx } from '../types';
 
 interface Props {
@@ -17,6 +17,7 @@ export function InicioMovil({ ctx }: Props) {
   const totalHoy = sumaHoras(ctx.porDia[ctx.fechaHoy] ?? []);
   const reqHoy = diaHoy?.laborable ? jornada : 0;
   const balanceMes = ctx.balance ? ctx.balance.horasImputadas - ctx.balance.requeridasEfectivas : null;
+  const restanteHoy = reqHoy - totalHoy;
 
   const conLineas = ctx.dias
     .filter((d) => (ctx.porDia[d.fecha] ?? []).length > 0)
@@ -31,11 +32,23 @@ export function InicioMovil({ ctx }: Props) {
 
   return (
     <div className="space-y-4 pt-2">
-      <div className="card space-y-2 p-4">
-        <p className="mono text-2xl font-extrabold">
-          {fmt(totalHoy)} <small className="text-sm font-bold text-ink-tertiary">de {fmt(reqHoy)} h hoy</small>
+      <div className="space-y-2">
+        <p className="flex items-center gap-2 text-sm font-extrabold">
+          <IconReloj size={16} />
+          Horas imputadas
         </p>
-        <ProgressBar horas={totalHoy} requeridas={reqHoy} />
+        <div className="card space-y-2 p-4">
+          <p className="mono text-2xl font-extrabold">
+            {fmt(totalHoy)} <small className="text-sm font-bold text-ink-tertiary">de {fmt(reqHoy)} h hoy</small>
+          </p>
+          <ProgressBar horas={totalHoy} requeridas={reqHoy} />
+          {reqHoy > 0 && (
+            <p className="flex items-center gap-1.5 text-xs font-extrabold text-ink-secondary">
+              <span className={`h-[7px] w-[7px] rounded-full ${restanteHoy <= 0 ? 'bg-ink-primary' : 'border border-ink-primary'}`} />
+              {restanteHoy > 0 ? `te quedan ${fmt(restanteHoy)} h` : restanteHoy === 0 ? 'día completo' : <s>{fmt(-restanteHoy)} h de más</s>}
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="card grid grid-cols-3 divide-x divide-border p-4 text-center">
