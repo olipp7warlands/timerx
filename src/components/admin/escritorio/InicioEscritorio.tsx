@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useResumenDia } from '@/hooks/admin/useResumenDia';
 import { useResumenMes } from '@/hooks/admin/useResumenMes';
+import { useEstadoDiasMes } from '@/hooks/admin/useEstadoDiasMes';
 import { useHorasPorEmpresaYProyecto } from '@/hooks/admin/useHorasPorEmpresaYProyecto';
 import { useRefacturacion } from '@/hooks/admin/useRefacturacion';
 import { useDiasMes } from '@/hooks/useDiasMes';
@@ -31,6 +32,7 @@ export function InicioEscritorio({ info, onIrA }: { info: AdminInfo; onIrA: (s: 
 
   const { resumen: dia, loading: diaLoading } = useResumenDia(fechaDia);
   const { resumen: mes, loading: mesLoading } = useResumenMes(anioMes.anio, anioMes.mes);
+  const { estadoPorFecha } = useEstadoDiasMes(anioMes.anio, anioMes.mes);
   const { porEmpresa, porProyecto } = useHorasPorEmpresaYProyecto(anioMes.anio, anioMes.mes);
   const { lineas: refact } = useRefacturacion(anioMes.anio, anioMes.mes);
   const { dias } = useDiasMes(anioMes.anio, anioMes.mes, info.empresaId);
@@ -132,13 +134,18 @@ export function InicioEscritorio({ info, onIrA }: { info: AdminInfo; onIrA: (s: 
                 </button>
               </span>
             </div>
-            <CalendarGrid dias={dias} estadoDia={(d) => (d.fecha === fechaDia ? 'completo' : d.fecha > hoy ? 'futuro' : 'incompleto')} onClickDia={setFechaDia} />
+            <CalendarGrid
+              dias={dias}
+              estadoDia={(d) => estadoPorFecha[d.fecha] ?? 'futuro'}
+              claseExtra={(d) => (d.fecha === fechaDia ? 'bg-accent text-on-accent border-accent' : '')}
+              onClickDia={setFechaDia}
+            />
             <div className="mt-3 flex gap-4 text-xs text-ink-tertiary">
               <span className="flex items-center gap-1.5">
-                <span className="h-[7px] w-[7px] rounded-full bg-ink-primary" /> Seleccionado
+                <span className="h-[7px] w-[7px] rounded-full bg-ink-primary" /> Completo
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-[7px] w-[7px] rounded-full border border-ink-primary" /> Laborable
+                <span className="h-[7px] w-[7px] rounded-full border border-ink-primary" /> Parcial
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-[7px] w-[7px] rounded-full bg-ink-disabled" /> Futuro

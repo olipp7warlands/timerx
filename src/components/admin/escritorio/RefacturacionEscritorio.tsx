@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useRefacturacion } from '@/hooks/admin/useRefacturacion';
+import { usePeriodo } from '@/hooks/admin/usePeriodo';
+import { useEmpresas } from '@/hooks/admin/useEmpresas';
 import { useToast } from '@/components/empleado/compartido/Toast';
-import { formatoMes } from '@/lib/horas/calendario';
+import { formatoMes, formatoMesAnio } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
 
 const CAT_COLOR: Record<string, string> = {
@@ -14,15 +16,28 @@ const CAT_COLOR: Record<string, string> = {
 };
 
 export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
-  const hoy = useMemo(() => new Date(), []);
-  const [anio, mes] = [hoy.getFullYear(), hoy.getMonth() + 1];
+  const [anioMes, setAnioMes] = useState(() => {
+    const d = new Date();
+    return { anio: d.getFullYear(), mes: d.getMonth() + 1 };
+  });
+  const { anio, mes } = anioMes;
   const { lineas, loading, recargar, cerrarPeriodo } = useRefacturacion(anio, mes);
+  const { cerrado, recargar: recargarPeriodo } = usePeriodo(info.empresaId, anio, mes);
+  const { empresas } = useEmpresas();
   const toast = useToast();
   const [cerrando, setCerrando] = useState(false);
+  const [empresaExport, setEmpresaExport] = useState(info.rol === 'admin_empresa' ? info.empresaId : '');
 
   const totalImporte = lineas.reduce((s, l) => s + l.importe, 0);
   const totalHoras = lineas.reduce((s, l) => s + l.horas, 0);
   const horasSinTarifa = lineas.filter((l) => !l.tarifaCompleta).reduce((s, l) => s + l.horas, 0);
+
+  function cambiarMes(delta: number) {
+    setAnioMes(({ anio, mes }) => {
+      const d = new Date(anio, mes - 1 + delta, 1);
+      return { anio: d.getFullYear(), mes: d.getMonth() + 1 };
+    });
+  }
 
   async function onCerrar() {
     setCerrando(true);
@@ -34,10 +49,24 @@ export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
     }
     toast(`Periodo ${mes}/${anio} cerrado`);
     recargar();
+    recargarPeriodo();
   }
+
+  const hrefFte = `/api/export/fte?anio=${anio}&mes=${mes}${empresaExport ? `&empresa=${empresaExport}` : ''}`;
+  const hrefRefacturacion = `/api/export/refacturacion?anio=${anio}&mes=${mes}`;
 
   return (
     <div className="space-y-4">
+      <div className="card day-nav-card flex items-center justify-between p-3 px-4">
+        <button type="button" className="grid h-9 w-9 place-items-center rounded-2xl border border-border bg-subtle text-lg" onClick={() => cambiarMes(-1)}>
+          ‹
+        </button>
+        <p className="text-[16.5px] font-extrabold">{formatoMesAnio(anio, mes)}</p>
+        <button type="button" className="grid h-9 w-9 place-items-center rounded-2xl border border-border bg-subtle text-lg" onClick={() => cambiarMes(1)}>
+          ›
+        </button>
+      </div>
+
       <div className="grid grid-cols-4 gap-3.5 max-[1100px]:grid-cols-2">
         <div className="card p-4">
           <p className="mono text-2xl font-extrabold">
@@ -58,7 +87,7 @@ export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
           <p className="micro mt-1">Horas sin tarifa</p>
         </div>
         <div className="card p-4">
-          <p className="text-2xl font-extrabold">Abierto</p>
+          <p className="text-2xl font-extrabold">{cerrado ? 'Cerrado' : 'Abierto'}</p>
           <p className="micro mt-1">Estado del periodo</p>
         </div>
       </div>
@@ -121,9 +150,33 @@ export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
             </div>
             <div className="card-body">
               <p className="text-xs text-ink-tertiary">El cierre bloquea todas las imputaciones del periodo y congela los importes.</p>
-              <button type="button" className="btn btn-primary full" disabled={cerrando} onClick={onCerrar}>
-                {cerrando ? 'Cerrando…' : `Cerrar ${formatoMes(mes).toLowerCase()}`}
+              <button type="button" className="btn btn-primary full" disabled={cerrando || cerrado} onClick={onCerrar}>
+                {cerrando ? 'Cerrando…' : cerrado ? 'Ya cerrado' : `Cerrar ${formatoMes(mes).toLowerCase()}`}
               </button>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <h2 className="text-sm font-extrabold">Exportar</h2>
+            </div>
+            <div className="card-body space-y-2.5">
+              <a href={hrefRefacturacion} className="btn full justify-center">
+                Excel de refacturación
+              </a>
+              {info.rol === 'admin_grupo' && (
+                <select className="input" value={empresaExport} onChange={(e) => setEmpresaExport(e.target.value)}>
+                  <option value="">Grupo completo</option>
+                  {empresas.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.nombre}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <a href={hrefFte} className="btn full justify-center">
+                Excel FTE mensual
+              </a>
             </div>
           </div>
         </div>

@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       ajuste: {
@@ -796,6 +821,13 @@ export type Database = {
         Returns: boolean
       }
       es_responsable_de: { Args: { p_perfil: string }; Returns: boolean }
+      estado_dias_mes: {
+        Args: { p_anio: number; p_mes: number }
+        Returns: {
+          estado: string
+          fecha: string
+        }[]
+      }
       faltantes: {
         Args: { p_desde: string; p_hasta: string }
         Returns: {
@@ -1025,6 +1057,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       estado_ausencia: ["pendiente", "aprobada", "rechazada", "cancelada"],
