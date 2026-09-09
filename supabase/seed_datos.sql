@@ -156,3 +156,18 @@ insert into periodo (empresa_id, anio, mes, estado, cerrado_por, cerrado_en)
 select e.id, m.anio, m.mes, 'cerrado', '10000000-0000-0000-0000-000000000001', now()
 from empresa e
 cross join (values (2026, 7), (2026, 8)) as m(anio, mes);
+
+-- 8. F5: líneas en 'enviada' para que la bandeja de aprobación se enseñe
+--    poblada desde el primer vistazo. Adicionales a las horas de PDET del
+--    punto 6 (no las tocan) -- días/personas elegidos con hueco real bajo
+--    el tope de 12h/día verificado contra la base, evitando a Andrés y el
+--    proyecto Ximeras para no rozar los cuadres ya reconciliados de F4
+--    (fte_mes() igualmente ignora 'enviada' por completo, así que esto no
+--    podría moverlos aunque quisiera -- precaución adicional, no necesidad).
+--    Leo Silva / Web corporativa -> destino Málaga CF SAD (prueba el ámbito
+--    "aprueba la empresa destino" con Marina). Sara Martín / Interno ->
+--    destino Wowinx (queda fuera del ámbito de Marina, dentro del de Cristian).
+insert into imputacion (empleado_id, proyecto_id, subcategoria_id, fecha, horas, estado) values
+  ('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0003-000000000002', '00000000-0000-0000-0002-000000000001', '2026-09-08', 4.0, 'enviada'), -- Leo Silva / Web corporativa
+  ('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0003-000000000002', '00000000-0000-0000-0002-000000000001', '2026-09-09', 3.0, 'enviada'), -- Leo Silva / Web corporativa
+  ('10000000-0000-0000-0000-000000000005', '00000000-0000-0000-0003-000000000005', '00000000-0000-0000-0002-00000000000c', '2026-09-04', 3.0, 'enviada'); -- Sara Martín / Interno

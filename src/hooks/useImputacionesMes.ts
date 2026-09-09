@@ -14,6 +14,7 @@ export interface ImputacionLinea {
   categoriaNombre: string;
   subcategoriaId: string;
   subcategoriaNombre: string;
+  motivoRechazo: string | null;
 }
 
 export interface NuevaLinea {
@@ -24,7 +25,7 @@ export interface NuevaLinea {
 }
 
 const SELECT = `
-  id, fecha, horas, estado, proyecto_id, subcategoria_id,
+  id, fecha, horas, estado, proyecto_id, subcategoria_id, motivo_rechazo,
   proyecto:proyecto_id(nombre, empresa:empresa_id(nombre)),
   subcategoria:subcategoria_id(nombre, categoria:categoria_id(nombre))
 `;
@@ -41,6 +42,7 @@ function mapear(fila: any): ImputacionLinea {
     categoriaNombre: fila.subcategoria?.categoria?.nombre ?? '',
     subcategoriaId: fila.subcategoria_id,
     subcategoriaNombre: fila.subcategoria?.nombre ?? '',
+    motivoRechazo: fila.motivo_rechazo,
   };
 }
 
@@ -164,5 +166,19 @@ export function useImputacionesMes(anio: number, mes: number) {
     [recargar]
   );
 
-  return { porDia, loading, insertar, insertarLote, ajustarHoras, eliminar, recargar };
+  /** Envía a aprobación TODAS las líneas borrador/rechazada del mes cargado. */
+  const enviarPendientes = useCallback(async () => {
+    const ids = Object.values(porDia)
+      .flat()
+      .filter((l) => l.estado === 'borrador' || l.estado === 'rechazada')
+      .map((l) => l.id);
+    if (ids.length === 0) return { error: null, n: 0 };
+
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc('enviar_imputaciones', { p_ids: ids });
+    if (!error) await recargar();
+    return { error: mensajeError(error), n: data ?? 0 };
+  }, [porDia, recargar]);
+
+  return { porDia, loading, insertar, insertarLote, ajustarHoras, eliminar, enviarPendientes, recargar };
 }

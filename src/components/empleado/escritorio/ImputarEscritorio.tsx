@@ -9,6 +9,7 @@ import { CalendarGrid } from '../compartido/CalendarGrid';
 import { ComposerLinea } from './ComposerLinea';
 import { PrecargadoEscritorio } from './PrecargadoEscritorio';
 import { ModalHistorico } from './ModalHistorico';
+import { ModalCentrado } from '../compartido/ModalCentrado';
 import { AvisoAusenciaDia } from '../compartido/AvisoAusenciaDia';
 import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, diaAdyacenteLaborable, estadoDia, fmt, formatoMesAnio, nombreDia, sumaHoras } from '@/lib/horas/calendario';
 import { IconCalendario, IconHistorial, IconHoy } from '@/components/ui/icons';
@@ -24,7 +25,21 @@ const ESTADO_ETIQUETA: Record<string, string> = {
 
 export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
   const [historicoAbierto, setHistoricoAbierto] = useState(false);
+  const [envioAbierto, setEnvioAbierto] = useState(false);
+  const [enviando, setEnviando] = useState(false);
   const jornada = ctx.balance?.jornadaHoras ?? 0;
+
+  const lineasPendientes = Object.values(ctx.porDia)
+    .flat()
+    .filter((l) => l.estado === 'borrador' || l.estado === 'rechazada');
+  const horasPendientes = lineasPendientes.reduce((s, l) => s + l.horas, 0);
+
+  async function onEnviar() {
+    setEnviando(true);
+    const exito = await ctx.enviarPendientes();
+    setEnviando(false);
+    if (exito) setEnvioAbierto(false);
+  }
 
   const diaSel = ctx.dias.find((d) => d.fecha === ctx.selDay);
   const lineasHoy = ctx.porDia[ctx.selDay] ?? [];
@@ -68,6 +83,17 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
           </div>
         </div>
 
+        {lineasPendientes.length > 0 && (
+          <div className="card flex items-center justify-between p-3.5 px-4">
+            <p className="text-sm font-extrabold">
+              {lineasPendientes.length} línea{lineasPendientes.length === 1 ? '' : 's'} por enviar · {fmt(horasPendientes)} h
+            </p>
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => setEnvioAbierto(true)}>
+              Enviar mes
+            </button>
+          </div>
+        )}
+
         <AvisoAusenciaDia ausencia={ausenciaDia} />
 
         {!bloqueadoPorAusencia && <PrecargadoEscritorio ctx={ctx} />}
@@ -87,27 +113,30 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
             {lineasHoy.map((l) => {
               const editable = l.estado === 'borrador' || l.estado === 'rechazada';
               return (
-                <div key={l.id} className="flex items-center justify-between gap-3 border-b border-border py-2.5 last:border-b-0">
-                  <span className="flex min-w-0 items-center gap-2 text-sm">
-                    <CatDot categoria={l.categoriaNombre} />
-                    <b className="truncate font-extrabold">
-                      {l.proyectoNombre} · {l.subcategoriaNombre}
-                    </b>
-                    <span className="shrink-0 text-xs text-ink-secondary">{l.empresaNombre}</span>
-                  </span>
-                  {editable ? (
-                    <span className="flex shrink-0 items-center gap-2">
-                      <Stepper value={l.horas} max={ctx.maxHorasDia ?? 12} onChange={(h) => ctx.ajustarHorasLinea(l.id, h)} />
-                      <button type="button" className="btn btn-sm" onClick={() => ctx.eliminarLinea(l.id)} aria-label="Eliminar línea">
-                        ✕
-                      </button>
+                <div key={l.id} className="border-b border-border py-2.5 last:border-b-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="flex min-w-0 items-center gap-2 text-sm">
+                      <CatDot categoria={l.categoriaNombre} />
+                      <b className="truncate font-extrabold">
+                        {l.proyectoNombre} · {l.subcategoriaNombre}
+                      </b>
+                      <span className="shrink-0 text-xs text-ink-secondary">{l.empresaNombre}</span>
                     </span>
-                  ) : (
-                    <span className="flex shrink-0 items-center gap-2 text-xs text-ink-tertiary">
-                      <span className="mono">{fmt(l.horas)} h</span>
-                      <span>{ESTADO_ETIQUETA[l.estado] ?? l.estado}</span>
-                    </span>
-                  )}
+                    {editable ? (
+                      <span className="flex shrink-0 items-center gap-2">
+                        <Stepper value={l.horas} max={ctx.maxHorasDia ?? 12} onChange={(h) => ctx.ajustarHorasLinea(l.id, h)} />
+                        <button type="button" className="btn btn-sm" onClick={() => ctx.eliminarLinea(l.id)} aria-label="Eliminar línea">
+                          ✕
+                        </button>
+                      </span>
+                    ) : (
+                      <span className="flex shrink-0 items-center gap-2 text-xs text-ink-tertiary">
+                        <span className="mono">{fmt(l.horas)} h</span>
+                        <span>{ESTADO_ETIQUETA[l.estado] ?? l.estado}</span>
+                      </span>
+                    )}
+                  </div>
+                  {l.estado === 'rechazada' && l.motivoRechazo && <p className="micro mt-1">Rechazada: {l.motivoRechazo}</p>}
                 </div>
               );
             })}
@@ -183,6 +212,23 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
       </div>
 
       <ModalHistorico ctx={ctx} abierto={historicoAbierto} onCerrar={() => setHistoricoAbierto(false)} />
+
+      <ModalCentrado abierto={envioAbierto} onCerrar={() => setEnvioAbierto(false)} titulo="Enviar mes">
+        <div className="space-y-4">
+          <p className="text-sm">
+            Vas a enviar {lineasPendientes.length} línea{lineasPendientes.length === 1 ? '' : 's'} ({fmt(horasPendientes)} h) de{' '}
+            {formatoMesAnio(ctx.anio, ctx.mes)} para su aprobación. Las líneas enviadas dejan de ser editables.
+          </p>
+          <div className="flex gap-2">
+            <button type="button" className="btn flex-1 justify-center" onClick={() => setEnvioAbierto(false)}>
+              Cancelar
+            </button>
+            <button type="button" className="btn btn-primary flex-1 justify-center" disabled={enviando} onClick={onEnviar}>
+              {enviando ? 'Enviando…' : 'Enviar'}
+            </button>
+          </div>
+        </div>
+      </ModalCentrado>
     </div>
   );
 }

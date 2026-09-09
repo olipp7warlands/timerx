@@ -38,7 +38,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
   const [staged, setStaged] = useState<Staged | null>(null);
 
   const { dias, loading: diasLoading } = useDiasMes(anio, mes, empresaId);
-  const { porDia, insertar, insertarLote, ajustarHoras, eliminar } = useImputacionesMes(anio, mes);
+  const { porDia, insertar, insertarLote, ajustarHoras, eliminar, enviarPendientes: enviarPendientesHook } = useImputacionesMes(anio, mes);
   const { ausencias, solicitar } = useAusenciasMes(anio, mes);
   const { paraFechas: proyectosParaFechas } = useProyectosAsignados();
   const { grupos } = useCategoriasTareas();
@@ -157,6 +157,16 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
     else toast('Eliminada');
   }
 
+  async function enviarPendientes() {
+    const { error, n } = await enviarPendientesHook();
+    if (error) {
+      toast(error, 'error');
+      return false;
+    }
+    if (n > 0) toast(`${n} línea${n === 1 ? '' : 's'} enviada${n === 1 ? '' : 's'}`);
+    return true;
+  }
+
   async function solicitarAusencia(tipo: 'vacaciones' | 'baja_medica' | 'otro_permiso', inicio: string, fin: string) {
     const { error } = await solicitar(tipo, inicio, fin);
     if (error) {
@@ -203,6 +213,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
     ajustarHorasLinea,
     eliminarLinea,
     solicitarAusencia,
+    enviarPendientes,
   };
 
   return isDesktop ? <ShellEscritorio {...ctx} /> : <ShellMovil {...ctx} />;

@@ -9,7 +9,7 @@ import { ListaConUsar } from '../compartido/ListaConUsar';
 import { BottomSheet } from '../compartido/BottomSheet';
 import { CalendarGrid } from '../compartido/CalendarGrid';
 import { AvisoAusenciaDia } from '../compartido/AvisoAusenciaDia';
-import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, diaAdyacenteLaborable, estadoDia, fmt, nombreDia, sumaHoras } from '@/lib/horas/calendario';
+import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, diaAdyacenteLaborable, estadoDia, fmt, formatoMesAnio, nombreDia, sumaHoras } from '@/lib/horas/calendario';
 import { IconCalendario, IconHoy, IconHistorial, IconArchivo } from '@/components/ui/icons';
 import type { PasoInicial } from './NuevaImputacionSheet';
 import type { EmpleadoCtx } from '../types';
@@ -22,7 +22,21 @@ interface Props {
 
 export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
   const [pickerAbierto, setPickerAbierto] = useState(false);
+  const [envioAbierto, setEnvioAbierto] = useState(false);
+  const [enviando, setEnviando] = useState(false);
   const jornada = ctx.balance?.jornadaHoras ?? 0;
+
+  const lineasPendientes = Object.values(ctx.porDia)
+    .flat()
+    .filter((l) => l.estado === 'borrador' || l.estado === 'rechazada');
+  const horasPendientes = lineasPendientes.reduce((s, l) => s + l.horas, 0);
+
+  async function onEnviar() {
+    setEnviando(true);
+    const exito = await ctx.enviarPendientes();
+    setEnviando(false);
+    if (exito) setEnvioAbierto(false);
+  }
 
   const diaSel = ctx.dias.find((d) => d.fecha === ctx.selDay);
   const lineasHoy = ctx.porDia[ctx.selDay] ?? [];
@@ -68,6 +82,17 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
         </p>
         <ProgressBar horas={totalDia} requeridas={reqDia} />
       </div>
+
+      {lineasPendientes.length > 0 && (
+        <div className="card flex items-center justify-between p-3.5">
+          <p className="text-sm font-extrabold">
+            {lineasPendientes.length} línea{lineasPendientes.length === 1 ? '' : 's'} por enviar · {fmt(horasPendientes)} h
+          </p>
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => setEnvioAbierto(true)}>
+            Enviar mes
+          </button>
+        </div>
+      )}
 
       <AvisoAusenciaDia ausencia={ausenciaDia} />
 
@@ -170,6 +195,23 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
             setPickerAbierto(false);
           }}
         />
+      </BottomSheet>
+
+      <BottomSheet abierto={envioAbierto} onCerrar={() => setEnvioAbierto(false)} titulo="Enviar mes">
+        <div className="space-y-4">
+          <p className="text-sm">
+            Vas a enviar {lineasPendientes.length} línea{lineasPendientes.length === 1 ? '' : 's'} ({fmt(horasPendientes)} h) de{' '}
+            {formatoMesAnio(ctx.anio, ctx.mes)} para su aprobación. Las líneas enviadas dejan de ser editables.
+          </p>
+          <div className="flex gap-2">
+            <button type="button" className="btn flex-1 justify-center" onClick={() => setEnvioAbierto(false)}>
+              Cancelar
+            </button>
+            <button type="button" className="btn btn-primary flex-1 justify-center" disabled={enviando} onClick={onEnviar}>
+              {enviando ? 'Enviando…' : 'Enviar'}
+            </button>
+          </div>
+        </div>
       </BottomSheet>
     </div>
   );
