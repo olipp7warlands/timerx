@@ -15,6 +15,7 @@ export interface ImputacionLinea {
   subcategoriaId: string;
   subcategoriaNombre: string;
   motivoRechazo: string | null;
+  descripcion: string | null;
 }
 
 export interface NuevaLinea {
@@ -22,10 +23,11 @@ export interface NuevaLinea {
   subcategoriaId: string;
   horas: number;
   fecha: string;
+  descripcion?: string;
 }
 
 const SELECT = `
-  id, fecha, horas, estado, proyecto_id, subcategoria_id, motivo_rechazo,
+  id, fecha, horas, estado, proyecto_id, subcategoria_id, motivo_rechazo, descripcion,
   proyecto:proyecto_id(nombre, empresa:empresa_id(nombre)),
   subcategoria:subcategoria_id(nombre, categoria:categoria_id(nombre))
 `;
@@ -43,6 +45,7 @@ function mapear(fila: any): ImputacionLinea {
     subcategoriaId: fila.subcategoria_id,
     subcategoriaNombre: fila.subcategoria?.nombre ?? '',
     motivoRechazo: fila.motivo_rechazo,
+    descripcion: fila.descripcion,
   };
 }
 
@@ -105,6 +108,7 @@ export function useImputacionesMes(anio: number, mes: number) {
         subcategoria_id: linea.subcategoriaId,
         fecha: linea.fecha,
         horas: linea.horas,
+        descripcion: linea.descripcion || null,
         estado: 'borrador',
       });
       if (!error) await recargar();
@@ -129,6 +133,7 @@ export function useImputacionesMes(anio: number, mes: number) {
         subcategoria_id: l.subcategoriaId,
         fecha: l.fecha,
         horas: l.horas,
+        descripcion: l.descripcion || null,
         estado: 'borrador' as const,
       }));
 

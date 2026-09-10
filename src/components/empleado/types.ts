@@ -14,6 +14,7 @@ export interface StagedLinea {
   subcategoriaId: string;
   subcategoriaNombre: string;
   horas: number;
+  descripcion: string;
 }
 
 export interface Staged {
@@ -51,6 +52,7 @@ export interface EmpleadoCtx {
   confirmarStaged: () => Promise<void>;
   descartarStaged: () => void;
   ajustarLineaStaged: (index: number, horas: number) => void;
+  actualizarDescripcionStaged: (index: number, descripcion: string) => void;
   anadirLineaStaged: (linea: StagedLinea) => void;
   usarLinea: (linea: ImputacionLinea, destino: string) => Promise<void>;
   /** true = éxito. Los consumidores (wizard) deben mantener la hoja abierta si devuelve false, para no perder la selección tras un error. */

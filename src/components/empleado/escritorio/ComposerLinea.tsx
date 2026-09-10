@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Stepper } from '../compartido/Stepper';
+import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import type { ProyectoAsignado } from '@/hooks/useProyectosAsignados';
 import type { GrupoTareas } from '@/hooks/useCategoriasTareas';
 import type { StagedLinea } from '../types';
@@ -26,6 +27,8 @@ export function ComposerLinea({ proyectos, grupos, maxHorasDia, etiquetaBoton = 
   const [proyectoId, setProyectoId] = useState('');
   const [subcategoriaId, setSubcategoriaId] = useState('');
   const [horas, setHoras] = useState(1);
+  const [descripcion, setDescripcion] = useState('');
+  const descripcionObligatoria = useDescripcionObligatoria();
 
   useEffect(() => {
     if (!proyectos.some((p) => p.id === proyectoId)) setProyectoId(proyectos[0]?.id ?? '');
@@ -48,6 +51,7 @@ export function ComposerLinea({ proyectos, grupos, maxHorasDia, etiquetaBoton = 
       }
     }
     if (!proyecto || !subcategoriaNombre) return;
+    if (descripcionObligatoria && !descripcion.trim()) return;
     onAnadir({
       proyectoId: proyecto.id,
       proyectoNombre: proyecto.nombre,
@@ -56,33 +60,46 @@ export function ComposerLinea({ proyectos, grupos, maxHorasDia, etiquetaBoton = 
       subcategoriaId,
       subcategoriaNombre,
       horas,
+      descripcion,
     });
+    setDescripcion('');
   }
 
   return (
-    <div className="grid grid-cols-2 items-center gap-2 border-t border-border pt-3 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1.1fr)_auto_auto]">
-      <select className="input" aria-label="Proyecto" value={proyectoId} onChange={(e) => setProyectoId(e.target.value)}>
-        {proyectos.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.nombre} — {p.empresaNombre}
-          </option>
-        ))}
-      </select>
-      <select className="input" aria-label="Tarea" value={subcategoriaId} onChange={(e) => setSubcategoriaId(e.target.value)}>
-        {grupos.map((g) => (
-          <optgroup key={g.categoriaId} label={g.categoriaNombre}>
-            {g.subcategorias.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.nombre}
-              </option>
-            ))}
-          </optgroup>
-        ))}
-      </select>
-      <Stepper value={horas} max={maxHorasDia ?? 12} onChange={setHoras} />
-      <button type="button" className="btn btn-primary" onClick={anadir}>
-        {etiquetaBoton}
-      </button>
+    <div className="space-y-2 border-t border-border pt-3">
+      {descripcionObligatoria && (
+        <input
+          className="input"
+          aria-label="Descripción"
+          placeholder="Descripción (obligatoria)"
+          value={descripcion}
+          onChange={(e) => setDescripcion(e.target.value)}
+        />
+      )}
+      <div className="grid grid-cols-2 items-center gap-2 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1.1fr)_auto_auto]">
+        <select className="input" aria-label="Proyecto" value={proyectoId} onChange={(e) => setProyectoId(e.target.value)}>
+          {proyectos.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.nombre} — {p.empresaNombre}
+            </option>
+          ))}
+        </select>
+        <select className="input" aria-label="Tarea" value={subcategoriaId} onChange={(e) => setSubcategoriaId(e.target.value)}>
+          {grupos.map((g) => (
+            <optgroup key={g.categoriaId} label={g.categoriaNombre}>
+              {g.subcategorias.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.nombre}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        <Stepper value={horas} max={maxHorasDia ?? 12} onChange={setHoras} />
+        <button type="button" className="btn btn-primary" disabled={descripcionObligatoria && !descripcion.trim()} onClick={anadir}>
+          {etiquetaBoton}
+        </button>
+      </div>
     </div>
   );
 }

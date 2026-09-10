@@ -9,6 +9,7 @@ import { useProyectosAsignados } from '@/hooks/useProyectosAsignados';
 import { useCategoriasTareas } from '@/hooks/useCategoriasTareas';
 import { useBalanceMes } from '@/hooks/useBalanceMes';
 import { useMaxHorasDia } from '@/hooks/useMaxHorasDia';
+import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import { ausenciaEnFecha, fmt } from '@/lib/horas/calendario';
 import { ToastProvider, useToast } from './compartido/Toast';
 import { ShellMovil } from './movil/ShellMovil';
@@ -44,6 +45,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
   const { grupos } = useCategoriasTareas();
   const { balance } = useBalanceMes(anio, mes);
   const { maxHorasDia } = useMaxHorasDia();
+  const descripcionObligatoria = useDescripcionObligatoria();
 
   function reutilizarDia(origenFecha: string, aHoy: boolean) {
     const lineasOrigen = porDia[origenFecha] ?? [];
@@ -55,6 +57,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
       subcategoriaId: l.subcategoriaId,
       subcategoriaNombre: l.subcategoriaNombre,
       horas: l.horas,
+      descripcion: l.descripcion ?? '',
     }));
     setStaged({ origen: origenFecha, lineas });
     if (aHoy) setSelDay(fechaHoy);
@@ -77,11 +80,20 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
       return;
     }
 
+    if (descripcionObligatoria) {
+      const sinDescripcion = staged.lineas.filter((l) => !l.descripcion.trim());
+      if (sinDescripcion.length > 0) {
+        toast(`Falta descripción en: ${sinDescripcion.map((l) => l.proyectoNombre).join(', ')}`, 'error');
+        return;
+      }
+    }
+
     const lineas: NuevaLinea[] = staged.lineas.map((l) => ({
       proyectoId: l.proyectoId,
       subcategoriaId: l.subcategoriaId,
       horas: l.horas,
       fecha: selDay,
+      descripcion: l.descripcion,
     }));
     const total = staged.lineas.reduce((s, l) => s + l.horas, 0);
     const { error } = await insertarLote(lineas);
@@ -101,6 +113,10 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
     setStaged((s) => (s ? { ...s, lineas: s.lineas.map((l, i) => (i === index ? { ...l, horas } : l)) } : s));
   }
 
+  function actualizarDescripcionStaged(index: number, descripcion: string) {
+    setStaged((s) => (s ? { ...s, lineas: s.lineas.map((l, i) => (i === index ? { ...l, descripcion } : l)) } : s));
+  }
+
   function anadirLineaStaged(linea: StagedLinea) {
     setStaged((s) => (s ? { ...s, lineas: [...s.lineas, linea] } : { origen: selDay, lineas: [linea] }));
   }
@@ -115,11 +131,16 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
       toast(`Ya no estás asignado a ${linea.proyectoNombre}`, 'error');
       return;
     }
+    if (descripcionObligatoria && !linea.descripcion?.trim()) {
+      toast('Esta línea no tiene descripción — edítala desde Imputar o usa el composer', 'error');
+      return;
+    }
     const { error } = await insertar({
       proyectoId: linea.proyectoId,
       subcategoriaId: linea.subcategoriaId,
       horas: linea.horas,
       fecha: destino,
+      descripcion: linea.descripcion ?? undefined,
     });
     if (error) toast(error, 'error');
     else toast(`Guardado · ${fmt(linea.horas)} h en ${linea.proyectoNombre}`);
@@ -206,6 +227,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
     confirmarStaged,
     descartarStaged,
     ajustarLineaStaged,
+    actualizarDescripcionStaged,
     anadirLineaStaged,
     usarLinea,
     guardarHoras,

@@ -10,6 +10,8 @@ import { useDiasMes } from '@/hooks/useDiasMes';
 import { CalendarGrid } from '@/components/empleado/compartido/CalendarGrid';
 import { Kpi } from '../compartido/Kpi';
 import { Donut } from '../compartido/Donut';
+import { useToast } from '@/components/empleado/compartido/Toast';
+import { enviarRecordatoriosManual } from '@/app/admin/actions';
 import { fmt, formatoDiaLargo, formatoMesAnio } from '@/lib/horas/calendario';
 import { IconHoy, IconCalendario } from '@/components/ui/icons';
 import type { AdminInfo, SeccionAdmin } from '../types';
@@ -29,6 +31,19 @@ export function InicioEscritorio({ info, onIrA }: { info: AdminInfo; onIrA: (s: 
     const d = new Date();
     return { anio: d.getFullYear(), mes: d.getMonth() + 1 };
   });
+  const [enviandoRecordatorios, setEnviandoRecordatorios] = useState(false);
+  const toast = useToast();
+
+  async function onRecordar() {
+    setEnviandoRecordatorios(true);
+    const { error, procesados, omitidos } = await enviarRecordatoriosManual();
+    setEnviandoRecordatorios(false);
+    if (error) {
+      toast(error, 'error');
+      return;
+    }
+    toast(procesados === 0 ? 'Nadie con recordatorio pendiente' : `${procesados} recordatorio${procesados === 1 ? '' : 's'} enviado${procesados === 1 ? '' : 's'}${omitidos ? ` (${omitidos} ya recibidos hoy)` : ''}`);
+  }
 
   const { resumen: dia, loading: diaLoading } = useResumenDia(fechaDia);
   const { resumen: mes, loading: mesLoading } = useResumenMes(anioMes.anio, anioMes.mes);
@@ -79,8 +94,8 @@ export function InicioEscritorio({ info, onIrA }: { info: AdminInfo; onIrA: (s: 
               <div className="card">
                 <div className="card-head py-3 px-4">
                   <h2 className="text-sm font-extrabold">Pendientes de imputar</h2>
-                  <button type="button" className="btn btn-sm" disabled title="Disponible al activar recordatorios">
-                    Recordar
+                  <button type="button" className="btn btn-sm" disabled={enviandoRecordatorios} onClick={onRecordar}>
+                    {enviandoRecordatorios ? 'Enviando…' : 'Recordar'}
                   </button>
                 </div>
                 <div className="space-y-2 px-4 pb-3.5 pt-1">

@@ -8,6 +8,8 @@ import { useProyectosAdmin } from '@/hooks/admin/useProyectosAdmin';
 import { useAsignacionesEmpleado } from '@/hooks/admin/useAsignacionesEmpleado';
 import { useCategorias } from '@/hooks/admin/useCategorias';
 import { useAprobacionImputaciones } from '@/hooks/admin/useAprobacionImputaciones';
+import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
+import { enviarRecordatoriosManual } from '@/app/admin/actions';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { fmt } from '@/lib/horas/calendario';
 
@@ -22,12 +24,14 @@ export function ControlEscritorio() {
   const { proyectos } = useProyectosAdmin();
   const { categorias } = useCategorias();
   const { pendientes, loading: loadingPendientes, aprobar, rechazar } = useAprobacionImputaciones();
+  const descripcionObligatoria = useDescripcionObligatoria();
   const toast = useToast();
 
-  const [form, setForm] = useState({ empleadoId: '', proyectoId: '', subcategoriaId: '', fecha: '', horas: '' });
+  const [form, setForm] = useState({ empleadoId: '', proyectoId: '', subcategoriaId: '', fecha: '', horas: '', descripcion: '' });
   const { proyectoIdsParaFecha } = useAsignacionesEmpleado(form.empleadoId);
   const [rechazandoId, setRechazandoId] = useState<string | null>(null);
   const [motivoRechazo, setMotivoRechazo] = useState('');
+  const [enviandoRecordatorios, setEnviandoRecordatorios] = useState(false);
 
   const subcategorias = categorias.flatMap((c) => c.subcategorias.map((s) => ({ ...s, categoriaNombre: c.nombre })));
   const idsVigentes = proyectoIdsParaFecha(form.fecha);
@@ -37,12 +41,16 @@ export function ControlEscritorio() {
   const proyectoIdEfectivo = idsVigentes.includes(form.proyectoId) ? form.proyectoId : '';
 
   function abrirImputacion(empleadoId: string, fecha: string) {
-    setForm({ empleadoId, proyectoId: '', subcategoriaId: '', fecha, horas: '' });
+    setForm({ empleadoId, proyectoId: '', subcategoriaId: '', fecha, horas: '', descripcion: '' });
   }
 
   async function guardarImputacion() {
     if (!form.empleadoId || !proyectoIdEfectivo || !form.subcategoriaId || !form.fecha || !form.horas) {
       toast('Completa empleado, proyecto, subcategoría, fecha y horas', 'error');
+      return;
+    }
+    if (descripcionObligatoria && !form.descripcion.trim()) {
+      toast('Completa la descripción', 'error');
       return;
     }
     const { error } = await imputar({
@@ -51,14 +59,26 @@ export function ControlEscritorio() {
       subcategoriaId: form.subcategoriaId,
       fecha: form.fecha,
       horas: Number(form.horas.replace(',', '.')),
+      descripcion: form.descripcion || undefined,
     });
     if (error) {
       toast(error, 'error');
       return;
     }
     toast('Imputación directa registrada');
-    setForm({ empleadoId: '', proyectoId: '', subcategoriaId: '', fecha: '', horas: '' });
+    setForm({ empleadoId: '', proyectoId: '', subcategoriaId: '', fecha: '', horas: '', descripcion: '' });
     recargar();
+  }
+
+  async function onEnviarRecordatorios() {
+    setEnviandoRecordatorios(true);
+    const { error, procesados, omitidos } = await enviarRecordatoriosManual();
+    setEnviandoRecordatorios(false);
+    if (error) {
+      toast(error, 'error');
+      return;
+    }
+    toast(procesados === 0 ? 'Nadie con recordatorio pendiente' : `${procesados} recordatorio${procesados === 1 ? '' : 's'} enviado${procesados === 1 ? '' : 's'}${omitidos ? ` (${omitidos} ya recibidos hoy)` : ''}`);
   }
 
   async function onAprobar(id: string) {
@@ -121,7 +141,13 @@ export function ControlEscritorio() {
             <input className="input mono" type="date" value={form.fecha} onChange={(e) => setForm((f) => ({ ...f, fecha: e.target.value }))} />
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Horas</label>
             <input className="input mono" value={form.horas} onChange={(e) => setForm((f) => ({ ...f, horas: e.target.value }))} placeholder="7" />
-            <button type="button" className="btn full" onClick={guardarImputacion}>
+            {descripcionObligatoria && (
+              <>
+                <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Descripción</label>
+                <input className="input" value={form.descripcion} onChange={(e) => setForm((f) => ({ ...f, descripcion: e.target.value }))} placeholder="Descripción (obligatoria)" />
+              </>
+            )}
+            <button type="button" className="btn full mt-3" onClick={guardarImputacion}>
               Guardar imputación
             </button>
           </div>
@@ -131,8 +157,8 @@ export function ControlEscritorio() {
       <div className="card">
         <div className="card-head">
           <h2 className="text-sm font-extrabold">Imputaciones faltantes · este mes</h2>
-          <button type="button" className="btn btn-sm" disabled title="Disponible al activar recordatorios">
-            Recordar por email
+          <button type="button" className="btn btn-sm" disabled={enviandoRecordatorios} onClick={onEnviarRecordatorios}>
+            {enviandoRecordatorios ? 'Enviando…' : 'Recordar por email'}
           </button>
         </div>
         <div className="px-1.5 pb-2">

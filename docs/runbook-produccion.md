@@ -1,0 +1,71 @@
+# Runbook — Despliegue a producción real
+
+> **Borrador.** No ejecutado. Escrito como parte del inventario previo a F6 (recordatorios y pulido). Contiene una decisión abierta que bloquea el resto del runbook — marcada explícitamente más abajo — y no debe seguirse paso a paso hasta que esa decisión y las de `PLAN.md` F6 estén cerradas con el usuario.
+
+## Decisión abierta que condiciona todo lo demás
+
+**¿El destino final de producción es el mismo proyecto Supabase/Railway que la demo (limpiado de datos ficticios), o uno nuevo y separado?**
+
+Recomendación: **proyecto nuevo, separado de la demo.** Razones:
+- La demo (`https://timerx-production.up.railway.app`) sigue siendo la herramienta comercial/de presentación — necesita seguir mostrando el escenario de Wowinx/Málaga CF SAD/Legal Norte con datos coherentes indefinidamente, no solo hasta que exista producción real.
+- Mezclar datos reales de nómina/refacturación de un cliente real con un proyecto que también sirve demos a terceros es un riesgo operativo innecesario (un clic en el sitio equivocado durante una demo comercial no debe poder tocar datos reales, y viceversa).
+- Las credenciales de servicio (`SUPABASE_SERVICE_ROLE_KEY`) de un proyecto de producción real no deberían compartirse con el entorno que además usa el equipo comercial/de producto para enseñar la app.
+
+Este runbook asume esa recomendación (proyecto nuevo). Si se decide reutilizar el proyecto de la demo, los pasos 1-2 cambian por un plan de limpieza de datos en vez de creación desde cero — no está desarrollado aquí porque no es la opción recomendada.
+
+## 0. Prerrequisitos
+
+- [ ] Decisión anterior cerrada con el usuario.
+- [ ] Dominio propio disponible para producción (no `*.up.railway.app`).
+- [ ] Decisiones de F6 sobre recordatorios cerradas (afecta si `RESEND_API_KEY`/dominio verificado en Resend entran en este runbook o quedan para después).
+- [ ] Datos reales del cliente: empresas reales, categorías/subcategorías reales, tarifas reales, lista real de empleados con sus emails — nada de esto existe todavía como artefacto reutilizable, hay que recopilarlo antes de sembrar el proyecto nuevo.
+
+## 1. Proyecto Supabase nuevo
+
+- [ ] Crear proyecto Supabase limpio.
+- [ ] Aplicar migraciones **001 a 011 en orden** desde `supabase/migrations/` (`supabase db push` contra el proyecto nuevo, tras `supabase link`).
+- [ ] **NO ejecutar `supabase/seed_datos.sql` tal cual** — mezcla datos de catálogo reutilizables (estructura de tarifas, ejemplo de asignaciones) con datos 100% ficticios de la demo (empresas Wowinx/Málaga CF SAD/Legal Norte, imputaciones, ausencias, las 3 líneas `enviada` de F5). Nada de `seed_datos.sql` debe llegar a producción sin reescribirse con datos reales.
+- [ ] Sembrar solo lo que sea catálogo real y estable: empresas reales del cliente, categorías/subcategorías reales (`categoria`/`subcategoria`), festivos reales del calendario laboral real, `ajuste` con los valores reales (`jornada_horas`, `tope_horas_dia`, etc. — revisar si los defaults de 002 sirven o hay que ajustarlos al cliente real).
+- [ ] Confirmar `RLS` activo en todas las tablas (ya lo está por las migraciones; verificar con una consulta de sesión anónima que da 0 filas, mismo patrón usado en las verificaciones de F3).
+
+## 2. Usuarios reales
+
+- [ ] **Cero usuarios por seed script** (`scripts/seed-usuarios.mjs` es solo para desarrollo/demo — no ejecutar contra producción).
+- [ ] Alta exclusivamente por invitación real (`inviteUserByEmail`, sección Usuarios del panel), uno a uno, con el email real de cada persona.
+- [ ] **Sin contraseña compartida.** `scripts/set-passwords.mjs` (contraseña `Horas2026!`) es solo para la demo — cada usuario real define su propia contraseña al aceptar la invitación, con reset propio vía el flujo estándar de Supabase Auth.
+
+## 3. Railway
+
+- [ ] Servicio nuevo (o al menos un `environment` de producción real separado, si se decide compartir proyecto Railway — a decidir junto con la pregunta de la sección 0).
+- [ ] Variables (`railway variable set`, nunca en texto plano en el repo): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — todas del proyecto Supabase **nuevo**, nunca reutilizar las de la demo. `RESEND_API_KEY` si F6 ya está construido y decidido.
+- [ ] `railway domain` con dominio propio del cliente/producto, no el genérico `*.up.railway.app` de la demo — requiere configurar DNS.
+- [ ] Redeploy tras fijar las `NEXT_PUBLIC_*` (se compilan en build time, no runtime — mismo aviso que en F3.5).
+- [ ] `poweredByHeader: false` ya está en `next.config.ts`, no requiere acción.
+
+## 4. Supabase Auth
+
+- [ ] `site_url` = dominio real de producción (no el de Railway demo ni `localhost`).
+- [ ] `additional_redirect_urls`: revisar si conviene mantener las de desarrollo local para poder seguir depurando contra este proyecto, o dejarlo estricto solo al dominio real.
+- [ ] Aplicar vía `supabase/config.toml` + `supabase config push`, replicando el patrón ya usado en F3.5 (archivo deliberadamente mínimo, solo las 2 claves de `[auth]`, `config diff` antes de pushear para no tocar nada más).
+
+## 5. Verificaciones post-deploy (mismo estándar que F3.5)
+
+- [ ] `/debug`, `/debug/movil`, `/debug/movil-admin` → 404 en el dominio real.
+- [ ] Login real de al menos un usuario invitado, sesión establecida, datos reales cargando.
+- [ ] `/admin` gated correctamente por rol.
+- [ ] Cabeceras revisadas (sin `X-Powered-By`, nada inesperado).
+- [ ] `grep` del valor de `SUPABASE_SERVICE_ROLE_KEY` sobre un build local con las mismas variables → cero coincidencias en `.next` (mismo control que F3.5).
+
+## Todo lo que hoy es "demo" y no debe llegar a producción tal cual
+
+Lista de repaso explícito antes de dar F6/producción por cerrada:
+
+| Elemento | Dónde vive | Por qué no vale para producción |
+|---|---|---|
+| Contraseña compartida `Horas2026!` | `scripts/set-passwords.mjs` | Credencial única compartida entre 11 cuentas — solo aceptable para poder enseñar la demo desde un móvil sin depender de magic links. |
+| Seed ficticio completo | `scripts/seed-usuarios.mjs`, `supabase/seed.sql`, `supabase/seed_datos.sql` | Empresas (Wowinx SL, Málaga CF SAD, Legal Norte), proyectos (Ximeras, Triatix...), imputaciones y ausencias son todas de ejemplo. |
+| 3 líneas `enviada` de F5 | `supabase/seed_datos.sql` §8 (Leo Silva, Sara Martín) | Añadidas explícitamente para que la bandeja de aprobación se enseñe poblada en la demo. |
+| Dominio `timerx-production.up.railway.app` | Railway (F3.5) | Dominio genérico de demo, no de marca/cliente. |
+| `olcasan08@gmail.com` (Oliver Pérez) como empleado invitado | Seed real vía invitación (post-F3.5) | Es la vía de acceso del propietario del proyecto a la demo desde el móvil, no un usuario real del cliente. |
+| 12h sin tarifa "a propósito" en Wowinx, septiembre | Datos reales insertados durante F3/F4 para poder enseñar el bloqueo de cierre | Escenario deliberadamente roto para demostrar `cerrar_periodo()`. |
+| `additional_redirect_urls` con `localhost`/`127.0.0.1` | `supabase/config.toml` | Solo tiene sentido si producción sigue siendo el mismo proyecto que se usa para desarrollar localmente — revisar según la decisión de la sección 0. |

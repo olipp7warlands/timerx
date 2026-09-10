@@ -9,6 +9,7 @@ import { ListaConUsar } from '../compartido/ListaConUsar';
 import { BottomSheet } from '../compartido/BottomSheet';
 import { CalendarGrid } from '../compartido/CalendarGrid';
 import { AvisoAusenciaDia } from '../compartido/AvisoAusenciaDia';
+import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, diaAdyacenteLaborable, estadoDia, fmt, formatoMesAnio, nombreDia, sumaHoras } from '@/lib/horas/calendario';
 import { IconCalendario, IconHoy, IconHistorial, IconArchivo } from '@/components/ui/icons';
 import type { PasoInicial } from './NuevaImputacionSheet';
@@ -25,6 +26,7 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
   const [envioAbierto, setEnvioAbierto] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const jornada = ctx.balance?.jornadaHoras ?? 0;
+  const descripcionObligatoria = useDescripcionObligatoria();
 
   const lineasPendientes = Object.values(ctx.porDia)
     .flat()
@@ -102,17 +104,32 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
             <b className="text-sm">Precargado del {Number(ctx.staged.origen.slice(-2))}</b>
             <span className="mono text-sm">{fmt(totalStaged)} h</span>
           </div>
-          {ctx.staged.lineas.map((l, i) => (
-            <div key={i} className="flex items-center justify-between text-sm">
-              <span className="flex min-w-0 items-center gap-2">
-                <CatDot categoria={l.categoriaNombre} />
-                <span className="truncate">
-                  {l.proyectoNombre} · {l.subcategoriaNombre}
-                </span>
-              </span>
-              <Stepper value={l.horas} max={ctx.maxHorasDia ?? 12} onChange={(h) => ctx.ajustarLineaStaged(i, h)} />
-            </div>
-          ))}
+          {ctx.staged.lineas.map((l, i) => {
+            const sinDescripcion = descripcionObligatoria && !l.descripcion.trim();
+            return (
+              <div key={i} className="space-y-1">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <CatDot categoria={l.categoriaNombre} />
+                    <span className="truncate">
+                      {l.proyectoNombre} · {l.subcategoriaNombre}
+                    </span>
+                  </span>
+                  <Stepper value={l.horas} max={ctx.maxHorasDia ?? 12} onChange={(h) => ctx.ajustarLineaStaged(i, h)} />
+                </div>
+                {descripcionObligatoria && (
+                  <input
+                    className="input"
+                    aria-label={`Descripción de ${l.proyectoNombre} · ${l.subcategoriaNombre}`}
+                    placeholder="Descripción (obligatoria)"
+                    value={l.descripcion}
+                    onChange={(e) => ctx.actualizarDescripcionStaged(i, e.target.value)}
+                  />
+                )}
+                {sinDescripcion && <p className="micro">Falta descripción</p>}
+              </div>
+            );
+          })}
           <button type="button" className="add-line flex items-center gap-2 text-xs font-extrabold" onClick={() => onAbrirHoja('proyecto', true)}>
             <span className="grid h-6 w-6 place-items-center rounded-full border border-dashed border-ink-primary">＋</span>
             Imputar nueva tarea
@@ -121,7 +138,12 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
             <button type="button" className="btn flex-1 justify-center" onClick={ctx.descartarStaged}>
               Descartar
             </button>
-            <button type="button" className="btn btn-primary flex-1 justify-center" onClick={ctx.confirmarStaged}>
+            <button
+              type="button"
+              className="btn btn-primary flex-1 justify-center"
+              disabled={descripcionObligatoria && ctx.staged.lineas.some((l) => !l.descripcion.trim())}
+              onClick={ctx.confirmarStaged}
+            >
               Confirmar
             </button>
           </div>

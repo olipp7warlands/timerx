@@ -60,18 +60,11 @@ export function AjustesEscritorio({ info }: { info: AdminInfo }) {
           onToggle={() => toggle('descripcionObligatoria', ajustes.descripcionObligatoria)}
         />
         <Ajuste
-          nombre="Bloquear meses cerrados"
-          descripcion="Impide cualquier cambio en periodos ya cerrados."
-          valor={ajustes.bloquearMesesCerrados}
-          editable={esAdminGrupo}
-          onToggle={() => toggle('bloquearMesesCerrados', ajustes.bloquearMesesCerrados)}
-        />
-        <Ajuste
           nombre="Recordatorio por email"
-          descripcion="Envía un aviso a quien tenga imputaciones pendientes (F6, pendiente de activar)."
+          descripcion="Envío diario a quien tenga días laborables sin completar (últimos 5 días)."
           valor={ajustes.recordatorioEmail}
-          editable={false}
-          onToggle={() => {}}
+          editable={esAdminGrupo}
+          onToggle={() => toggle('recordatorioEmail', ajustes.recordatorioEmail)}
         />
       </div>
     </div>

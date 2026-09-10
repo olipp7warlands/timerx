@@ -145,7 +145,12 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
             ) : proyectosDia.length === 0 ? (
               <p className="py-2 text-sm text-ink-tertiary">No tienes proyectos asignados para este día. Habla con tu administrador.</p>
             ) : (
-              <ComposerLinea proyectos={proyectosDia} grupos={ctx.grupos} maxHorasDia={ctx.maxHorasDia} onAnadir={(l) => ctx.guardarHoras({ proyectoId: l.proyectoId, subcategoriaId: l.subcategoriaId, horas: l.horas, fecha: ctx.selDay })} />
+              <ComposerLinea
+                proyectos={proyectosDia}
+                grupos={ctx.grupos}
+                maxHorasDia={ctx.maxHorasDia}
+                onAnadir={(l) => ctx.guardarHoras({ proyectoId: l.proyectoId, subcategoriaId: l.subcategoriaId, horas: l.horas, fecha: ctx.selDay, descripcion: l.descripcion })}
+              />
             )}
           </div>
         </div>

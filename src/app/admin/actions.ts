@@ -1,7 +1,11 @@
 'use server';
 
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { createClient as createSessionClient } from '@/lib/supabase/server';
 import { getPerfilServer } from '@/lib/supabase/perfil';
+import { procesarRecordatorios } from '@/lib/recordatorios/enviar';
+
+const VENTANA_DIAS_RECORDATORIO = 5;
 
 export interface InvitarUsuarioInput {
   email: string;
@@ -50,4 +54,40 @@ export async function invitarUsuario(input: InvitarUsuarioInput): Promise<{ erro
   }
 
   return { error: null };
+}
+
+/**
+ * Botón manual "Recordar"/"Recordar por email" -- misma ventana de 5 días y
+ * misma lógica de envío que el cron (src/lib/recordatorios/enviar.ts), pero
+ * lee faltantes() con la sesión real del admin (no faltantes_recordatorio(),
+ * exclusiva de service_role) para que el ámbito sea exactamente el que ya ve
+ * en pantalla -- admin_grupo todo el grupo, admin_empresa solo su empresa.
+ */
+export async function enviarRecordatoriosManual(): Promise<{ error: string | null; procesados: number; omitidos: number }> {
+  const perfil = await getPerfilServer();
+  if (!perfil || !['admin_grupo', 'admin_empresa'].includes(perfil.rol)) {
+    return { error: 'Sin permisos para enviar recordatorios', procesados: 0, omitidos: 0 };
+  }
+
+  const hoy = new Date();
+  const desde = new Date(hoy);
+  desde.setDate(desde.getDate() - VENTANA_DIAS_RECORDATORIO);
+  const fechaDesde = desde.toISOString().slice(0, 10);
+  const fechaHasta = hoy.toISOString().slice(0, 10);
+
+  const supabaseSesion = await createSessionClient();
+  const { data, error } = await supabaseSesion.rpc('faltantes', { p_desde: fechaDesde, p_hasta: fechaHasta });
+  if (error) return { error: error.message, procesados: 0, omitidos: 0 };
+
+  const filas = (data ?? []).map((f: any) => ({
+    perfilId: f.perfil_id,
+    nombre: f.nombre,
+    email: f.email,
+    fecha: f.fecha,
+    falta: Number(f.falta),
+  }));
+
+  const modo = process.env.MODO_EMAIL === 'real' ? 'real' : 'log';
+  const resultado = await procesarRecordatorios(filas, modo, fechaDesde, fechaHasta);
+  return { error: null, ...resultado };
 }

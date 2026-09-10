@@ -6,6 +6,7 @@ import { CatDot } from '../compartido/CatDot';
 import { Stepper } from '../compartido/Stepper';
 import { CalendarGrid } from '../compartido/CalendarGrid';
 import { SelectorRangoFechas, type RangoFechas } from '../compartido/SelectorRangoFechas';
+import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import { ausenciaEnFecha, CLASE_AUSENCIA_DIA } from '@/lib/horas/calendario';
 import type { EmpleadoCtx } from '../types';
 
@@ -43,18 +44,20 @@ interface State {
   actual: Paso;
   sel: Sel;
   horas: number;
+  descripcion: string;
 }
 
 type Action =
   | { tipo: 'RESET'; paso: Paso }
   | { tipo: 'AVANZAR'; paso: Paso; sel?: Partial<Sel> }
   | { tipo: 'RETROCEDER' }
-  | { tipo: 'SET_HORAS'; horas: number };
+  | { tipo: 'SET_HORAS'; horas: number }
+  | { tipo: 'SET_DESCRIPCION'; descripcion: string };
 
 function reducer(state: State, action: Action): State {
   switch (action.tipo) {
     case 'RESET':
-      return { pila: [], actual: action.paso, sel: {}, horas: 1 };
+      return { pila: [], actual: action.paso, sel: {}, horas: 1, descripcion: '' };
     case 'AVANZAR':
       return { ...state, pila: [...state.pila, state.actual], actual: action.paso, sel: { ...state.sel, ...action.sel } };
     case 'RETROCEDER': {
@@ -64,6 +67,8 @@ function reducer(state: State, action: Action): State {
     }
     case 'SET_HORAS':
       return { ...state, horas: action.horas };
+    case 'SET_DESCRIPCION':
+      return { ...state, descripcion: action.descripcion };
   }
 }
 
@@ -76,7 +81,8 @@ interface Props {
 }
 
 export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged, onCerrar }: Props) {
-  const [state, dispatch] = useReducer(reducer, { pila: [], actual: 'tipo', sel: {}, horas: 1 });
+  const [state, dispatch] = useReducer(reducer, { pila: [], actual: 'tipo', sel: {}, horas: 1, descripcion: '' });
+  const descripcionObligatoria = useDescripcionObligatoria();
   const [multiDias, setMultiDias] = useState<Set<string>>(new Set());
   const [mostrarCalMulti, setMostrarCalMulti] = useState(false);
   const [rangoAus, setRangoAus] = useState<RangoFechas>({ inicio: null, fin: null });
@@ -105,6 +111,7 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
 
   async function guardarHoras() {
     if (!state.sel.proyectoId || !state.sel.subcategoriaId) return;
+    if (descripcionObligatoria && !state.descripcion.trim()) return;
     if (destinoStaged) {
       ctx.anadirLineaStaged({
         proyectoId: state.sel.proyectoId,
@@ -114,6 +121,7 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
         subcategoriaId: state.sel.subcategoriaId,
         subcategoriaNombre: state.sel.subcategoriaNombre!,
         horas: state.horas,
+        descripcion: state.descripcion,
       });
       onCerrar();
       return;
@@ -121,7 +129,7 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
     // Si falla (p.ej. supera el tope diario), la hoja se queda abierta con la selección intacta
     // para que el usuario vea el error y pueda ajustar horas/días sin repetir todo el wizard.
     const exito = await ctx.guardarHorasMultiDia(
-      { proyectoId: state.sel.proyectoId, subcategoriaId: state.sel.subcategoriaId, horas: state.horas },
+      { proyectoId: state.sel.proyectoId, subcategoriaId: state.sel.subcategoriaId, horas: state.horas, descripcion: state.descripcion },
       [...multiDias]
     );
     if (exito) onCerrar();
@@ -213,6 +221,15 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
               </button>
             ))}
           </div>
+          {descripcionObligatoria && (
+            <input
+              className="input"
+              aria-label="Descripción"
+              placeholder="Descripción (obligatoria)"
+              value={state.descripcion}
+              onChange={(e) => dispatch({ tipo: 'SET_DESCRIPCION', descripcion: e.target.value })}
+            />
+          )}
           {!destinoStaged && (
             <div>
               <button type="button" className="btn btn-sm w-full justify-center" onClick={() => setMostrarCalMulti((v) => !v)}>
@@ -240,7 +257,12 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
               )}
             </div>
           )}
-          <button type="button" className="btn btn-primary w-full justify-center" onClick={guardarHoras}>
+          <button
+            type="button"
+            className="btn btn-primary w-full justify-center"
+            disabled={descripcionObligatoria && !state.descripcion.trim()}
+            onClick={guardarHoras}
+          >
             {destinoStaged ? 'Añadir al precargado' : 'Guardar horas'}
           </button>
         </div>

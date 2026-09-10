@@ -1,6 +1,7 @@
 import { CatDot } from '../compartido/CatDot';
 import { Stepper } from '../compartido/Stepper';
 import { ComposerLinea } from './ComposerLinea';
+import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import { fmt } from '@/lib/horas/calendario';
 import type { EmpleadoCtx } from '../types';
 
@@ -10,9 +11,11 @@ interface Props {
 
 /** Precargado de escritorio: steppers por línea + composer propio "＋ Añadir al lote" + Confirmar (total en vivo) / Descartar. */
 export function PrecargadoEscritorio({ ctx }: Props) {
+  const descripcionObligatoria = useDescripcionObligatoria();
   if (!ctx.staged) return null;
   const total = ctx.staged.lineas.reduce((s, l) => s + l.horas, 0);
   const proyectosDia = ctx.proyectosParaFechas([ctx.selDay]);
+  const faltaDescripcion = descripcionObligatoria && ctx.staged.lineas.some((l) => !l.descripcion.trim());
 
   return (
     <div className="card space-y-3 border-dashed p-4">
@@ -20,17 +23,32 @@ export function PrecargadoEscritorio({ ctx }: Props) {
         <b className="text-sm">Precargado del {Number(ctx.staged.origen.slice(-2))}</b>
         <span className="mono text-sm">{fmt(total)} h</span>
       </div>
-      {ctx.staged.lineas.map((l, i) => (
-        <div key={i} className="flex items-center justify-between border-b border-border pb-2 text-sm last:border-b-0">
-          <span className="flex min-w-0 items-center gap-2">
-            <CatDot categoria={l.categoriaNombre} />
-            <span className="truncate">
-              {l.proyectoNombre} · {l.subcategoriaNombre}
-            </span>
-          </span>
-          <Stepper value={l.horas} max={ctx.maxHorasDia ?? 12} onChange={(h) => ctx.ajustarLineaStaged(i, h)} />
-        </div>
-      ))}
+      {ctx.staged.lineas.map((l, i) => {
+        const sinDescripcion = descripcionObligatoria && !l.descripcion.trim();
+        return (
+          <div key={i} className="space-y-1 border-b border-border pb-2 last:border-b-0">
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex min-w-0 items-center gap-2">
+                <CatDot categoria={l.categoriaNombre} />
+                <span className="truncate">
+                  {l.proyectoNombre} · {l.subcategoriaNombre}
+                </span>
+              </span>
+              <Stepper value={l.horas} max={ctx.maxHorasDia ?? 12} onChange={(h) => ctx.ajustarLineaStaged(i, h)} />
+            </div>
+            {descripcionObligatoria && (
+              <input
+                className="input"
+                aria-label={`Descripción de ${l.proyectoNombre} · ${l.subcategoriaNombre}`}
+                placeholder="Descripción (obligatoria)"
+                value={l.descripcion}
+                onChange={(e) => ctx.actualizarDescripcionStaged(i, e.target.value)}
+              />
+            )}
+            {sinDescripcion && <p className="micro">Falta descripción</p>}
+          </div>
+        );
+      })}
       {proyectosDia.length === 0 ? (
         <p className="text-sm text-ink-tertiary">No tienes proyectos asignados para este día. Habla con tu administrador.</p>
       ) : (
@@ -40,7 +58,7 @@ export function PrecargadoEscritorio({ ctx }: Props) {
         <button type="button" className="btn flex-1 justify-center" onClick={ctx.descartarStaged}>
           Descartar
         </button>
-        <button type="button" className="btn btn-primary flex-1 justify-center" onClick={ctx.confirmarStaged}>
+        <button type="button" className="btn btn-primary flex-1 justify-center" disabled={faltaDescripcion} onClick={ctx.confirmarStaged}>
           Confirmar {fmt(total)} h
         </button>
       </div>
