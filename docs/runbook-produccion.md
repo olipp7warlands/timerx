@@ -1,29 +1,27 @@
 # Runbook — Despliegue a producción real
 
-> **Borrador.** No ejecutado. Escrito como parte del inventario previo a F6 (recordatorios y pulido). Contiene una decisión abierta que bloquea el resto del runbook — marcada explícitamente más abajo — y no debe seguirse paso a paso hasta que esa decisión y las de `PLAN.md` F6 estén cerradas con el usuario.
+> **Decisión de proyecto cerrada, resto pendiente de ejecución.** Escrito como parte del inventario previo a F6. La decisión de la sección siguiente ya está confirmada por el usuario; el resto de los pasos no se ha ejecutado todavía — sigue siendo Bloque B (producción real), fuera de F6 Bloque A.
 
-## Decisión abierta que condiciona todo lo demás
+## Decisión cerrada: proyecto Supabase/Railway nuevo, separado de la demo
 
-**¿El destino final de producción es el mismo proyecto Supabase/Railway que la demo (limpiado de datos ficticios), o uno nuevo y separado?**
-
-Recomendación: **proyecto nuevo, separado de la demo.** Razones:
+**Confirmado por el usuario: producción real usa un proyecto Supabase nuevo** (no el de la demo, limpiado de datos). Razones que motivaron la recomendación, mantenidas por escrito:
 - La demo (`https://timerx-production.up.railway.app`) sigue siendo la herramienta comercial/de presentación — necesita seguir mostrando el escenario de Wowinx/Málaga CF SAD/Legal Norte con datos coherentes indefinidamente, no solo hasta que exista producción real.
 - Mezclar datos reales de nómina/refacturación de un cliente real con un proyecto que también sirve demos a terceros es un riesgo operativo innecesario (un clic en el sitio equivocado durante una demo comercial no debe poder tocar datos reales, y viceversa).
 - Las credenciales de servicio (`SUPABASE_SERVICE_ROLE_KEY`) de un proyecto de producción real no deberían compartirse con el entorno que además usa el equipo comercial/de producto para enseñar la app.
 
-Este runbook asume esa recomendación (proyecto nuevo). Si se decide reutilizar el proyecto de la demo, los pasos 1-2 cambian por un plan de limpieza de datos en vez de creación desde cero — no está desarrollado aquí porque no es la opción recomendada.
+El resto de este runbook asume proyecto nuevo — los pasos 1-2 son creación desde cero, no limpieza de un proyecto existente.
 
 ## 0. Prerrequisitos
 
-- [ ] Decisión anterior cerrada con el usuario.
+- [x] Decisión de proyecto Supabase/Railway nuevo cerrada con el usuario.
 - [ ] Dominio propio disponible para producción (no `*.up.railway.app`).
-- [ ] Decisiones de F6 sobre recordatorios cerradas (afecta si `RESEND_API_KEY`/dominio verificado en Resend entran en este runbook o quedan para después).
+- [x] Decisiones de F6 sobre recordatorios cerradas (Bloque A construido y desplegado: cron + botón manual, `MODO_EMAIL='log'` por defecto — cuenta/dominio Resend reales siguen sin confirmar, ver tabla final).
 - [ ] Datos reales del cliente: empresas reales, categorías/subcategorías reales, tarifas reales, lista real de empleados con sus emails — nada de esto existe todavía como artefacto reutilizable, hay que recopilarlo antes de sembrar el proyecto nuevo.
 
 ## 1. Proyecto Supabase nuevo
 
 - [ ] Crear proyecto Supabase limpio.
-- [ ] Aplicar migraciones **001 a 011 en orden** desde `supabase/migrations/` (`supabase db push` contra el proyecto nuevo, tras `supabase link`).
+- [ ] Aplicar migraciones **001 a 012 en orden** desde `supabase/migrations/` (`supabase db push` contra el proyecto nuevo, tras `supabase link`).
 - [ ] **NO ejecutar `supabase/seed_datos.sql` tal cual** — mezcla datos de catálogo reutilizables (estructura de tarifas, ejemplo de asignaciones) con datos 100% ficticios de la demo (empresas Wowinx/Málaga CF SAD/Legal Norte, imputaciones, ausencias, las 3 líneas `enviada` de F5). Nada de `seed_datos.sql` debe llegar a producción sin reescribirse con datos reales.
 - [ ] Sembrar solo lo que sea catálogo real y estable: empresas reales del cliente, categorías/subcategorías reales (`categoria`/`subcategoria`), festivos reales del calendario laboral real, `ajuste` con los valores reales (`jornada_horas`, `tope_horas_dia`, etc. — revisar si los defaults de 002 sirven o hay que ajustarlos al cliente real).
 - [ ] Confirmar `RLS` activo en todas las tablas (ya lo está por las migraciones; verificar con una consulta de sesión anónima que da 0 filas, mismo patrón usado en las verificaciones de F3).
