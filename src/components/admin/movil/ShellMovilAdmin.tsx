@@ -8,6 +8,7 @@ import type { AdminInfo, SeccionAdmin } from '../types';
 import { InicioMovil } from './InicioMovil';
 import { AusenciasMovil } from './AusenciasMovil';
 import { OtraSeccionMovil } from './OtraSeccionMovil';
+import { MapaMovil } from './MapaMovil';
 
 const ETIQUETAS: Record<SeccionAdmin, string> = {
   inicio: 'Inicio',
@@ -17,6 +18,7 @@ const ETIQUETAS: Record<SeccionAdmin, string> = {
   proyectos: 'Proyectos',
   categorias: 'Categorías',
   calendario: 'Calendario',
+  mapa: 'Mapa',
   control: 'Control',
   tarifas: 'Tarifas',
   refacturacion: 'Refacturaciones',
@@ -64,6 +66,7 @@ export function ShellMovilAdmin({ info, seccion, setSeccion }: Props) {
       <div className="px-4.5">
         {seccion === 'inicio' && <InicioMovil />}
         {seccion === 'ausencias' && <AusenciasMovil />}
+        {seccion === 'mapa' && <MapaMovil />}
         {!SECCIONES_MOVIL_FUNCIONALES.includes(seccion) && <OtraSeccionMovil titulo={ETIQUETAS[seccion]} />}
       </div>
 

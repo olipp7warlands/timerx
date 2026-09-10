@@ -206,6 +206,20 @@
   .aus-row b{font-size:14px; font-weight:800; display:block}
   .aus-row .subtxt{font-size:11.5px; color:var(--ink-tertiary)}
 
+
+  /* ===== Mapa del grupo ===== */
+  .mapa-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; align-items:start}
+  .mapa-card{border:1px solid var(--border); border-radius:16px; background:var(--bg-surface); box-shadow:var(--sombra); overflow:hidden}
+  .mapa-head{display:flex; align-items:center; gap:8px; padding:10px 14px; color:#fff; font-weight:800; font-size:11.5px; letter-spacing:.6px; text-transform:uppercase}
+  .mapa-head .m-dot{width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.85); flex-shrink:0}
+  .mapa-item{width:100%; text-align:left; display:flex; align-items:center; gap:8px; padding:10px 14px; border-top:1px solid var(--border); font-weight:700; font-size:13.5px; color:var(--ink-primary); cursor:pointer; background:none; border-left:none; border-right:none; border-bottom:none}
+  .mapa-item:hover{background:var(--bg-subtle)}
+  .mapa-item .chev{margin-left:auto; color:var(--ink-disabled); transition:transform .15s}
+  .mapa-item.open .chev{transform:rotate(90deg)}
+  .mapa-tag{font-size:10px; border:1px solid var(--border-strong); border-radius:6px; padding:1px 6px; color:var(--ink-tertiary); font-weight:800; flex-shrink:0}
+  .mapa-det{padding:2px 14px 12px; font-size:12.5px; color:var(--ink-secondary); font-weight:600; display:none}
+  .mapa-det.on{display:block}
+  .mapa-det .m-emp{display:block; margin-top:5px; font-size:11px; font-weight:800; color:var(--ink-tertiary)}
   .toast{position:fixed; left:50%; bottom:32px; transform:translateX(-50%) translateY(8px); background:var(--ink-primary); color:var(--bg-surface); border-radius:99px; padding:11px 22px; font-size:13px; font-weight:800; opacity:0; transition:.25s; z-index:30; pointer-events:none; white-space:nowrap}
   .toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
 </style>
@@ -249,6 +263,7 @@
     <div class="page-head">
       <div><h1>Hola, Cristian</h1><p class="sub">Miércoles 2 de septiembre · Wowinx SL</p></div>
       <div style="display:flex; align-items:center; gap:10px">
+        <button class="icon-btn" data-act="abrir-mapa" aria-label="Mapa del grupo" title="Mapa del grupo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Z"/><path d="M9 3v16M15 5v16"/></svg></button>
         <button class="btn dark" data-act="ir-imputar-hoy">＋ Imputar hoy</button>
         <div class="avatar">CH</div>
       </div>
@@ -296,7 +311,7 @@
   <section class="screen" id="scr-imputar">
     <div class="page-head">
       <div><h1>Imputar</h1><p class="sub">Septiembre 2026</p></div>
-      <div class="avatar">CH</div>
+      <div style="display:flex; align-items:center; gap:10px"><button class="icon-btn" data-act="abrir-mapa" aria-label="Mapa del grupo" title="Mapa del grupo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Z"/><path d="M9 3v16M15 5v16"/></svg></button><div class="avatar">CH</div></div>
     </div>
 
     <div class="grid2">
@@ -371,6 +386,7 @@
     <div class="page-head">
       <div><h1>Calendario</h1><p class="sub">Septiembre 2026 · haz clic en un día para imputarlo</p></div>
       <div style="display:flex; align-items:center; gap:10px">
+        <button class="icon-btn" data-act="abrir-mapa" aria-label="Mapa del grupo" title="Mapa del grupo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Z"/><path d="M9 3v16M15 5v16"/></svg></button>
         <button class="btn" data-act="abrir-aus">Solicitar ausencia</button>
         <div class="avatar">CH</div>
       </div>
@@ -412,6 +428,17 @@
     <div class="field"><label for="a-hasta">Hasta (día de septiembre)</label><input id="a-hasta" class="mono" type="number" min="1" max="30" value="25"></div>
     <p class="micro" style="margin:0 0 14px">La solicitud queda pendiente de aprobación. Al aprobarse, esos días se bloquean.</p>
     <button class="btn dark" style="width:100%" data-act="aus-enviar">Solicitar ausencia</button>
+  </div>
+</div>
+
+
+<!-- ================= MODAL: MAPA DEL GRUPO ================= -->
+<div class="scrim" id="mapa-scrim" data-act="cerrar-mapa"></div>
+<div class="modal" id="mapa-modal" style="width:min(920px,94vw)" role="dialog" aria-modal="true" aria-label="Mapa del grupo">
+  <div class="card-h"><h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Z"/><path d="M9 3v16M15 5v16"/></svg> Mapa del grupo</h2><button class="btn txt" data-act="cerrar-mapa">✕</button></div>
+  <div class="card-b">
+    <p class="micro" style="margin:0 0 12px">Áreas y proyectos del grupo, siempre al día. Toca un elemento para ver qué es y de qué empresa depende.</p>
+    <div class="mapa-grid" id="mapa-grid"></div>
   </div>
 </div>
 
@@ -489,6 +516,63 @@
         <div class="lineas">${days[x.d].map(l=>`<div class="linea-mini">${lineaTxt(l)}<span class="mono">${fmt(l.horas)} h</span></div>`).join('')}</div>
         <button class="btn sm" data-act="reutilizar" data-d="${x.d}"${aHoy?' data-hoy="1"':''}>Reutilizar día</button>
       </div>`;
+
+
+  // ===== Mapa del grupo (se genera dinámicamente desde estos datos) =====
+  const MAPA = [
+    { a:"Infraestructura", c:"#5E7A8C", items:[
+      {n:"3B3", t:"FS", d:"Fábrica de software del grupo: desarrollo, QA y soporte.", e:"Wowinx SL"},
+      {n:"Alethern", t:"W3", d:"Identidad y credenciales verificables.", e:"Wowinx SL"},
+      {n:"WIA", t:"IA", d:"Asistentes y automatización interna.", e:"Wowinx SL"},
+      {n:"prismaXR", t:"XR", d:"Experiencias inmersivas y realidad extendida.", e:"Wowinx SL"},
+    ]},
+    { a:"Tecnología", c:"#5E8C86", items:[
+      {n:"Ximeras", d:"Plataforma SaaS principal del grupo.", e:"Wowinx SL"},
+      {n:"Triatix", d:"Suite de herramientas de datos.", e:"Wowinx SL"},
+      {n:"Launcher", d:"Lanzadera interna de nuevos productos.", e:"Wowinx SL"},
+      {n:"seetreX", d:"Monitorización e informes en tiempo real.", e:"Wowinx SL"},
+      {n:"Ownia", d:"Gestión de activos digitales.", e:"Wowinx SL"},
+    ]},
+    { a:"Deportes", c:"#6E8B72", items:[
+      {n:"Málaga CF", d:"El club y su ecosistema digital.", e:"Málaga CF SAD"},
+      {n:"BeFootball", d:"Comunidad y contenidos de fútbol.", e:"Málaga CF SAD"},
+      {n:"BeSports Academy", d:"Formación deportiva.", e:"Málaga CF SAD"},
+    ]},
+    { a:"Dinero", c:"#8C7A5E", items:[
+      {n:"Bullfy", d:"Educación financiera.", e:"Wowinx SL"},
+      {n:"Easyfi", d:"Pagos y liquidaciones.", e:"Wowinx SL"},
+      {n:"eSignus", d:"Firma electrónica y custodia legal.", e:"Legal Norte SL"},
+      {n:"HashWallet", d:"Cartera de activos digitales.", e:"Wowinx SL"},
+    ]},
+    { a:"Cultura", c:"#7C6480", items:[
+      {n:"ROV", d:"Producción audiovisual.", e:"Wowinx SL"},
+      {n:"Banana Warriors", d:"Estudio creativo.", e:"Wowinx SL"},
+      {n:"The Archives of Silence", d:"Proyecto editorial.", e:"Wowinx SL"},
+    ]},
+    { a:"Entretenimiento", c:"#8C5E62", items:[
+      {n:"doubleW", d:"Juegos y experiencias.", e:"Wowinx SL"},
+      {n:"IMM", d:"Medios interactivos.", e:"Wowinx SL"},
+      {n:"AIdols", d:"Entretenimiento con IA.", e:"Wowinx SL"},
+    ]},
+  ];
+  function renderMapa(el){
+    if (!el) return;
+    el.innerHTML = MAPA.map((ar,ai)=>`
+      <div class="mapa-card">
+        <div class="mapa-head" style="background:${ar.c}"><span class="m-dot"></span>${ar.a}</div>
+        ${ar.items.map((it,ii)=>`
+          <button class="mapa-item" data-mi="${ai}-${ii}" aria-expanded="false">
+            ${it.t?`<span class=\"mapa-tag\">${it.t}</span>`:''}${it.n}<span class="chev">›</span>
+          </button>
+          <div class="mapa-det" id="md-${el.id}-${ai}-${ii}">${it.d}<span class="m-emp">${it.e}</span></div>`).join('')}
+      </div>`).join('');
+    el.querySelectorAll('.mapa-item').forEach(b=>b.addEventListener('click', ()=>{
+      const det = document.getElementById('md-'+el.id+'-'+b.dataset.mi);
+      const abre = !b.classList.contains('open');
+      b.classList.toggle('open', abre); b.setAttribute('aria-expanded', abre);
+      det.classList.toggle('on', abre);
+    }));
+  }
 
   // ============ Renders ============
   function renderInicio(){
@@ -677,6 +761,9 @@
         break;
       }
       case 'cerrar-hist': $('hist-scrim').classList.remove('on'); $('hist-modal').classList.remove('on'); break;
+
+      case 'abrir-mapa': renderMapa($('mapa-grid')); $('mapa-scrim').classList.add('on'); $('mapa-modal').classList.add('on'); break;
+      case 'cerrar-mapa': $('mapa-scrim').classList.remove('on'); $('mapa-modal').classList.remove('on'); break;
 
       case 'abrir-aus': $('aus-scrim').classList.add('on'); $('aus-modal').classList.add('on'); break;
       case 'cerrar-aus': $('aus-scrim').classList.remove('on'); $('aus-modal').classList.remove('on'); break;

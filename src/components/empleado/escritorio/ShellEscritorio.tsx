@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import type { EmpleadoCtx } from '../types';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import { IconReloj, IconChevronLeft, IconChevronRight, IconCasa, IconCalendario } from '@/components/ui/icons';
+import { IconReloj, IconChevronLeft, IconChevronRight, IconCasa, IconCalendario, IconMapa } from '@/components/ui/icons';
 import { InicioEscritorio } from './InicioEscritorio';
 import { ImputarEscritorio } from './ImputarEscritorio';
 import { CalendarioEscritorio } from './CalendarioEscritorio';
+import { ModalMapa } from './ModalMapa';
 
 const TABS: { id: EmpleadoCtx['tab']; etiqueta: string; Icono: typeof IconCasa }[] = [
   { id: 'inicio', etiqueta: 'Inicio', Icono: IconCasa },
@@ -16,6 +17,7 @@ const TABS: { id: EmpleadoCtx['tab']; etiqueta: string; Icono: typeof IconCasa }
 
 export function ShellEscritorio(ctx: EmpleadoCtx) {
   const [mini, setMini] = useState(false);
+  const [mapaAbierto, setMapaAbierto] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-bg">
@@ -56,6 +58,15 @@ export function ShellEscritorio(ctx: EmpleadoCtx) {
         ))}
 
         <div className="mt-auto flex items-center gap-2 border-t border-border pt-3">
+          <button
+            type="button"
+            onClick={() => setMapaAbierto(true)}
+            aria-label="Mapa del grupo"
+            title="Mapa del grupo"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-surface text-ink-secondary shadow-[var(--sombra)]"
+          >
+            <IconMapa />
+          </button>
           <ThemeToggle />
           {!mini && (
             <a href="/admin" className="btn btn-sm flex-1 justify-center">
@@ -70,6 +81,8 @@ export function ShellEscritorio(ctx: EmpleadoCtx) {
         {ctx.tab === 'imputar' && <ImputarEscritorio ctx={ctx} />}
         {ctx.tab === 'calendario' && <CalendarioEscritorio ctx={ctx} />}
       </main>
+
+      <ModalMapa abierto={mapaAbierto} onCerrar={() => setMapaAbierto(false)} />
     </div>
   );
 }

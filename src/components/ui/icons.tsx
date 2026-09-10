@@ -224,6 +224,16 @@ export function IconAjustes({ className, size = 16 }: IconProps) {
   );
 }
 
+/** Mapa del grupo: mapa plegado. */
+export function IconMapa({ className, size = 16 }: IconProps) {
+  return (
+    <svg {...base(size, 1.8)} className={className}>
+      <path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Z" />
+      <path d="M9 3v16M15 5v16" />
+    </svg>
+  );
+}
+
 /** Drawer / menú hamburguesa. */
 export function IconMenu({ className, size = 17 }: IconProps) {
   return (

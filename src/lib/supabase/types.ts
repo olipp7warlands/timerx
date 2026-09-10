@@ -344,6 +344,81 @@ export type Database = {
           },
         ]
       }
+      mapa_area: {
+        Row: {
+          activa: boolean
+          color: string
+          id: string
+          nombre: string
+          orden: number
+        }
+        Insert: {
+          activa?: boolean
+          color: string
+          id?: string
+          nombre: string
+          orden?: number
+        }
+        Update: {
+          activa?: boolean
+          color?: string
+          id?: string
+          nombre?: string
+          orden?: number
+        }
+        Relationships: []
+      }
+      mapa_item: {
+        Row: {
+          activo: boolean
+          area_id: string
+          descripcion: string
+          empresa_id: string | null
+          etiqueta: string | null
+          id: string
+          nombre: string
+          orden: number
+          url: string | null
+        }
+        Insert: {
+          activo?: boolean
+          area_id: string
+          descripcion: string
+          empresa_id?: string | null
+          etiqueta?: string | null
+          id?: string
+          nombre: string
+          orden?: number
+          url?: string | null
+        }
+        Update: {
+          activo?: boolean
+          area_id?: string
+          descripcion?: string
+          empresa_id?: string | null
+          etiqueta?: string | null
+          id?: string
+          nombre?: string
+          orden?: number
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mapa_item_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_area"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mapa_item_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       perfil: {
         Row: {
           activo: boolean

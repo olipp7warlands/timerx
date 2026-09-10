@@ -6,6 +6,7 @@ export type SeccionAdmin =
   | 'proyectos'
   | 'categorias'
   | 'calendario'
+  | 'mapa'
   | 'control'
   | 'tarifas'
   | 'refacturacion'

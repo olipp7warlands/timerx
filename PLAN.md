@@ -140,6 +140,12 @@ Sin mock que replicar (ni el empleado ni el admin lo cubren en los HTML de refer
 - **`bloquear_meses_cerrados`**: toggle retirado de `AjustesEscritorio.tsx` — el bloqueo ya era incondicional en el trigger, el flag no hacía nada; la columna en `ajuste` se queda sin uso, documentada aquí.
 - Runbook de despliegue a producción real: `docs/runbook-produccion.md`, con la decisión de proyecto Supabase nuevo ya confirmada.
 
+### F6 Bloque B · Mapa del grupo — hecho
+- Migración 013 (`mapa_area`, `mapa_item`): lectura para todo `authenticated`, escritura solo `admin_grupo` (mismo patrón que `ajuste`/`categoria`). "Eliminar" en la UI es baja lógica (`activa`/`activo = false`, nunca `delete`) — un área con elementos activos no puede eliminarse. 6 áreas / 22 elementos sembrados literales del mock en `supabase/seed.sql` §6.
+- 4 superficies de consulta compartiendo `useMapa()` + `MapaGrid.tsx` (mismo acordeón, sin "cerrar los demás"): modal en escritorio empleado, hoja inferior en móvil empleado, pantalla real en admin móvil (grupo Estructura, con nota de que la edición vive en escritorio), y vista previa en vivo dentro de la gestión de escritorio.
+- Gestión (`MapaEscritorio.tsx`, sidebar Estructura tras Calendario): alta/edición/reordenación (`↑`/`↓`, intercambia `orden` con el vecino) y baja lógica con confirmación (`src/components/ui/confirmar.ts`, hoy `window.confirm`, sustituible en un solo sitio) para áreas y elementos. Paleta fija de 8 tonos (`src/lib/mapa/paleta.ts`) — nunca un color-picker libre.
+- **Verificado**: build limpio; RLS real (Andrés y Marina leen y no escriben, rechazo confirmado por policy; Cristian CRUD completo); ciclo dinámico real (área + elemento creados por Cristian vía UI, visibles para Andrés sin redeploy, luego eliminados y confirmados como baja lógica en BD, no como fila borrada); render contrastado contra los 4 mocks vía `/debug/movil` y `/debug/movil-admin`.
+
 ### F6 Bloque B · Pulido — pendiente de feedback de demo, no iniciado
 - Bandeja de aprobación de imputaciones en admin móvil (candidata anotada en F5) — pendiente de que el usuario pruebe la bandeja de escritorio.
 - QA móvil real, estados vacíos, accesibilidad (focus visible, aria de las hojas).
@@ -150,7 +156,7 @@ Sin mock que replicar (ni el empleado ni el admin lo cubren en los HTML de refer
 
 ## 6. Seed de desarrollo
 
-Empresas: Wowinx SL (B-11223344), Málaga CF SAD (A-99887766), Legal Norte SL (B-55667788). Departamentos: 3B3 (responsable Cristian Haro), Jurídico, Diseño. Categorías/subcategorías y proyectos: los de los mocks (Interno no refacturable). Usuarios (11): Cristian Haro (admin_grupo), Verónica Salguero, Andrés Fuentes, Leo Silva, Sara Martín, Ana Ruiz (Legal Norte), Cosme Hernandez, Daniel Ramírez, Marta Gil (Jurídico), Enrique Robles (empleado moroso de Málaga, usado en los mocks con vacaciones rechazadas y faltantes) y Marina Ortega (admin_empresa de Málaga CF SAD — persona aparte, no es Enrique). Tarifas: Desarrollo 60, Diseño 55, Abogados 95 (origen Legal Norte), Ana Ruiz 110. Imputaciones de julio y agosto completas (meses cerrados), septiembre parcial replicando los números de los mocks; 1 baja aprobada (Andrés 01–02/09), 2 vacaciones pendientes.
+Empresas: Wowinx SL (B-11223344), Málaga CF SAD (A-99887766), Legal Norte SL (B-55667788). Departamentos: 3B3 (responsable Cristian Haro), Jurídico, Diseño. Categorías/subcategorías y proyectos: los de los mocks (Interno no refacturable). Usuarios (11): Cristian Haro (admin_grupo), Verónica Salguero, Andrés Fuentes, Leo Silva, Sara Martín, Ana Ruiz (Legal Norte), Cosme Hernandez, Daniel Ramírez, Marta Gil (Jurídico), Enrique Robles (empleado moroso de Málaga, usado en los mocks con vacaciones rechazadas y faltantes) y Marina Ortega (admin_empresa de Málaga CF SAD — persona aparte, no es Enrique). Tarifas: Desarrollo 60, Diseño 55, Abogados 95 (origen Legal Norte), Ana Ruiz 110. Imputaciones de julio y agosto completas (meses cerrados), septiembre parcial replicando los números de los mocks; 1 baja aprobada (Andrés 01–02/09), 2 vacaciones pendientes. Mapa del grupo (F6): 6 áreas y 22 elementos, literales de la constante `MAPA` de los mocks (Infraestructura, Tecnología, Deportes, Dinero, Cultura, Entretenimiento), con `empresa_id` resuelto contra las 3 empresas ya sembradas.
 
 ## 7. Prompt inicial para Claude Code
 

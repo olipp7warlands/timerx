@@ -280,6 +280,21 @@
   .cal-foot.on{display:block}
   .hist-date{margin:14px 0 6px}
   .hist-date:first-child{margin-top:4px}
+  /* ===== Mapa del grupo ===== */
+  .mapa-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; align-items:start}
+  .mapa-card{border:1px solid var(--border); border-radius:16px; background:var(--bg-surface); box-shadow:var(--sombra); overflow:hidden}
+  .mapa-head{display:flex; align-items:center; gap:8px; padding:10px 14px; color:#fff; font-weight:800; font-size:11.5px; letter-spacing:.6px; text-transform:uppercase}
+  .mapa-head .m-dot{width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.85); flex-shrink:0}
+  .mapa-item{width:100%; text-align:left; display:flex; align-items:center; gap:8px; padding:10px 14px; border-top:1px solid var(--border); font-weight:700; font-size:13.5px; color:var(--ink-primary); cursor:pointer; background:none; border-left:none; border-right:none; border-bottom:none}
+  .mapa-item:hover{background:var(--bg-subtle)}
+  .mapa-item .chev{margin-left:auto; color:var(--ink-disabled); transition:transform .15s}
+  .mapa-item.open .chev{transform:rotate(90deg)}
+  .mapa-tag{font-size:10px; border:1px solid var(--border-strong); border-radius:6px; padding:1px 6px; color:var(--ink-tertiary); font-weight:800; flex-shrink:0}
+  .mapa-det{padding:2px 14px 12px; font-size:12.5px; color:var(--ink-secondary); font-weight:600; display:none}
+  .mapa-det.on{display:block}
+  .mapa-det .m-emp{display:block; margin-top:5px; font-size:11px; font-weight:800; color:var(--ink-tertiary)}
+  .mapa-grid{display:flex; flex-direction:column; gap:12px}
+
 
   .toast{
     position:absolute; left:50%; bottom:154px; transform:translateX(-50%) translateY(8px);
@@ -300,6 +315,7 @@
     <div class="app-head">
       <div><h1>Hola, Cristian</h1><p class="sub">Miércoles 2 de septiembre · Wowinx SL</p></div>
       <div class="head-actions">
+        <button class="icon-btn mapa-btn" aria-label="Mapa del grupo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Z"/><path d="M9 3v16M15 5v16"/></svg></button>
         <button class="icon-btn theme-btn" aria-label="Cambiar modo claro u oscuro"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg></button>
         <div class="avatar">CH</div>
       </div>
@@ -346,6 +362,7 @@
     <div class="app-head">
       <div><h1>Imputar</h1><p class="sub">Septiembre 2026</p></div>
       <div class="head-actions">
+        <button class="icon-btn mapa-btn" aria-label="Mapa del grupo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Z"/><path d="M9 3v16M15 5v16"/></svg></button>
         <button class="icon-btn theme-btn" aria-label="Cambiar modo claro u oscuro"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg></button>
         <div class="avatar">CH</div>
       </div>
@@ -393,6 +410,7 @@
     <div class="app-head">
       <div><h1>Calendario</h1><p class="sub">Septiembre 2026 · toca un día para imputarlo</p></div>
       <div class="head-actions">
+        <button class="icon-btn mapa-btn" aria-label="Mapa del grupo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Z"/><path d="M9 3v16M15 5v16"/></svg></button>
         <button class="icon-btn theme-btn" aria-label="Cambiar modo claro u oscuro"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg></button>
         <div class="avatar">CH</div>
       </div>
@@ -471,6 +489,20 @@
         <button class="save" id="cal-apply">Aplicar a los días elegidos</button>
       </div>
     </div>
+  </div>
+
+  
+  <!-- ===== Hoja: mapa del grupo ===== -->
+  <div class="overlay" id="mapa-overlay"></div>
+  <div class="sheet" id="mapa-sheet" role="dialog" aria-modal="true" aria-label="Mapa del grupo">
+    <div class="grab"></div>
+    <div class="sheet-head">
+      <span class="back"></span>
+      <h2>Mapa del grupo</h2>
+      <button class="close" id="mapa-close" aria-label="Cerrar">✕</button>
+    </div>
+    <p class="crumbs">Toca un elemento para ver qué es</p>
+    <div class="options"><div class="mapa-grid" id="mapa-grid-m"></div></div>
   </div>
 
   <div class="toast" id="toast">Guardado</div>
@@ -954,6 +986,68 @@
   }));
 
   renderAll();
+
+  // ===== Mapa del grupo (se genera dinámicamente desde estos datos) =====
+  const MAPA = [
+    { a:"Infraestructura", c:"#5E7A8C", items:[
+      {n:"3B3", t:"FS", d:"Fábrica de software del grupo: desarrollo, QA y soporte.", e:"Wowinx SL"},
+      {n:"Alethern", t:"W3", d:"Identidad y credenciales verificables.", e:"Wowinx SL"},
+      {n:"WIA", t:"IA", d:"Asistentes y automatización interna.", e:"Wowinx SL"},
+      {n:"prismaXR", t:"XR", d:"Experiencias inmersivas y realidad extendida.", e:"Wowinx SL"},
+    ]},
+    { a:"Tecnología", c:"#5E8C86", items:[
+      {n:"Ximeras", d:"Plataforma SaaS principal del grupo.", e:"Wowinx SL"},
+      {n:"Triatix", d:"Suite de herramientas de datos.", e:"Wowinx SL"},
+      {n:"Launcher", d:"Lanzadera interna de nuevos productos.", e:"Wowinx SL"},
+      {n:"seetreX", d:"Monitorización e informes en tiempo real.", e:"Wowinx SL"},
+      {n:"Ownia", d:"Gestión de activos digitales.", e:"Wowinx SL"},
+    ]},
+    { a:"Deportes", c:"#6E8B72", items:[
+      {n:"Málaga CF", d:"El club y su ecosistema digital.", e:"Málaga CF SAD"},
+      {n:"BeFootball", d:"Comunidad y contenidos de fútbol.", e:"Málaga CF SAD"},
+      {n:"BeSports Academy", d:"Formación deportiva.", e:"Málaga CF SAD"},
+    ]},
+    { a:"Dinero", c:"#8C7A5E", items:[
+      {n:"Bullfy", d:"Educación financiera.", e:"Wowinx SL"},
+      {n:"Easyfi", d:"Pagos y liquidaciones.", e:"Wowinx SL"},
+      {n:"eSignus", d:"Firma electrónica y custodia legal.", e:"Legal Norte SL"},
+      {n:"HashWallet", d:"Cartera de activos digitales.", e:"Wowinx SL"},
+    ]},
+    { a:"Cultura", c:"#7C6480", items:[
+      {n:"ROV", d:"Producción audiovisual.", e:"Wowinx SL"},
+      {n:"Banana Warriors", d:"Estudio creativo.", e:"Wowinx SL"},
+      {n:"The Archives of Silence", d:"Proyecto editorial.", e:"Wowinx SL"},
+    ]},
+    { a:"Entretenimiento", c:"#8C5E62", items:[
+      {n:"doubleW", d:"Juegos y experiencias.", e:"Wowinx SL"},
+      {n:"IMM", d:"Medios interactivos.", e:"Wowinx SL"},
+      {n:"AIdols", d:"Entretenimiento con IA.", e:"Wowinx SL"},
+    ]},
+  ];
+  function renderMapa(el){
+    if (!el) return;
+    el.innerHTML = MAPA.map((ar,ai)=>`
+      <div class="mapa-card">
+        <div class="mapa-head" style="background:${ar.c}"><span class="m-dot"></span>${ar.a}</div>
+        ${ar.items.map((it,ii)=>`
+          <button class="mapa-item" data-mi="${ai}-${ii}" aria-expanded="false">
+            ${it.t?`<span class=\"mapa-tag\">${it.t}</span>`:''}${it.n}<span class="chev">›</span>
+          </button>
+          <div class="mapa-det" id="md-${el.id}-${ai}-${ii}">${it.d}<span class="m-emp">${it.e}</span></div>`).join('')}
+      </div>`).join('');
+    el.querySelectorAll('.mapa-item').forEach(b=>b.addEventListener('click', ()=>{
+      const det = document.getElementById('md-'+el.id+'-'+b.dataset.mi);
+      const abre = !b.classList.contains('open');
+      b.classList.toggle('open', abre); b.setAttribute('aria-expanded', abre);
+      det.classList.toggle('on', abre);
+    }));
+  }
+
+  function abrirMapa(){ renderMapa(document.getElementById('mapa-grid-m')); document.getElementById('mapa-overlay').classList.add('on'); document.getElementById('mapa-sheet').classList.add('on'); }
+  function cerrarMapa(){ document.getElementById('mapa-overlay').classList.remove('on'); document.getElementById('mapa-sheet').classList.remove('on'); }
+  document.querySelectorAll('.mapa-btn').forEach(b=>b.addEventListener('click', abrirMapa));
+  document.getElementById('mapa-close').addEventListener('click', cerrarMapa);
+  document.getElementById('mapa-overlay').addEventListener('click', cerrarMapa);
 </script>
 </body>
 </html>

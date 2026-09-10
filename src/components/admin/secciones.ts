@@ -6,6 +6,7 @@ import {
   IconCarpeta,
   IconCategoria,
   IconCalendario,
+  IconMapa,
   IconControl,
   IconTarifas,
   IconRefacturacion,
@@ -36,6 +37,7 @@ export const GRUPOS_SECCIONES: GrupoSeccion[] = [
       { id: 'proyectos', etiqueta: 'Proyectos', Icono: IconCarpeta },
       { id: 'categorias', etiqueta: 'Categorías', Icono: IconCategoria },
       { id: 'calendario', etiqueta: 'Calendario', Icono: IconCalendario },
+      { id: 'mapa', etiqueta: 'Mapa', Icono: IconMapa },
     ],
   },
   {
@@ -50,4 +52,4 @@ export const GRUPOS_SECCIONES: GrupoSeccion[] = [
 ];
 
 /** Secciones con pantalla propia en móvil (F3 Paso 3); el resto remite a escritorio. */
-export const SECCIONES_MOVIL_FUNCIONALES: SeccionAdmin[] = ['inicio', 'ausencias'];
+export const SECCIONES_MOVIL_FUNCIONALES: SeccionAdmin[] = ['inicio', 'ausencias', 'mapa'];

@@ -12,6 +12,7 @@ import { EmpresasEscritorio } from './EmpresasEscritorio';
 import { ProyectosEscritorio } from './ProyectosEscritorio';
 import { CategoriasEscritorio } from './CategoriasEscritorio';
 import { CalendarioEscritorio } from './CalendarioEscritorio';
+import { MapaEscritorio } from './MapaEscritorio';
 import { ControlEscritorio } from './ControlEscritorio';
 import { TarifasEscritorio } from './TarifasEscritorio';
 import { RefacturacionEscritorio } from './RefacturacionEscritorio';
@@ -86,6 +87,7 @@ export function ShellEscritorioAdmin({ info, seccion, setSeccion }: Props) {
         {seccion === 'proyectos' && <ProyectosEscritorio info={info} />}
         {seccion === 'categorias' && <CategoriasEscritorio info={info} />}
         {seccion === 'calendario' && <CalendarioEscritorio info={info} />}
+        {seccion === 'mapa' && <MapaEscritorio info={info} />}
         {seccion === 'control' && <ControlEscritorio />}
         {seccion === 'tarifas' && <TarifasEscritorio info={info} />}
         {seccion === 'refacturacion' && <RefacturacionEscritorio info={info} />}
