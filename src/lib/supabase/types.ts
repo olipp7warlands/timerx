@@ -356,6 +356,7 @@ export type Database = {
           max_horas_dia: number
           nombre: string
           rol: Database["public"]["Enums"]["rol_usuario"]
+          ultimo_recordatorio_en: string | null
         }
         Insert: {
           activo?: boolean
@@ -368,6 +369,7 @@ export type Database = {
           max_horas_dia?: number
           nombre: string
           rol?: Database["public"]["Enums"]["rol_usuario"]
+          ultimo_recordatorio_en?: string | null
         }
         Update: {
           activo?: boolean
@@ -380,6 +382,7 @@ export type Database = {
           max_horas_dia?: number
           nombre?: string
           rol?: Database["public"]["Enums"]["rol_usuario"]
+          ultimo_recordatorio_en?: string | null
         }
         Relationships: [
           {
@@ -531,6 +534,44 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "proyecto"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recordatorio_log: {
+        Row: {
+          creado_en: string
+          dias_faltantes: Json
+          fecha_desde: string
+          fecha_hasta: string
+          id: string
+          modo: string
+          perfil_id: string
+        }
+        Insert: {
+          creado_en?: string
+          dias_faltantes: Json
+          fecha_desde: string
+          fecha_hasta: string
+          id?: string
+          modo: string
+          perfil_id: string
+        }
+        Update: {
+          creado_en?: string
+          dias_faltantes?: Json
+          fecha_desde?: string
+          fecha_hasta?: string
+          id?: string
+          modo?: string
+          perfil_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recordatorio_log_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
             referencedColumns: ["id"]
           },
         ]
@@ -805,6 +846,7 @@ export type Database = {
         Args: { p_anio: number; p_empresa: string; p_mes: number }
         Returns: undefined
       }
+      descripcion_obligatoria: { Args: never; Returns: boolean }
       empleado_trabaja_en_empresa: {
         Args: { p_empleado: string; p_empresa: string }
         Returns: boolean
@@ -829,6 +871,18 @@ export type Database = {
         }[]
       }
       faltantes: {
+        Args: { p_desde: string; p_hasta: string }
+        Returns: {
+          email: string
+          falta: number
+          fecha: string
+          imputado: number
+          nombre: string
+          perfil_id: string
+          requerido: number
+        }[]
+      }
+      faltantes_recordatorio: {
         Args: { p_desde: string; p_hasta: string }
         Returns: {
           email: string
