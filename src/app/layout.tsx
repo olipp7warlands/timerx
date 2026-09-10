@@ -17,7 +17,10 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Horas Grupo',
+  title: {
+    default: 'Horas Grupo',
+    template: '%s · Horas Grupo',
+  },
   description: 'Imputación de horas y reporting FTE del grupo',
 };
 
