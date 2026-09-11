@@ -916,12 +916,32 @@ export type Database = {
           horas_requeridas: number
         }[]
       }
+      balance_mes_empleado: {
+        Args: { p_anio: number; p_empleado_id: string; p_mes: number }
+        Returns: {
+          dias_baja: number
+          dias_permiso: number
+          dias_vacaciones: number
+          horas_imputadas: number
+          horas_requeridas: number
+        }[]
+      }
       cancelar_ausencia: { Args: { p_id: string }; Returns: undefined }
       cerrar_periodo: {
         Args: { p_anio: number; p_empresa: string; p_mes: number }
         Returns: undefined
       }
       descripcion_obligatoria: { Args: never; Returns: boolean }
+      dias_ausencia_en_mes: {
+        Args: {
+          p_anio: number
+          p_empresa: string
+          p_fecha_fin: string
+          p_fecha_inicio: string
+          p_mes: number
+        }
+        Returns: number
+      }
       empleado_trabaja_en_empresa: {
         Args: { p_empleado: string; p_empresa: string }
         Returns: boolean
