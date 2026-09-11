@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import type { RolUsuario } from '@/lib/auth/roles';
 
 export interface UsuarioAdmin {
   id: string;
   nombre: string;
   email: string;
-  rol: string;
+  rol: RolUsuario;
   empresaId: string;
   empresaNombre: string;
   departamento: string | null;

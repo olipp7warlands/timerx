@@ -18,5 +18,6 @@ export interface AdminInfo {
   empresaId: string;
   empresaNombre: string;
   nombre: string;
+  email: string;
 }
 

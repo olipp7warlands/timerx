@@ -7,14 +7,8 @@ import { useEmpresas } from '@/hooks/admin/useEmpresas';
 import { useCategorias } from '@/hooks/admin/useCategorias';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { invitarUsuario } from '@/app/admin/actions';
+import { ETIQUETA_ROL } from '@/lib/auth/roles';
 import type { AdminInfo } from '../types';
-
-const ETIQUETA_ROL: Record<string, string> = {
-  admin_grupo: 'Admin grupo',
-  admin_empresa: 'Admin empresa',
-  responsable_proyecto: 'Responsable',
-  empleado: 'Empleado',
-};
 
 export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
   const { usuarios, loading, recargar } = useUsuarios();

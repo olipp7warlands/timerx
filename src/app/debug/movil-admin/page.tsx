@@ -23,6 +23,7 @@ export default async function DebugMovilAdminPage() {
           empresaId={perfil.empresa_id}
           empresaNombre={perfil.empresa?.nombre ?? ''}
           nombre={perfil.nombre}
+          email={perfil.email}
           forzarLayout="movil"
         />
       </div>

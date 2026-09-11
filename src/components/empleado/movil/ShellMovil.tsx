@@ -9,6 +9,7 @@ import { NuevaImputacionSheet, type PasoInicial } from './NuevaImputacionSheet';
 import { HistorialSheet } from './HistorialSheet';
 import { MapaSheet } from './MapaSheet';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { MenuUsuarioMovil } from '@/components/ui/MenuUsuario';
 import { IconCasa, IconReloj, IconCalendario, IconMas, IconMapa } from '@/components/ui/icons';
 import { ausenciaEnFecha, formatoDiaLargo } from '@/lib/horas/calendario';
 
@@ -41,13 +42,6 @@ export function ShellMovil(ctx: EmpleadoCtx) {
 
   const fabBloqueado = ctx.tab === 'imputar' && ausenciaEnFecha(ctx.selDay, ctx.ausencias)?.estado === 'aprobada';
 
-  const iniciales = ctx.nombre
-    .split(' ')
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-
   return (
     <div className="min-h-screen bg-bg pb-[calc(96px+env(safe-area-inset-bottom))]">
       <header className="flex items-center justify-between px-5 pb-2 pt-5">
@@ -67,7 +61,7 @@ export function ShellMovil(ctx: EmpleadoCtx) {
             <IconMapa />
           </button>
           <ThemeToggle />
-          <div className="grid h-9 w-9 place-items-center rounded-full bg-accent text-xs font-extrabold text-on-accent">{iniciales}</div>
+          <MenuUsuarioMovil nombre={ctx.nombre} email={ctx.email} rol={ctx.rol} />
         </div>
       </header>
 

@@ -12,6 +12,7 @@ export default async function AdminPage() {
       empresaId={perfil.empresa_id}
       empresaNombre={perfil.empresa?.nombre ?? ''}
       nombre={perfil.nombre}
+      email={perfil.email}
     />
   );
 }

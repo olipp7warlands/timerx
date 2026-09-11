@@ -14,17 +14,20 @@ import { ausenciaEnFecha, fmt } from '@/lib/horas/calendario';
 import { ToastProvider, useToast } from './compartido/Toast';
 import { ShellMovil } from './movil/ShellMovil';
 import { ShellEscritorio } from './escritorio/ShellEscritorio';
+import type { RolUsuario } from '@/lib/auth/roles';
 import type { EmpleadoCtx, Staged, StagedLinea, Tab } from './types';
 
 interface Props {
   empresaId: string;
   empresaNombre: string;
   nombre: string;
+  email: string;
+  rol: RolUsuario;
   /** Solo para verificación visual (/debug/movil, /debug/escritorio): fuerza el layout sin depender del viewport real. */
   forzarLayout?: 'movil' | 'escritorio';
 }
 
-function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: Props) {
+function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, email, rol, forzarLayout }: Props) {
   const isDesktopReal = useIsDesktop();
   const isDesktop = forzarLayout ? forzarLayout === 'escritorio' : isDesktopReal;
   const toast = useToast();
@@ -210,6 +213,8 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, forzarLayout }: 
     empresaId,
     empresaNombre,
     nombre,
+    email,
+    rol,
     tab,
     setTab,
     selDay,

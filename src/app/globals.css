@@ -176,6 +176,9 @@ html[data-theme="dark"] {
   .card-body {
     padding: 16px 18px 18px;
   }
+  .card-body > .btn {
+    margin-top: 16px;
+  }
 
   .input {
     background: var(--bg-subtle);

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { EmpleadoCtx } from '../types';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { MenuUsuarioDesktop } from '@/components/ui/MenuUsuario';
 import { IconReloj, IconChevronLeft, IconChevronRight, IconCasa, IconCalendario, IconMapa } from '@/components/ui/icons';
 import { InicioEscritorio } from './InicioEscritorio';
 import { ImputarEscritorio } from './ImputarEscritorio';
@@ -68,6 +69,7 @@ export function ShellEscritorio(ctx: EmpleadoCtx) {
             <IconMapa />
           </button>
           <ThemeToggle />
+          <MenuUsuarioDesktop nombre={ctx.nombre} email={ctx.email} rol={ctx.rol} />
           {!mini && (
             <a href="/admin" className="btn btn-sm flex-1 justify-center">
               Panel admin

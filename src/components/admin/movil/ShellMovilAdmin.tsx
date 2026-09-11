@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { MenuUsuarioMovil } from '@/components/ui/MenuUsuario';
 import { IconMenu, IconReloj } from '@/components/ui/icons';
 import { GRUPOS_SECCIONES, SECCIONES_MOVIL_FUNCIONALES } from '../secciones';
 import type { AdminInfo, SeccionAdmin } from '../types';
@@ -33,12 +34,6 @@ interface Props {
 
 export function ShellMovilAdmin({ info, seccion, setSeccion }: Props) {
   const [drawerAbierto, setDrawerAbierto] = useState(false);
-  const iniciales = info.nombre
-    .split(' ')
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-bg pb-11">
@@ -59,7 +54,7 @@ export function ShellMovilAdmin({ info, seccion, setSeccion }: Props) {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <div className="grid h-9 w-9 place-items-center rounded-full bg-accent text-xs font-extrabold text-on-accent">{iniciales}</div>
+          <MenuUsuarioMovil nombre={info.nombre} email={info.email} rol={info.rol} />
         </div>
       </header>
 

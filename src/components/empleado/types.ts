@@ -4,6 +4,7 @@ import type { Ausencia } from '@/hooks/useAusenciasMes';
 import type { ProyectoAsignado } from '@/hooks/useProyectosAsignados';
 import type { GrupoTareas } from '@/hooks/useCategoriasTareas';
 import type { BalanceMes } from '@/hooks/useBalanceMes';
+import type { RolUsuario } from '@/lib/auth/roles';
 
 /** Línea precargada (staged), forma equivalente a la de los mocks {proyecto,empresa,cat,sub,horas} pero con IDs reales. */
 export interface StagedLinea {
@@ -32,6 +33,8 @@ export interface EmpleadoCtx {
   empresaId: string;
   empresaNombre: string;
   nombre: string;
+  email: string;
+  rol: RolUsuario;
 
   tab: Tab;
   setTab: (t: Tab) => void;

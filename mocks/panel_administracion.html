@@ -124,6 +124,10 @@
   .mapa-det.on{display:block}
   .mapa-det .m-emp{display:block; margin-top:5px; font-size:11px; font-weight:800; color:var(--ink-tertiary)}
 
+  .row-link{cursor:pointer}
+  .row-link:hover td{background:var(--bg-subtle)}
+  .card-body > .btn{margin-top:14px}
+  .card-body select + .btn, .card-body input + .btn{margin-top:16px}
   .sec-label{display:flex; align-items:center; gap:9px; font-size:15.5px; font-weight:800; color:var(--ink-primary); margin:4px 0 12px}
   .sec-label svg{color:var(--ink-secondary); flex-shrink:0}
   .home-top{display:grid; grid-template-columns:minmax(0,1fr) 370px; gap:14px; align-items:start; margin-bottom:6px}
@@ -401,6 +405,7 @@
 
   <!-- ============ USUARIOS ============ -->
   <section id="usuarios" class="panel" role="tabpanel">
+    <div id="usu-lista">
     <div class="split">
       <div class="stack">
         <div class="card">
@@ -437,17 +442,19 @@
           <table>
             <thead><tr><th>Nombre</th><th>Empresa</th><th>Departamento</th><th>Rol</th><th>Categoría</th><th class="r">Acciones</th></tr></thead>
             <tbody>
-              <tr><td style="font-weight:800">Cristian Haro</td><td>Wowinx SL</td><td>3B3</td><td><span class="role solid">Admin grupo</span></td><td><span class="cat-dot" style="background:var(--cat-desarrollo)"></span>Desarrollo</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
-              <tr><td style="font-weight:800">Verónica Salguero</td><td>Wowinx SL</td><td>3B3</td><td><span class="role">Empleado</span></td><td><span class="cat-dot" style="background:var(--cat-desarrollo)"></span>Desarrollo</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
-              <tr><td style="font-weight:800">Sara Martín</td><td>Wowinx SL</td><td>3B3</td><td><span class="role">Responsable</span></td><td><span class="cat-dot" style="background:var(--cat-diseno)"></span>Diseño</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
-              <tr><td style="font-weight:800">Ana Ruiz</td><td>Legal Norte SL</td><td>Jurídico</td><td><span class="role">Empleado</span></td><td><span class="cat-dot" style="background:var(--cat-abogados)"></span>Abogados</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
-              <tr><td style="font-weight:800">Andrés Fuentes</td><td>Wowinx SL</td><td>3B3</td><td><span class="role">Empleado</span></td><td><span class="cat-dot" style="background:var(--cat-desarrollo)"></span>Desarrollo</td><td class="r"><button class="btn btn-sm">Editar</button></td></tr>
+              <tr><td style="font-weight:800">Cristian Haro</td><td>Wowinx SL</td><td>3B3</td><td><span class="role solid">Admin grupo</span></td><td><span class="cat-dot" style="background:var(--cat-desarrollo)"></span>Desarrollo</td><td class="r"><button class="btn btn-sm" data-u="Cristian Haro">Ver</button></td></tr>
+              <tr><td style="font-weight:800">Verónica Salguero</td><td>Wowinx SL</td><td>3B3</td><td><span class="role">Empleado</span></td><td><span class="cat-dot" style="background:var(--cat-desarrollo)"></span>Desarrollo</td><td class="r"><button class="btn btn-sm" data-u="Verónica Salguero">Ver</button></td></tr>
+              <tr><td style="font-weight:800">Sara Martín</td><td>Wowinx SL</td><td>3B3</td><td><span class="role">Responsable</span></td><td><span class="cat-dot" style="background:var(--cat-diseno)"></span>Diseño</td><td class="r"><button class="btn btn-sm" data-u="Sara Martín">Ver</button></td></tr>
+              <tr><td style="font-weight:800">Ana Ruiz</td><td>Legal Norte SL</td><td>Jurídico</td><td><span class="role">Empleado</span></td><td><span class="cat-dot" style="background:var(--cat-abogados)"></span>Abogados</td><td class="r"><button class="btn btn-sm" data-u="Ana Ruiz">Ver</button></td></tr>
+              <tr><td style="font-weight:800">Andrés Fuentes</td><td>Wowinx SL</td><td>3B3</td><td><span class="role">Empleado</span></td><td><span class="cat-dot" style="background:var(--cat-desarrollo)"></span>Desarrollo</td><td class="r"><button class="btn btn-sm" data-u="Andrés Fuentes">Ver</button></td></tr>
             </tbody>
           </table>
           <p class="foot" style="padding:0 12px 10px">El responsable de departamento aprueba ausencias y vigila las imputaciones faltantes de su equipo.</p>
         </div>
       </div>
     </div>
+    </div>
+    <div id="usu-det" style="display:none"></div>
   </section>
 
   <!-- ============ EMPRESAS ============ -->
@@ -1087,6 +1094,7 @@
       return `${CATC[c[0]]||"var(--ink-disabled)"} ${a}% ${b}%`;
     }).join(", ") + ")";
   }
+  const PPOOL = [["Leo Silva","3B3","Desarrollo"],["Daniel Ramírez","3B3","Desarrollo"],["Cosme Hernandez","3B3","Desarrollo"],["Marta Gil","Jurídico","Abogados"],["Oliver Pérez","3B3","Desarrollo"],["Enrique Robles","—","Gestión"]];
   function verProyecto(n){
     const p = PDET[n];
     const det = AID('proy-det');
@@ -1128,12 +1136,16 @@
         <div class="card-head"><h2>Personas en el proyecto</h2><span class="micro">Septiembre</span></div>
         <div class="card-body" style="padding:0 6px 8px">
           <table>
-            <thead><tr><th>Nombre</th><th>Departamento</th><th>Categoría</th><th class="r">Horas</th><th class="r">% del proyecto</th></tr></thead>
-            <tbody>
-              ${p.pers.map(x=>`<tr><td style="font-weight:800">${x[0]}</td><td>${x[1]}</td><td><span class="cat-dot" style="background:${CATC[x[2]]||'var(--ink-disabled)'}"></span>${x[2]}</td><td class="r mono">${afmt(x[3])}</td><td class="r mono">${Math.round(x[3]/p.h*100)}%</td></tr>`).join('')}
+            <thead><tr><th>Nombre</th><th>Departamento</th><th>Categoría</th><th class="r">Horas</th><th class="r">% del proyecto</th><th class="r"></th></tr></thead>
+            <tbody id="p-pers">
+              ${p.pers.map(x=>`<tr><td style="font-weight:800">${x[0]}</td><td>${x[1]}</td><td><span class="cat-dot" style="background:${CATC[x[2]]||'var(--ink-disabled)'}"></span>${x[2]}</td><td class="r mono">${afmt(x[3])}</td><td class="r mono">${Math.round(x[3]/p.h*100)}%</td><td class="r"><button class="btn btn-sm p-fin">Finalizar</button></td></tr>`).join('')}
             </tbody>
           </table>
           ${p.extra ? '<p class="foot" style="padding:0 12px 10px">'+p.extra+' con menos de 15 h cada una.</p>' : ''}
+          <div style="display:flex; gap:8px; align-items:center; padding:12px">
+            <select id="p-nueva" style="flex:1; max-width:320px">${PPOOL.filter(x=>!p.pers.some(y=>y[0]===x[0])).map(x=>`<option>${x[0]} — ${x[1]} · ${x[2]}</option>`).join('')}</select>
+            <button class="btn btn-primary btn-sm" id="p-add">＋ Añadir persona</button>
+          </div>
         </div>
       </div>`;
     }
@@ -1144,8 +1156,172 @@
       det.style.display = 'none';
       AID('proy-lista').style.display = 'block';
     });
+    const padd = AID('p-add'); if (padd) padd.addEventListener('click', ()=>{
+      const sel = AID('p-nueva'); if (!sel.value) return;
+      const [nom, resto] = sel.value.split(' — ');
+      const [dep, cat] = resto.split(' · ');
+      AID('p-pers').insertAdjacentHTML('beforeend', `<tr><td style="font-weight:800">${nom} <span class="micro">· recién asignada</span></td><td>${dep}</td><td><span class="cat-dot" style="background:${CATC[cat]||'var(--ink-disabled)'}"></span>${cat}</td><td class="r mono">0,0</td><td class="r mono">0%</td><td class="r"><button class="btn btn-sm p-fin">Finalizar</button></td></tr>`);
+      sel.querySelector('option:checked').remove();
+      if (!sel.options.length){ sel.disabled = true; padd.disabled = true; }
+    });
+    det.onclick = det.onclick || (e => {
+      const f = e.target.closest('.p-fin'); if (!f) return;
+      const tr = f.closest('tr'); tr.style.opacity = '.55';
+      f.outerHTML = '<span class="micro">hasta hoy</span>';
+    });
   }
   document.querySelectorAll('#proyectos [data-p]').forEach(b=>b.addEventListener('click', ()=>verProyecto(b.dataset.p)));
+
+
+  // ===== Ficha de usuario =====
+  const UDET = {
+    "Cristian Haro": { ini:"CH", emp:"Wowinx SL", dep:"3B3", rol:"Admin grupo", cat:"Desarrollo",
+      imp:152.5, reqef:154.0, ausdias:0,
+      proys:[["Ximeras","Wowinx SL",96],["Interno","Wowinx SL",56.5]],
+      asig:[["Ximeras","Wowinx SL","desde ene 2026"],["Interno","Wowinx SL","desde ene 2026"]],
+      pend:[], lineas:[["Jueves 10 sep","Interno · Reuniones",5.0,"aprobada"],["Miércoles 9 sep","Ximeras · Backend",7.0,"aprobada"]],
+      aus:[] },
+    "Verónica Salguero": { ini:"VS", emp:"Wowinx SL", dep:"3B3", rol:"Empleado", cat:"Desarrollo",
+      imp:140.0, reqef:140.0, ausdias:0,
+      proys:[["Ximeras","Wowinx SL",88],["Interno","Wowinx SL",52]],
+      asig:[["Ximeras","Wowinx SL","desde ene 2026"],["Interno","Wowinx SL","desde feb 2026"]],
+      pend:[], lineas:[["Jueves 10 sep","Ximeras · Frontend",7.0,"aprobada"],["Miércoles 9 sep","Ximeras · Frontend",7.0,"aprobada"]],
+      aus:[] },
+    "Ana Ruiz": { ini:"AR", emp:"Legal Norte SL", dep:"Jurídico", rol:"Empleado", cat:"Abogados",
+      imp:154.0, reqef:154.0, ausdias:0,
+      proys:[["Asesoría intragrupo","Legal Norte SL",130],["Ximeras","Wowinx SL",24]],
+      asig:[["Asesoría intragrupo","Legal Norte SL","desde ene 2026"],["Ximeras","Wowinx SL","desde abr 2026"]],
+      pend:[], lineas:[["Jueves 10 sep","Asesoría intragrupo · Contratos",7.0,"aprobada"],["Miércoles 9 sep","Ximeras · Contratos",4.0,"aprobada"]],
+      aus:[] },
+    "Andrés Fuentes": { ini:"AF", emp:"Wowinx SL", dep:"3B3", rol:"Empleado", cat:"Desarrollo",
+      imp:172.0, reqef:140.0, ausdias:2,
+      proys:[["Ximeras","Wowinx SL",68],["Web corporativa","Málaga CF SAD",64],["Triatix","Wowinx SL",40]],
+      asig:[["Ximeras","Wowinx SL","desde ene 2026"],["Web corporativa","Málaga CF SAD","desde mar 2026"],["Triatix","Wowinx SL","desde jun 2026"]],
+      pend:[],
+      lineas:[["Jueves 10 sep","Ximeras · Backend",4.0,"aprobada"],["Jueves 10 sep","Web corporativa · Maquetación",3.0,"aprobada"],["Miércoles 9 sep","Triatix · QA",7.0,"aprobada"],["Martes 8 sep","Ximeras · Backend",7.0,"cerrada… aprobada"]],
+      aus:[["Baja médica","1–2 sep · 2 días","aprobada"]] },
+    "Sara Martín": { ini:"SM", emp:"Wowinx SL", dep:"3B3", rol:"Responsable", cat:"Diseño",
+      imp:49.0, reqef:49.0, ausdias:0,
+      proys:[["Ximeras","Wowinx SL",28],["Interno","Wowinx SL",15],["Web corporativa","Málaga CF SAD",6]],
+      asig:[["Ximeras","Wowinx SL","desde ene 2026"],["Interno","Wowinx SL","desde ene 2026"],["Web corporativa","Málaga CF SAD","desde may 2026"]],
+      pend:[["Jueves 4 sep","Interno · Reuniones",6.0]],
+      lineas:[["Jueves 4 sep","Interno · Reuniones",6.0,"enviada"],["Miércoles 3 sep","Ximeras · UX",7.0,"aprobada"],["Martes 2 sep","Ximeras · UX",7.0,"aprobada"]],
+      aus:[] },
+  };
+  function verUsuario(n){
+    const u = UDET[n] || { ini:n.split(' ').map(x=>x[0]).join('').slice(0,2), emp:"Wowinx SL", dep:"—", rol:"Empleado", cat:"—",
+      imp:0, reqef:154.0, ausdias:0, proys:[], asig:[], pend:[], lineas:[], aus:[] };
+    const det = AID('usu-det');
+    const cab = `
+      <button class="btn btn-sm" id="u-volver">‹ Volver a usuarios</button>
+      <div style="display:flex; align-items:center; gap:14px; margin:16px 0 14px; flex-wrap:wrap">
+        <span style="width:44px; height:44px; border-radius:50%; background:var(--accent); color:var(--on-accent); display:grid; place-items:center; font-weight:800; font-size:14px">${u?u.ini:n.split(' ').map(x=>x[0]).join('').slice(0,2)}</span>
+        <div>
+          <h2 style="margin:0; font-size:20px; font-weight:800">${n}</h2>
+          <p class="micro" style="margin:2px 0 0">${u.emp} · ${u.dep} · ${u.cat} · <span class="role ${u.rol.includes('Admin')?'solid':''}">${u.rol}</span> · <span class="state"><span class="dot full"></span>Activo</span></p>
+        </div>
+      </div>`;
+    {
+      const bal = u.imp - u.reqef, maxP = Math.max(1, ...u.proys.map(p=>p[2]));
+      det.innerHTML = cab + `
+      <div class="kpis">
+        <div class="kpi"><p class="v">${afmt(u.imp)} <small>/ ${afmt(u.reqef)} h</small></p><p class="l">Imputadas · septiembre</p><p class="state"><span class="dot full"></span>requeridas efectivas (netas de ausencias)</p></div>
+        <div class="kpi"><p class="v">${bal>0?'+':''}${afmt(bal)} <small>h</small></p><p class="l">Balance del mes</p><p class="state"><span class="dot ${bal>=0?'full':'hollow'}"></span>${bal>=0?'al día':'por debajo de lo requerido'}</p></div>
+        <div class="kpi"><p class="v">${u.ausdias}</p><p class="l">Días de ausencia</p><p class="state"><span class="dot ${u.ausdias?'full':'off'}"></span>${u.ausdias?'aprobadas este mes':'ninguna este mes'}</p></div>
+        <div class="kpi"><p class="v">${u.pend.length}</p><p class="l">Pendientes de aprobar</p><p class="state"><span class="dot ${u.pend.length?'hollow':'full'}"></span>${u.pend.length?'requieren tu revisión':'nada pendiente'}</p></div>
+      </div>
+      <div class="split" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); margin-bottom:16px">
+        <div class="card">
+          <div class="card-head"><h2>Reparto del mes por proyecto</h2><span class="micro">Septiembre</span></div>
+          <div class="card-body">
+            ${u.proys.length ? u.proys.map(p=>`<div class="hbar"><span class="n">${p[0]}</span><span class="track"><i style="width:${Math.round(p[2]/maxP*100)}%"></i></span><span class="mono">${afmt(p[2])} h</span></div>`).join('') : '<p class="desc">Sin horas imputadas este mes.</p>'}
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Proyectos asignados</h2></div>
+          <div class="card-body">
+            <div id="u-asig">${u.asig.length ? u.asig.map(a=>`<div style="display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--border); font-size:13px"><b style="font-weight:800">${a[0]}</b><span class="micro">· ${a[1]} · ${a[2]}</span><button class="btn btn-sm u-fin" style="margin-left:auto">Finalizar</button></div>`).join('') : '<p class="desc">Sin proyectos asignados todavía — asígnale el primero aquí abajo.</p>'}</div>
+            <div style="display:flex; gap:8px; margin-top:12px; align-items:center">
+              <select id="u-nuevo-p" style="flex:1"><option>Launcher — Wowinx SL</option><option>Asesoría intragrupo — Legal Norte SL</option><option>Masterchef — Málaga CF SAD</option></select>
+              <button class="btn btn-primary btn-sm" id="u-asignar">＋ Asignar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="split" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); margin-bottom:16px">
+        <div class="card">
+          <div class="card-head"><h2>Pendientes de aprobar</h2><span class="micro">De este usuario</span></div>
+          <div class="card-body" style="padding:0 6px 8px">
+            ${u.pend.length ? `<table><thead><tr><th>Fecha</th><th>Línea</th><th class="r">Horas</th><th class="r">Acciones</th></tr></thead><tbody>
+              ${u.pend.map((x,i)=>`<tr><td>${x[0]}</td><td style="font-weight:800">${x[1]}</td><td class="r mono">${afmt(x[2])}</td><td class="r" id="u-pa-${i}"><button class="btn btn-sm ua-no" data-i="${i}">Rechazar</button> <button class="btn btn-sm btn-primary ua-ok" data-i="${i}">Aprobar</button></td></tr>`).join('')}
+            </tbody></table>` : '<p class="desc" style="padding:14px 12px">Nada pendiente de aprobar de este usuario.</p>'}
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Ausencias</h2><span class="micro">Este mes</span></div>
+          <div class="card-body">
+            ${u.aus.length ? u.aus.map(a=>`<div style="display:flex; align-items:center; gap:8px; padding:7px 0; font-size:13px"><b style="font-weight:800">${a[0]}</b><span class="micro">· ${a[1]}</span><span class="state" style="margin-left:auto"><span class="dot ${a[2]==='aprobada'?'full':'hollow'}"></span>${a[2]==='aprobada'?'Aprobada':'Pendiente'}</span></div>`).join('') : '<p class="desc">Sin ausencias este mes.</p>'}
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Últimas imputaciones</h2><span class="micro">Ver horas del usuario</span></div>
+          <div class="card-body" style="padding:0 6px 8px">
+            <table><thead><tr><th>Fecha</th><th>Línea</th><th class="r">Horas</th><th class="r">Estado</th></tr></thead><tbody>
+              ${(u.lineas||[]).length ? (u.lineas||[]).map(l=>`<tr><td>${l[0]}</td><td style="font-weight:800">${l[1]}</td><td class="r mono">${afmt(l[2])}</td><td class="r"><span class="state"><span class="dot ${l[3]==='enviada'?'hollow':'full'}"></span>${l[3].split('…')[0]}</span></td></tr>`).join('') : '<tr><td colspan="4"><p class="desc" style="margin:8px 4px">Todavía no ha imputado ninguna línea.</p></td></tr>'}
+            </tbody></table>
+            <p class="foot" style="padding:0 12px 10px">Historial completo en la app del empleado o vía imputación directa.</p>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Acciones sobre el usuario</h2></div>
+        <div class="card-body">
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <button class="btn btn-sm">Recordar por email</button>
+            <button class="btn btn-sm" data-go="control">Imputación directa ›</button>
+            <button class="btn btn-sm" id="u-editbtn">Editar datos</button>
+            <button class="btn btn-sm" style="color:var(--ink-tertiary)">Desactivar usuario</button>
+          </div>
+          <div id="u-editbox" style="display:none; margin-top:14px; display:none; gap:10px">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px">
+              <div><label>Empresa empleadora</label><select><option>Wowinx SL</option><option>Málaga CF SAD</option><option>Legal Norte SL</option></select></div>
+              <div><label>Departamento</label><select><option>3B3</option><option>Jurídico</option><option>Diseño</option></select></div>
+              <div><label>Categoría</label><select><option>Desarrollo</option><option>Diseño</option><option>Abogados</option><option>Gestión</option></select></div>
+              <div><label>Rol</label><select><option>Empleado</option><option>Responsable</option><option>Admin de empresa</option><option>Admin de grupo</option></select></div>
+            </div>
+            <button class="btn btn-primary btn-sm" id="u-guardar" style="margin-top:10px">Guardar cambios</button>
+          </div>
+        </div>
+      </div>`;
+    }
+    det.style.display = 'block';
+    AID('usu-lista').style.display = 'none';
+    AID('u-volver').addEventListener('click', ()=>{ det.style.display='none'; AID('usu-lista').style.display='block'; });
+    det.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click', ()=>{ const t=document.querySelector('.tab[data-panel="'+b.dataset.go+'"]'); if(t) t.click(); }));
+    det.querySelectorAll('.ua-ok').forEach(b=>b.addEventListener('click', ()=>{ AID('u-pa-'+b.dataset.i).innerHTML = '<span class="state"><span class="dot full"></span>Aprobada</span>'; }));
+    det.querySelectorAll('.ua-no').forEach(b=>b.addEventListener('click', ()=>{ AID('u-pa-'+b.dataset.i).innerHTML = '<span class="state" style="color:var(--ink-tertiary)">Rechazada</span>'; }));
+    const eb = AID('u-editbtn'); if (eb) eb.addEventListener('click', ()=>{ const x=AID('u-editbox'); x.style.display = x.style.display==='none' ? 'block' : 'none'; });
+    const asg = AID('u-asignar'); if (asg) asg.addEventListener('click', ()=>{
+      const sel = AID('u-nuevo-p'); if (!sel.value) return;
+      const [pn, pe] = sel.value.split(' — ');
+      AID('u-asig').insertAdjacentHTML('beforeend', `<div style="display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--border); font-size:13px"><b style="font-weight:800">${pn}</b><span class="micro">· ${pe} · desde hoy</span><button class="btn btn-sm u-fin" style="margin-left:auto">Finalizar</button></div>`);
+      sel.querySelector('option:checked').remove();
+      if (!sel.options.length){ sel.disabled = true; asg.disabled = true; }
+    });
+    const ug = AID('u-guardar'); if (ug) ug.addEventListener('click', ()=>{ ug.textContent = 'Guardado ✓'; ug.disabled = true; setTimeout(()=>{ ug.textContent='Guardar cambios'; ug.disabled=false; }, 1600); });
+    det.onclick = det.onclick || (e => {
+      const f = e.target.closest('.u-fin'); if (!f) return;
+      const fila = f.parentElement; fila.style.opacity = '.55';
+      f.outerHTML = '<span class="micro" style="margin-left:auto">hasta hoy</span>';
+    });
+  }
+  document.querySelectorAll('#usuarios [data-u]').forEach(b=>b.addEventListener('click', ()=>verUsuario(b.dataset.u)));
+  // Fila entera clicable en cualquier tabla con botón "Ver" (usuarios y proyectos)
+  document.querySelectorAll('[data-u], [data-p]').forEach(b=>{
+    const tr = b.closest('tr'); if (!tr) return;
+    tr.classList.add('row-link');
+    tr.addEventListener('click', e => { if (!e.target.closest('button')) b.click(); });
+  });
 
   const setTheme = t => document.documentElement.dataset.theme = t;
   setTheme(matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');

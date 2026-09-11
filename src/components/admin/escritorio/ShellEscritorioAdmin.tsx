@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { MenuUsuarioDesktop } from '@/components/ui/MenuUsuario';
 import { IconReloj, IconChevronLeft, IconChevronRight } from '@/components/ui/icons';
 import { GRUPOS_SECCIONES } from '../secciones';
 import type { AdminInfo, SeccionAdmin } from '../types';
@@ -71,6 +72,7 @@ export function ShellEscritorioAdmin({ info, seccion, setSeccion }: Props) {
 
         <div className="mt-auto flex items-center gap-2 border-t border-border pt-3">
           <ThemeToggle />
+          <MenuUsuarioDesktop nombre={info.nombre} email={info.email} rol={info.rol} />
           {!mini && (
             <a href="/" className="btn btn-sm flex-1 justify-center">
               App empleado
