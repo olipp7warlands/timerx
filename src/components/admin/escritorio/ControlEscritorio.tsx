@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useFaltantesAdmin } from '@/hooks/admin/useFaltantesAdmin';
 import { useImputarDirecto } from '@/hooks/admin/useImputarDirecto';
 import { useUsuarios } from '@/hooks/admin/useUsuarios';
@@ -11,9 +11,16 @@ import { useAprobacionImputaciones } from '@/hooks/admin/useAprobacionImputacion
 import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import { enviarRecordatoriosManual } from '@/app/admin/actions';
 import { useToast } from '@/components/empleado/compartido/Toast';
+import { TablaPendientesImputacion } from '../compartido/TablaPendientesImputacion';
 import { fmt } from '@/lib/horas/calendario';
 
-export function ControlEscritorio() {
+interface Props {
+  /** Empleado preseleccionado desde "Imputación directa" de la ficha de usuario -- se consume una vez y se limpia en el padre. */
+  empleadoPreseleccionado?: string | null;
+  onConsumirPreseleccion?: () => void;
+}
+
+export function ControlEscritorio({ empleadoPreseleccionado, onConsumirPreseleccion }: Props = {}) {
   const hoy = useMemo(() => new Date(), []);
   const desdeMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
   const hastaHoy = hoy.toISOString().slice(0, 10);
@@ -29,9 +36,14 @@ export function ControlEscritorio() {
 
   const [form, setForm] = useState({ empleadoId: '', proyectoId: '', subcategoriaId: '', fecha: '', horas: '', descripcion: '' });
   const { proyectoIdsParaFecha } = useAsignacionesEmpleado(form.empleadoId);
-  const [rechazandoId, setRechazandoId] = useState<string | null>(null);
-  const [motivoRechazo, setMotivoRechazo] = useState('');
   const [enviandoRecordatorios, setEnviandoRecordatorios] = useState(false);
+
+  useEffect(() => {
+    if (empleadoPreseleccionado) {
+      setForm((f) => ({ ...f, empleadoId: empleadoPreseleccionado }));
+      onConsumirPreseleccion?.();
+    }
+  }, [empleadoPreseleccionado, onConsumirPreseleccion]);
 
   const subcategorias = categorias.flatMap((c) => c.subcategorias.map((s) => ({ ...s, categoriaNombre: c.nombre })));
   const idsVigentes = proyectoIdsParaFecha(form.fecha);
@@ -79,21 +91,6 @@ export function ControlEscritorio() {
       return;
     }
     toast(procesados === 0 ? 'Nadie con recordatorio pendiente' : `${procesados} recordatorio${procesados === 1 ? '' : 's'} enviado${procesados === 1 ? '' : 's'}${omitidos ? ` (${omitidos} ya recibidos hoy)` : ''}`);
-  }
-
-  async function onAprobar(id: string) {
-    const { error } = await aprobar(id);
-    if (error) toast(error, 'error');
-    else toast('Imputación aprobada');
-  }
-
-  async function onConfirmarRechazo(id: string) {
-    if (!motivoRechazo.trim()) return;
-    const { error } = await rechazar(id, motivoRechazo.trim());
-    if (error) toast(error, 'error');
-    else toast('Imputación rechazada');
-    setRechazandoId(null);
-    setMotivoRechazo('');
   }
 
   return (
@@ -209,71 +206,7 @@ export function ControlEscritorio() {
         <h2 className="text-sm font-extrabold">Aprobación de imputaciones</h2>
       </div>
       <div className="px-1.5 pb-2">
-        {loadingPendientes ? (
-          <p className="p-4 text-sm text-ink-tertiary">Cargando…</p>
-        ) : pendientes.length === 0 ? (
-          <p className="p-4 text-sm text-ink-tertiary">Nadie tiene imputaciones enviadas pendientes de aprobar.</p>
-        ) : (
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
-                <th className="border-b border-border px-2.5 py-2">Empleado</th>
-                <th className="border-b border-border px-2.5 py-2">Proyecto</th>
-                <th className="border-b border-border px-2.5 py-2">Fecha</th>
-                <th className="border-b border-border px-2.5 py-2 text-right">Horas</th>
-                <th className="border-b border-border px-2.5 py-2 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pendientes.map((p) => (
-                <tr key={p.id} className="hover:bg-subtle">
-                  <td className="border-b border-border px-2.5 py-2.5 font-extrabold">{p.empleadoNombre}</td>
-                  <td className="border-b border-border px-2.5 py-2.5">
-                    {p.proyectoNombre}
-                    <span className="block text-[11px] font-normal text-ink-tertiary">{p.empresaDestino}</span>
-                  </td>
-                  <td className="mono border-b border-border px-2.5 py-2.5">{p.fecha}</td>
-                  <td className="mono border-b border-border px-2.5 py-2.5 text-right">{fmt(p.horas)}</td>
-                  <td className="border-b border-border px-2.5 py-2.5 text-right">
-                    {rechazandoId === p.id ? (
-                      <span className="flex items-center justify-end gap-1.5">
-                        <input
-                          className="input w-[220px]"
-                          placeholder="Motivo del rechazo (obligatorio)"
-                          value={motivoRechazo}
-                          onChange={(e) => setMotivoRechazo(e.target.value)}
-                          autoFocus
-                        />
-                        <button
-                          type="button"
-                          className="btn-text"
-                          onClick={() => {
-                            setRechazandoId(null);
-                            setMotivoRechazo('');
-                          }}
-                        >
-                          Cancelar
-                        </button>
-                        <button type="button" className="btn btn-sm btn-primary" disabled={!motivoRechazo.trim()} onClick={() => onConfirmarRechazo(p.id)}>
-                          Confirmar rechazo
-                        </button>
-                      </span>
-                    ) : (
-                      <>
-                        <button type="button" className="btn-text" onClick={() => setRechazandoId(p.id)}>
-                          Rechazar
-                        </button>{' '}
-                        <button type="button" className="btn btn-sm btn-primary" onClick={() => onAprobar(p.id)}>
-                          Aprobar
-                        </button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <TablaPendientesImputacion pendientes={pendientes} loading={loadingPendientes} onAprobar={aprobar} onRechazar={rechazar} />
         <p className="foot px-3 pb-2.5 pt-3 text-xs text-ink-tertiary">Aprueba la empresa destino del proyecto (o admin de grupo) — quien recibe el trabajo.</p>
       </div>
     </div>

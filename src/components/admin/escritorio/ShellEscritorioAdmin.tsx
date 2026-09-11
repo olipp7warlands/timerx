@@ -27,6 +27,12 @@ interface Props {
 
 export function ShellEscritorioAdmin({ info, seccion, setSeccion }: Props) {
   const [mini, setMini] = useState(false);
+  const [empleadoParaControl, setEmpleadoParaControl] = useState<string | null>(null);
+
+  function irAControl(empleadoId: string) {
+    setEmpleadoParaControl(empleadoId);
+    setSeccion('control');
+  }
 
   return (
     <div className="flex min-h-screen bg-bg">
@@ -83,14 +89,16 @@ export function ShellEscritorioAdmin({ info, seccion, setSeccion }: Props) {
 
       <main className="min-w-0 flex-1 p-8">
         {seccion === 'inicio' && <InicioEscritorio info={info} onIrA={setSeccion} />}
-        {seccion === 'usuarios' && <UsuariosEscritorio info={info} />}
+        {seccion === 'usuarios' && <UsuariosEscritorio info={info} onIrAControl={irAControl} />}
         {seccion === 'ausencias' && <AusenciasEscritorio />}
         {seccion === 'empresas' && <EmpresasEscritorio info={info} />}
         {seccion === 'proyectos' && <ProyectosEscritorio info={info} />}
         {seccion === 'categorias' && <CategoriasEscritorio info={info} />}
         {seccion === 'calendario' && <CalendarioEscritorio info={info} />}
         {seccion === 'mapa' && <MapaEscritorio info={info} />}
-        {seccion === 'control' && <ControlEscritorio />}
+        {seccion === 'control' && (
+          <ControlEscritorio empleadoPreseleccionado={empleadoParaControl} onConsumirPreseleccion={() => setEmpleadoParaControl(null)} />
+        )}
         {seccion === 'tarifas' && <TarifasEscritorio info={info} />}
         {seccion === 'refacturacion' && <RefacturacionEscritorio info={info} />}
         {seccion === 'ajustes' && <AjustesEscritorio info={info} />}

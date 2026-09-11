@@ -177,7 +177,18 @@ html[data-theme="dark"] {
     padding: 16px 18px 18px;
   }
   .card-body > .btn {
+    margin-top: 14px;
+  }
+  .card-body select + .btn,
+  .card-body input + .btn {
     margin-top: 16px;
+  }
+
+  .row-link {
+    cursor: pointer;
+  }
+  .row-link:hover td {
+    background: var(--bg-subtle);
   }
 
   .input {

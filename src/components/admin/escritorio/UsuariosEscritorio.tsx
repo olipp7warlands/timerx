@@ -8,10 +8,16 @@ import { useCategorias } from '@/hooks/admin/useCategorias';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { invitarUsuario } from '@/app/admin/actions';
 import { ETIQUETA_ROL } from '@/lib/auth/roles';
+import { FichaUsuarioEscritorio } from './FichaUsuarioEscritorio';
 import type { AdminInfo } from '../types';
 
-export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
-  const { usuarios, loading, recargar } = useUsuarios();
+interface Props {
+  info: AdminInfo;
+  onIrAControl: (empleadoId: string) => void;
+}
+
+export function UsuariosEscritorio({ info, onIrAControl }: Props) {
+  const { usuarios, loading, recargar, actualizar, desactivar } = useUsuarios();
   const { departamentos, crear: crearDepartamento } = useDepartamentos();
   const { empresas } = useEmpresas();
   const { categorias } = useCategorias();
@@ -19,11 +25,13 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
 
   const esAdminGrupo = info.rol === 'admin_grupo';
   const [busqueda, setBusqueda] = useState('');
+  const [seleccionadoId, setSeleccionadoId] = useState<string | null>(null);
   const [form, setForm] = useState({ email: '', nombre: '', empresaId: info.empresaId, departamentoId: '', rol: 'empleado', categoriaId: '' });
   const [enviando, setEnviando] = useState(false);
   const [depNombre, setDepNombre] = useState('');
 
   const filtrados = usuarios.filter((u) => u.nombre.toLowerCase().includes(busqueda.toLowerCase()));
+  const seleccionado = usuarios.find((u) => u.id === seleccionadoId) ?? null;
 
   async function enviarInvitacion() {
     if (!form.email || !form.nombre) {
@@ -57,6 +65,19 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
       toast(`Departamento "${depNombre}" creado`);
       setDepNombre('');
     }
+  }
+
+  if (seleccionado) {
+    return (
+      <FichaUsuarioEscritorio
+        info={info}
+        usuario={seleccionado}
+        onVolver={() => setSeleccionadoId(null)}
+        onIrAControl={onIrAControl}
+        onActualizar={actualizar}
+        onDesactivar={desactivar}
+      />
+    );
   }
 
   return (
@@ -148,11 +169,18 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                   <th className="border-b border-border px-2.5 py-2">Departamento</th>
                   <th className="border-b border-border px-2.5 py-2">Rol</th>
                   <th className="border-b border-border px-2.5 py-2">Categoría</th>
+                  <th className="border-b border-border px-2.5 py-2 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {filtrados.map((u) => (
-                  <tr key={u.id} className="hover:bg-subtle">
+                  <tr
+                    key={u.id}
+                    className="row-link hover:bg-subtle"
+                    onClick={(e) => {
+                      if (!(e.target as HTMLElement).closest('button')) setSeleccionadoId(u.id);
+                    }}
+                  >
                     <td className="border-b border-border px-2.5 py-2.5 font-extrabold">{u.nombre}</td>
                     <td className="border-b border-border px-2.5 py-2.5">{u.empresaNombre}</td>
                     <td className="border-b border-border px-2.5 py-2.5">{u.departamento ?? '—'}</td>
@@ -162,6 +190,11 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                       </span>
                     </td>
                     <td className="border-b border-border px-2.5 py-2.5">{u.categoriaNombre ?? '—'}</td>
+                    <td className="border-b border-border px-2.5 py-2.5 text-right">
+                      <button type="button" className="btn btn-sm" onClick={() => setSeleccionadoId(u.id)}>
+                        Ver
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -100,7 +100,13 @@ export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
               {proyectos.map((p) => {
                 const horas = porProyecto.find((h) => h.proyectoId === p.id)?.horas ?? 0;
                 return (
-                  <tr key={p.id} className="hover:bg-subtle">
+                  <tr
+                    key={p.id}
+                    className="row-link hover:bg-subtle"
+                    onClick={(e) => {
+                      if (!(e.target as HTMLElement).closest('button')) setSeleccionado(p);
+                    }}
+                  >
                     <td className="border-b border-border px-2.5 py-2.5 font-extrabold">{p.nombre}</td>
                     <td className="border-b border-border px-2.5 py-2.5">{p.empresaNombre}</td>
                     <td className={`mono border-b border-border px-2.5 py-2.5 text-right ${horas === 0 ? 'text-ink-tertiary' : ''}`}>{fmt(horas)}</td>

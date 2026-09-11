@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 
 export interface ImputacionPendiente {
   id: string;
+  empleadoId: string;
   empleadoNombre: string;
   proyectoNombre: string;
   empresaDestino: string;
@@ -13,7 +14,7 @@ export interface ImputacionPendiente {
 }
 
 const SELECT = `
-  id, fecha, horas,
+  id, fecha, horas, empleado_id,
   empleado:empleado_id(nombre),
   proyecto:proyecto_id(nombre, empresa:empresa_id(nombre))
 `;
@@ -30,6 +31,7 @@ export function useAprobacionImputaciones() {
     setPendientes(
       (data ?? []).map((f: any) => ({
         id: f.id,
+        empleadoId: f.empleado_id,
         empleadoNombre: f.empleado?.nombre ?? '',
         proyectoNombre: f.proyecto?.nombre ?? '',
         empresaDestino: f.proyecto?.empresa?.nombre ?? '',

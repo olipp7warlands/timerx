@@ -91,3 +91,39 @@ export async function enviarRecordatoriosManual(): Promise<{ error: string | nul
   const resultado = await procesarRecordatorios(filas, modo, fechaDesde, fechaHasta);
   return { error: null, ...resultado };
 }
+
+/**
+ * "Recordar por email" de la ficha de usuario -- mismo cálculo que el botón
+ * general, pero filtrado a un solo empleado antes de procesar (respeta el
+ * mismo ámbito de sesión y el mismo guardarraíl anti-spam de 1/día).
+ */
+export async function enviarRecordatorioEmpleado(perfilId: string): Promise<{ error: string | null; procesados: number; omitidos: number }> {
+  const perfil = await getPerfilServer();
+  if (!perfil || !['admin_grupo', 'admin_empresa'].includes(perfil.rol)) {
+    return { error: 'Sin permisos para enviar recordatorios', procesados: 0, omitidos: 0 };
+  }
+
+  const hoy = new Date();
+  const desde = new Date(hoy);
+  desde.setDate(desde.getDate() - VENTANA_DIAS_RECORDATORIO);
+  const fechaDesde = desde.toISOString().slice(0, 10);
+  const fechaHasta = hoy.toISOString().slice(0, 10);
+
+  const supabaseSesion = await createSessionClient();
+  const { data, error } = await supabaseSesion.rpc('faltantes', { p_desde: fechaDesde, p_hasta: fechaHasta });
+  if (error) return { error: error.message, procesados: 0, omitidos: 0 };
+
+  const filas = (data ?? [])
+    .filter((f: any) => f.perfil_id === perfilId)
+    .map((f: any) => ({
+      perfilId: f.perfil_id,
+      nombre: f.nombre,
+      email: f.email,
+      fecha: f.fecha,
+      falta: Number(f.falta),
+    }));
+
+  const modo = process.env.MODO_EMAIL === 'real' ? 'real' : 'log';
+  const resultado = await procesarRecordatorios(filas, modo, fechaDesde, fechaHasta);
+  return { error: null, ...resultado };
+}
