@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useProyectosAdmin, type ProyectoAdmin } from '@/hooks/admin/useProyectosAdmin';
 import { useEmpresas } from '@/hooks/admin/useEmpresas';
 import { useHorasPorEmpresaYProyecto } from '@/hooks/admin/useHorasPorEmpresaYProyecto';
@@ -12,7 +12,14 @@ import type { AdminInfo } from '../types';
 
 const GRISES = ['var(--ink-primary)', 'var(--ink-secondary)', 'var(--ink-tertiary)', 'var(--ink-disabled)', 'var(--border-strong)'];
 
-export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
+interface Props {
+  info: AdminInfo;
+  /** Id de proyecto a abrir directamente (hand-off desde la ficha de empresa). */
+  preseleccion?: string | null;
+  onConsumirPreseleccion?: () => void;
+}
+
+export function ProyectosEscritorio({ info, preseleccion, onConsumirPreseleccion }: Props) {
   const hoy = new Date();
   const anio = hoy.getFullYear();
   const mes = hoy.getMonth() + 1;
@@ -25,6 +32,19 @@ export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
   const esAdminGrupo = info.rol === 'admin_grupo';
   const [seleccionado, setSeleccionado] = useState<ProyectoAdmin | null>(null);
   const [form, setForm] = useState({ empresaId: info.empresaId, codigo: '', nombre: '' });
+
+  useEffect(() => {
+    if (!preseleccion) return;
+    const p = proyectos.find((x) => x.id === preseleccion);
+    // Solo se consume el hand-off si realmente se encontró el proyecto -- `proyectos`
+    // casi siempre sigue cargando cuando este efecto corre por primera vez tras
+    // cambiar de sección; consumir sin éxito perdería la preselección para siempre
+    // (el efecto no volvería a correr al no cambiar ya `preseleccion`).
+    if (p) {
+      setSeleccionado(p);
+      onConsumirPreseleccion?.();
+    }
+  }, [preseleccion, proyectos, onConsumirPreseleccion]);
 
   async function crearProyecto() {
     if (!form.codigo || !form.nombre) {

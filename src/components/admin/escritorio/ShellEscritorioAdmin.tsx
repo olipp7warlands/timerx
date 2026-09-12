@@ -27,11 +27,24 @@ interface Props {
 
 export function ShellEscritorioAdmin({ info, seccion, setSeccion }: Props) {
   const [mini, setMini] = useState(false);
-  const [empleadoParaControl, setEmpleadoParaControl] = useState<string | null>(null);
 
-  function irAControl(empleadoId: string) {
-    setEmpleadoParaControl(empleadoId);
-    setSeccion('control');
+  /**
+   * Hand-off genérico entre secciones: "ir a X con este dato preseleccionado".
+   * Sustituye el estado puntual que antes solo servía para Control -- ahora
+   * también cubre abrir una ficha de Proyectos/Usuarios o precargar el
+   * formulario de invitación con una empresa, todo desde la ficha de empresa.
+   */
+  const [handoff, setHandoff] = useState<{ seccion: SeccionAdmin; data: any } | null>(null);
+
+  function irA(seccionDestino: SeccionAdmin, data?: any) {
+    setHandoff(data !== undefined ? { seccion: seccionDestino, data } : null);
+    setSeccion(seccionDestino);
+  }
+  function handoffPara(seccionActual: SeccionAdmin) {
+    return handoff?.seccion === seccionActual ? handoff.data : undefined;
+  }
+  function consumirHandoff() {
+    setHandoff(null);
   }
 
   return (
@@ -89,15 +102,30 @@ export function ShellEscritorioAdmin({ info, seccion, setSeccion }: Props) {
 
       <main className="min-w-0 flex-1 p-8">
         {seccion === 'inicio' && <InicioEscritorio info={info} onIrA={setSeccion} />}
-        {seccion === 'usuarios' && <UsuariosEscritorio info={info} onIrAControl={irAControl} />}
+        {seccion === 'usuarios' && (
+          <UsuariosEscritorio
+            info={info}
+            onIrAControl={(empleadoId) => irA('control', { empleadoId })}
+            preseleccion={handoffPara('usuarios')}
+            onConsumirPreseleccion={consumirHandoff}
+          />
+        )}
         {seccion === 'ausencias' && <AusenciasEscritorio />}
-        {seccion === 'empresas' && <EmpresasEscritorio info={info} />}
-        {seccion === 'proyectos' && <ProyectosEscritorio info={info} />}
+        {seccion === 'empresas' && (
+          <EmpresasEscritorio
+            info={info}
+            onIrAProyecto={(proyectoId) => irA('proyectos', { proyectoId })}
+            onIrAUsuario={(usuarioId) => irA('usuarios', { usuarioId })}
+            onIrAInvitarUsuario={(empresaId) => irA('usuarios', { empresaIdInvitar: empresaId })}
+            onIrARefacturacion={() => irA('refacturacion')}
+          />
+        )}
+        {seccion === 'proyectos' && <ProyectosEscritorio info={info} preseleccion={handoffPara('proyectos')?.proyectoId} onConsumirPreseleccion={consumirHandoff} />}
         {seccion === 'categorias' && <CategoriasEscritorio info={info} />}
         {seccion === 'calendario' && <CalendarioEscritorio info={info} />}
         {seccion === 'mapa' && <MapaEscritorio info={info} />}
         {seccion === 'control' && (
-          <ControlEscritorio empleadoPreseleccionado={empleadoParaControl} onConsumirPreseleccion={() => setEmpleadoParaControl(null)} />
+          <ControlEscritorio empleadoPreseleccionado={handoffPara('control')?.empleadoId ?? null} onConsumirPreseleccion={consumirHandoff} />
         )}
         {seccion === 'tarifas' && <TarifasEscritorio info={info} />}
         {seccion === 'refacturacion' && <RefacturacionEscritorio info={info} />}

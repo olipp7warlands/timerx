@@ -37,5 +37,27 @@ export function useEmpresas() {
     [recargar]
   );
 
-  return { empresas, loading, recargar, crear };
+  /** empresa_admin (escritura) es admin_grupo-only, sin excepción de "empresa propia" -- la UI oculta estas acciones para admin_empresa siempre. */
+  const actualizar = useCallback(
+    async (id: string, input: { nombre: string; cif: string | null }) => {
+      const supabase = createClient();
+      const { error } = await supabase.from('empresa').update({ nombre: input.nombre, cif: input.cif }).eq('id', id);
+      if (!error) await recargar();
+      return { error: error?.message ?? null };
+    },
+    [recargar]
+  );
+
+  /** Mutación pura, sin guard -- el guard (cero proyectos activos, cero empleados activos) vive en el componente, que ya tiene esas listas cargadas. */
+  const desactivar = useCallback(
+    async (id: string) => {
+      const supabase = createClient();
+      const { error } = await supabase.from('empresa').update({ activa: false }).eq('id', id);
+      if (!error) await recargar();
+      return { error: error?.message ?? null };
+    },
+    [recargar]
+  );
+
+  return { empresas, loading, recargar, crear, actualizar, desactivar };
 }

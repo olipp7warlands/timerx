@@ -35,9 +35,9 @@ export const GRUPOS_SECCIONES: GrupoSeccion[] = [
     items: [
       { id: 'empresas', etiqueta: 'Empresas', Icono: IconEmpresa },
       { id: 'proyectos', etiqueta: 'Proyectos', Icono: IconCarpeta },
-      { id: 'categorias', etiqueta: 'Categorías', Icono: IconCategoria },
       { id: 'calendario', etiqueta: 'Calendario', Icono: IconCalendario },
       { id: 'mapa', etiqueta: 'Mapa', Icono: IconMapa },
+      { id: 'categorias', etiqueta: 'Categorías', Icono: IconCategoria },
     ],
   },
   {

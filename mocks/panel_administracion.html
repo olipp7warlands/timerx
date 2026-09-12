@@ -283,10 +283,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>
       <span>Proyectos</span>
     </button>
-    <button class="tab" role="tab" aria-selected="false" data-panel="categorias">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.3 9.3a1.7 1.7 0 0 0 2.4 0l7.6-7.6a1.7 1.7 0 0 0 0-2.4Z"/><path d="M7 7h.01"/></svg>
-      <span>Categorías</span>
-    </button>
+    
     <button class="tab" role="tab" aria-selected="false" data-panel="calendario">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg>
       <span>Calendario</span>
@@ -294,6 +291,10 @@
     <button class="tab" role="tab" aria-selected="false" data-panel="mapa">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Z"/><path d="M9 3v16M15 5v16"/></svg>
       <span>Mapa</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="categorias">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.3 9.3a1.7 1.7 0 0 0 2.4 0l7.6-7.6a1.7 1.7 0 0 0 0-2.4Z"/><path d="M7 7h.01"/></svg>
+      <span>Categorías</span>
     </button>
 
     <p class="nav-label" style="margin:0">Operación</p>
@@ -459,6 +460,7 @@
 
   <!-- ============ EMPRESAS ============ -->
   <section id="empresas" class="panel" role="tabpanel">
+    <div id="emp-lista">
     <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
       <div class="kpi"><p class="v">3</p><p class="l">Empresas activas</p><p class="state"><span class="dot full"></span>todas con actividad este mes</p></div>
       <div class="kpi"><p class="v">626,5 <small>h</small></p><p class="l">Horas intragrupo · septiembre</p><p class="state"><span class="dot full"></span>51% del total imputado</p></div>
@@ -490,29 +492,19 @@
       </div>
       <div class="card">
         <div class="card-head"><h2>Empresas del grupo</h2></div>
-        <div class="card-body">
-          <div class="group">
-            <div class="group-head"><h3>Wowinx SL <small>B-11223344</small></h3><span class="state"><span class="dot full"></span>Activa</span></div>
-            <div class="item"><span>Proyectos activos</span><span class="mono">4</span></div>
-            <div class="item"><span>Horas recibidas · sep</span><span class="mono">612,0 h</span></div>
-            <div class="item"><span>Refacturación a favor · sep</span><span class="mono">25.970,00 €</span></div>
-          </div>
-          <div class="group">
-            <div class="group-head"><h3>Málaga CF SAD <small>A-99887766</small></h3><span class="state"><span class="dot full"></span>Activa</span></div>
-            <div class="item"><span>Proyectos activos</span><span class="mono">2</span></div>
-            <div class="item"><span>Horas recibidas · sep</span><span class="mono">348,0 h</span></div>
-            <div class="item"><span>Refacturación en contra · sep</span><span class="mono">20.180,00 €</span></div>
-          </div>
-          <div class="group">
-            <div class="group-head"><h3>Legal Norte SL <small>B-55667788</small></h3><span class="state"><span class="dot full"></span>Activa</span></div>
-            <div class="item"><span>Proyectos activos</span><span class="mono">1</span></div>
-            <div class="item"><span>Horas recibidas · sep</span><span class="mono">278,5 h</span></div>
-            <div class="item"><span>Refacturación a favor · sep</span><span class="mono">12.440,00 €</span></div>
-          </div>
-          <p class="foot">La empresa del proyecto es la que recibe el servicio: contra ella se calcula la refacturación.</p>
-        </div>
+        <table>
+          <thead><tr><th>Empresa</th><th>CIF</th><th class="r">Proyectos</th><th class="r">Horas · mes</th><th class="r">Refacturación · mes</th><th>Estado</th><th class="r">Acciones</th></tr></thead>
+          <tbody>
+            <tr><td style="font-weight:800">Wowinx SL</td><td class="mono">B-11223344</td><td class="r mono">4</td><td class="r mono">554,5</td><td class="r mono">4.620,00 €</td><td><span class="state"><span class="dot full"></span>Activa</span></td><td class="r"><button class="btn btn-sm" data-e="Wowinx SL">Ver</button></td></tr>
+            <tr><td style="font-weight:800">Málaga CF SAD</td><td class="mono">A-99887766</td><td class="r mono">2</td><td class="r mono">272,0</td><td class="r mono">15.860,00 €</td><td><span class="state"><span class="dot full"></span>Activa</span></td><td class="r"><button class="btn btn-sm" data-e="Málaga CF SAD">Ver</button></td></tr>
+            <tr><td style="font-weight:800">Legal Norte SL</td><td class="mono">B-55667788</td><td class="r mono">1</td><td class="r mono">182,0</td><td class="r mono">1.440,00 €</td><td><span class="state"><span class="dot full"></span>Activa</span></td><td class="r"><button class="btn btn-sm" data-e="Legal Norte SL">Ver</button></td></tr>
+          </tbody>
+        </table>
+        <p class="foot" style="padding:0 12px 10px">La empresa del proyecto es la que recibe el servicio: contra ella se calcula la refacturación.</p>
       </div>
     </div>
+    </div>
+    <div id="emp-det" style="display:none"></div>
   </section>
 
   <!-- ============ PROYECTOS ============ -->
@@ -1318,6 +1310,108 @@
   document.querySelectorAll('#usuarios [data-u]').forEach(b=>b.addEventListener('click', ()=>verUsuario(b.dataset.u)));
   // Fila entera clicable en cualquier tabla con botón "Ver" (usuarios y proyectos)
   document.querySelectorAll('[data-u], [data-p]').forEach(b=>{
+    const tr = b.closest('tr'); if (!tr) return;
+    tr.classList.add('row-link');
+    tr.addEventListener('click', e => { if (!e.target.closest('button')) b.click(); });
+  });
+
+
+  // ===== Ficha de empresa =====
+  const EDET = {
+    "Wowinx SL": { cif:"B-11223344", proy:[["Ximeras",318.0,"Activo"],["Triatix",160.5,"Activo"],["Interno",76.0,"Activo"],["Launcher",0,"Sin actividad"]],
+      emps:[["Cristian Haro","3B3","Desarrollo","Admin grupo"],["Verónica Salguero","3B3","Desarrollo","Empleado"],["Sara Martín","3B3","Diseño","Responsable"],["Andrés Fuentes","3B3","Desarrollo","Empleado"],["Leo Silva","3B3","Desarrollo","Empleado"],["Cosme Hernandez","3B3","Desarrollo","Empleado"],["Daniel Ramírez","3B3","Desarrollo","Empleado"],["Oliver Pérez","3B3","Desarrollo","Empleado"]],
+      ref:[["Legal Norte SL → Wowinx SL","4.620,00 €"]], tot:"4.620,00 €", horas:554.5 },
+    "Málaga CF SAD": { cif:"A-99887766", proy:[["Web corporativa",272.0,"Activo"],["Masterchef",0,"Sin actividad"]],
+      emps:[["Marina Ortega","—","—","Admin empresa"],["Enrique Robles","—","Gestión","Empleado"]],
+      ref:[["Wowinx SL → Málaga CF SAD","15.860,00 €"]], tot:"15.860,00 €", horas:272.0 },
+    "Legal Norte SL": { cif:"B-55667788", proy:[["Asesoría intragrupo",182.0,"Activo"]],
+      emps:[["Ana Ruiz","Jurídico","Abogados","Empleado"],["Marta Gil","Jurídico","Abogados","Empleado"]],
+      ref:[["Wowinx SL → Legal Norte SL","1.440,00 €"]], tot:"1.440,00 €", horas:182.0 },
+  };
+  function verEmpresa(n){
+    const e = EDET[n]; if (!e) return;
+    const det = AID('emp-det');
+    det.innerHTML = `
+      <button class="btn btn-sm" id="e-volver">‹ Volver a empresas</button>
+      <div style="display:flex; align-items:center; gap:14px; margin:16px 0 14px; flex-wrap:wrap">
+        <span style="width:44px; height:44px; border-radius:12px; background:var(--accent); color:var(--on-accent); display:grid; place-items:center; font-weight:800; font-size:13px">${n.split(' ').map(x=>x[0]).join('').slice(0,2)}</span>
+        <div>
+          <h2 style="margin:0; font-size:20px; font-weight:800">${n} <small class="mono" style="font-size:12px; color:var(--ink-tertiary); font-weight:500">${e.cif}</small></h2>
+          <p class="micro" style="margin:2px 0 0"><span class="state"><span class="dot full"></span>Activa</span> · empresa receptora de servicio</p>
+        </div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><p class="v">${e.emps.length}</p><p class="l">Empleados</p><p class="state"><span class="dot full"></span>en plantilla activa</p></div>
+        <div class="kpi"><p class="v">${e.proy.filter(p=>p[2]==='Activo').length} <small>de ${e.proy.length}</small></p><p class="l">Proyectos activos</p><p class="state"><span class="dot full"></span>como empresa destino</p></div>
+        <div class="kpi"><p class="v">${afmt(e.horas)} <small>h</small></p><p class="l">Horas recibidas · sep</p><p class="state"><span class="dot full"></span>criterio de valoración</p></div>
+        <div class="kpi"><p class="v" style="font-size:19px">${e.tot}</p><p class="l">Refacturación · sep</p><p class="state"><span class="dot hollow"></span>provisional hasta el cierre</p></div>
+      </div>
+      <div class="split" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); margin-bottom:16px">
+        <div class="card">
+          <div class="card-head"><h2>Proyectos de la empresa</h2></div>
+          <div class="card-body" style="padding:0 6px 8px">
+            <table><thead><tr><th>Proyecto</th><th class="r">Horas · mes</th><th>Estado</th><th class="r"></th></tr></thead><tbody>
+              ${e.proy.map(p=>`<tr class="row-link e-ir-proy" data-n="${p[0]}"><td style="font-weight:800">${p[0]}</td><td class="r mono">${afmt(p[1])}</td><td><span class="state"><span class="dot ${p[1]?'full':'off'}"></span>${p[2]}</span></td><td class="r"><button class="btn btn-sm">Ver ›</button></td></tr>`).join('')}
+            </tbody></table>
+            <div style="display:flex; gap:8px; align-items:center; padding:12px">
+              <input id="e-nuevo-proy" placeholder="Nombre del nuevo proyecto" style="flex:1; max-width:300px">
+              <button class="btn btn-primary btn-sm" id="e-add-proy">＋ Nuevo proyecto</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Empleados</h2><button class="btn btn-sm" data-go="usuarios">＋ Invitar usuario ›</button></div>
+          <div class="card-body" style="padding:0 6px 8px">
+            <table><thead><tr><th>Nombre</th><th>Departamento</th><th>Categoría</th><th>Rol</th></tr></thead><tbody>
+              ${e.emps.map(u=>`<tr class="row-link e-ir-usu" data-n="${u[0]}"><td style="font-weight:800">${u[0]}</td><td>${u[1]}</td><td>${u[2]}</td><td><span class="role ${u[3].includes('Admin')?'solid':''}">${u[3]}</span></td></tr>`).join('')}
+            </tbody></table>
+            <p class="foot" style="padding:0 12px 10px">Cambiar a alguien de empresa se hace desde su ficha de usuario (Editar datos).</p>
+          </div>
+        </div>
+      </div>
+      <div class="split" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+        <div class="card">
+          <div class="card-head"><h2>Refacturación del mes</h2><button class="btn btn-sm" data-go="refacturaciones">Detalle ›</button></div>
+          <div class="card-body">
+            ${e.ref.map(r=>`<div class="item"><span>${r[0]}</span><span class="mono">${r[1]}</span></div>`).join('')}
+            <div class="item"><span style="font-weight:800">Total recibido</span><span class="mono" style="font-weight:800">${e.tot}</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Acciones sobre la empresa</h2></div>
+          <div class="card-body">
+            <div style="display:flex; gap:8px; flex-wrap:wrap">
+              <button class="btn btn-sm" id="e-editbtn">Editar datos</button>
+              <button class="btn btn-sm" style="color:var(--ink-tertiary)">Desactivar empresa</button>
+            </div>
+            <div id="e-editbox" style="display:none; margin-top:14px">
+              <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px">
+                <div><label>Nombre</label><input value="${n}"></div>
+                <div><label>CIF</label><input class="mono" value="${e.cif}"></div>
+              </div>
+              <button class="btn btn-primary btn-sm" id="e-guardar" style="margin-top:10px">Guardar cambios</button>
+            </div>
+            <p class="foot" style="margin:10px 0 0">Desactivar exige no tener proyectos activos ni empleados asignados.</p>
+          </div>
+        </div>
+      </div>`;
+    det.style.display = 'block';
+    AID('emp-lista').style.display = 'none';
+    AID('e-volver').addEventListener('click', ()=>{ det.style.display='none'; AID('emp-lista').style.display='block'; });
+    det.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click', ()=>{ const t=document.querySelector('.tab[data-panel="'+b.dataset.go+'"]'); if(t) t.click(); }));
+    det.querySelectorAll('.e-ir-proy').forEach(tr=>tr.addEventListener('click', ()=>{ document.querySelector('.tab[data-panel="proyectos"]').click(); verProyecto(tr.dataset.n); }));
+    det.querySelectorAll('.e-ir-usu').forEach(tr=>tr.addEventListener('click', ()=>{ document.querySelector('.tab[data-panel="usuarios"]').click(); verUsuario(tr.dataset.n); }));
+    const ap = AID('e-add-proy'); ap.addEventListener('click', ()=>{
+      const inp = AID('e-nuevo-proy'); if (!inp.value.trim()) return;
+      ap.closest('.card-body').querySelector('tbody').insertAdjacentHTML('beforeend',
+        `<tr><td style="font-weight:800">${inp.value.trim()} <span class="micro">· recién creado</span></td><td class="r mono">0,0</td><td><span class="state"><span class="dot off"></span>Sin actividad</span></td><td class="r"></td></tr>`);
+      inp.value = '';
+    });
+    const eb = AID('e-editbtn'); eb.addEventListener('click', ()=>{ const x=AID('e-editbox'); x.style.display = x.style.display==='none' ? 'block' : 'none'; });
+    const eg = AID('e-guardar'); eg.addEventListener('click', ()=>{ eg.textContent='Guardado ✓'; eg.disabled=true; setTimeout(()=>{ eg.textContent='Guardar cambios'; eg.disabled=false; },1600); });
+  }
+  document.querySelectorAll('#empresas [data-e]').forEach(b=>b.addEventListener('click', ()=>verEmpresa(b.dataset.e)));
+  document.querySelectorAll('#empresas [data-e]').forEach(b=>{
     const tr = b.closest('tr'); if (!tr) return;
     tr.classList.add('row-link');
     tr.addEventListener('click', e => { if (!e.target.closest('button')) b.click(); });

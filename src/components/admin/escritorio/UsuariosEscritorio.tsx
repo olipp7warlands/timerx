@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useUsuarios } from '@/hooks/admin/useUsuarios';
 import { useDepartamentos } from '@/hooks/admin/useDepartamentos';
 import { useEmpresas } from '@/hooks/admin/useEmpresas';
@@ -11,12 +11,19 @@ import { ETIQUETA_ROL } from '@/lib/auth/roles';
 import { FichaUsuarioEscritorio } from './FichaUsuarioEscritorio';
 import type { AdminInfo } from '../types';
 
+export interface PreseleccionUsuarios {
+  usuarioId?: string;
+  empresaIdInvitar?: string;
+}
+
 interface Props {
   info: AdminInfo;
   onIrAControl: (empleadoId: string) => void;
+  preseleccion?: PreseleccionUsuarios;
+  onConsumirPreseleccion?: () => void;
 }
 
-export function UsuariosEscritorio({ info, onIrAControl }: Props) {
+export function UsuariosEscritorio({ info, onIrAControl, preseleccion, onConsumirPreseleccion }: Props) {
   const { usuarios, loading, recargar, actualizar, desactivar } = useUsuarios();
   const { departamentos, crear: crearDepartamento } = useDepartamentos();
   const { empresas } = useEmpresas();
@@ -29,6 +36,15 @@ export function UsuariosEscritorio({ info, onIrAControl }: Props) {
   const [form, setForm] = useState({ email: '', nombre: '', empresaId: info.empresaId, departamentoId: '', rol: 'empleado', categoriaId: '' });
   const [enviando, setEnviando] = useState(false);
   const [depNombre, setDepNombre] = useState('');
+
+  useEffect(() => {
+    if (!preseleccion) return;
+    // Ambas ramas fijan directamente por id (sin `find` contra una lista que
+    // pueda no haber cargado aún) -- seguro consumir de inmediato.
+    if (preseleccion.usuarioId) setSeleccionadoId(preseleccion.usuarioId);
+    if (preseleccion.empresaIdInvitar) setForm((f) => ({ ...f, empresaId: preseleccion.empresaIdInvitar! }));
+    onConsumirPreseleccion?.();
+  }, [preseleccion, onConsumirPreseleccion]);
 
   const filtrados = usuarios.filter((u) => u.nombre.toLowerCase().includes(busqueda.toLowerCase()));
   const seleccionado = usuarios.find((u) => u.id === seleccionadoId) ?? null;
