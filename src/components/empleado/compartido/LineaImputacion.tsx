@@ -5,7 +5,7 @@ import type { ImputacionLinea } from '@/hooks/useImputacionesMes';
 
 const ESTADO_ETIQUETA: Record<string, string> = {
   borrador: 'Borrador',
-  enviada: 'Enviada',
+  enviada: 'Computada',
   aprobada: 'Aprobada',
   rechazada: 'Rechazada',
   cerrada: 'Cerrada',

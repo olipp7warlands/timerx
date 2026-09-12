@@ -2,6 +2,8 @@ import { useRef } from 'react';
 import { ProgressBar } from '../compartido/ProgressBar';
 import { FilaDia } from '../compartido/FilaDia';
 import { CalendarGrid } from '../compartido/CalendarGrid';
+import { BottomSheet } from '../compartido/BottomSheet';
+import { useComputarDia } from '../compartido/useComputarDia';
 import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, fmt, estadoDia, sumaHoras } from '@/lib/horas/calendario';
 import { IconHistorial, IconChevronLeft, IconChevronRight, IconCalendario, IconReloj } from '@/components/ui/icons';
 import type { EmpleadoCtx } from '../types';
@@ -12,6 +14,7 @@ interface Props {
 
 export function InicioMovil({ ctx }: Props) {
   const carruselRef = useRef<HTMLDivElement>(null);
+  const computarDia = useComputarDia(ctx, ctx.fechaHoy);
   const jornada = ctx.balance?.jornadaHoras ?? 0;
   const diaHoy = ctx.dias.find((d) => d.fecha === ctx.fechaHoy);
   const totalHoy = sumaHoras(ctx.porDia[ctx.fechaHoy] ?? []);
@@ -47,6 +50,11 @@ export function InicioMovil({ ctx }: Props) {
               <span className={`h-[7px] w-[7px] rounded-full ${restanteHoy <= 0 ? 'bg-ink-primary' : 'border border-ink-primary'}`} />
               {restanteHoy > 0 ? `te quedan ${fmt(restanteHoy)} h` : restanteHoy === 0 ? 'día completo' : <s>{fmt(-restanteHoy)} h de más</s>}
             </p>
+          )}
+          {computarDia.pendientes.length > 0 && (
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => computarDia.setAbierto(true)}>
+              Computar día
+            </button>
           )}
         </div>
       </div>
@@ -130,6 +138,23 @@ export function InicioMovil({ ctx }: Props) {
           />
         </div>
       </div>
+
+      <BottomSheet abierto={computarDia.abierto} onCerrar={() => computarDia.setAbierto(false)} titulo="Computar día">
+        <div className="space-y-4">
+          <p className="text-sm">
+            Vas a computar {computarDia.pendientes.length} línea{computarDia.pendientes.length === 1 ? '' : 's'} ({fmt(computarDia.horas)} h) de
+            hoy para su aprobación. Las líneas computadas dejan de ser editables.
+          </p>
+          <div className="flex gap-2">
+            <button type="button" className="btn flex-1 justify-center" onClick={() => computarDia.setAbierto(false)}>
+              Cancelar
+            </button>
+            <button type="button" className="btn btn-primary flex-1 justify-center" disabled={computarDia.computando} onClick={computarDia.confirmar}>
+              {computarDia.computando ? 'Computando…' : 'Computar'}
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
     </div>
   );
 }

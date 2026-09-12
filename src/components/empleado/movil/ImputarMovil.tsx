@@ -9,6 +9,7 @@ import { ListaConUsar } from '../compartido/ListaConUsar';
 import { BottomSheet } from '../compartido/BottomSheet';
 import { CalendarGrid } from '../compartido/CalendarGrid';
 import { AvisoAusenciaDia } from '../compartido/AvisoAusenciaDia';
+import { useComputarDia } from '../compartido/useComputarDia';
 import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, diaAdyacenteLaborable, estadoDia, fmt, formatoMesAnio, nombreDia, sumaHoras } from '@/lib/horas/calendario';
 import { IconCalendario, IconHoy, IconHistorial, IconArchivo } from '@/components/ui/icons';
@@ -23,8 +24,8 @@ interface Props {
 
 export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
   const [pickerAbierto, setPickerAbierto] = useState(false);
-  const [envioAbierto, setEnvioAbierto] = useState(false);
-  const [enviando, setEnviando] = useState(false);
+  const [computarTodoAbierto, setComputarTodoAbierto] = useState(false);
+  const [computandoTodo, setComputandoTodo] = useState(false);
   const jornada = ctx.balance?.jornadaHoras ?? 0;
   const descripcionObligatoria = useDescripcionObligatoria();
 
@@ -32,15 +33,17 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
     .flat()
     .filter((l) => l.estado === 'borrador' || l.estado === 'rechazada');
   const horasPendientes = lineasPendientes.reduce((s, l) => s + l.horas, 0);
+  const diasConPendientes = new Set(lineasPendientes.map((l) => l.fecha)).size;
 
-  async function onEnviar() {
-    setEnviando(true);
-    const exito = await ctx.enviarPendientes();
-    setEnviando(false);
-    if (exito) setEnvioAbierto(false);
+  async function onComputarTodo() {
+    setComputandoTodo(true);
+    const exito = await ctx.computarTodo();
+    setComputandoTodo(false);
+    if (exito) setComputarTodoAbierto(false);
   }
 
   const diaSel = ctx.dias.find((d) => d.fecha === ctx.selDay);
+  const computarDia = useComputarDia(ctx, ctx.selDay);
   const lineasHoy = ctx.porDia[ctx.selDay] ?? [];
   const totalDia = sumaHoras(lineasHoy);
   const reqDia = diaSel?.laborable ? jornada : 0;
@@ -88,10 +91,11 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
       {lineasPendientes.length > 0 && (
         <div className="card flex items-center justify-between p-3.5">
           <p className="text-sm font-extrabold">
-            {lineasPendientes.length} línea{lineasPendientes.length === 1 ? '' : 's'} por enviar · {fmt(horasPendientes)} h
+            {lineasPendientes.length} línea{lineasPendientes.length === 1 ? '' : 's'} por computar en {diasConPendientes} día
+            {diasConPendientes === 1 ? '' : 's'} · {fmt(horasPendientes)} h
           </p>
-          <button type="button" className="btn btn-primary btn-sm" onClick={() => setEnvioAbierto(true)}>
-            Enviar mes
+          <button type="button" className="btn btn-sm" onClick={() => setComputarTodoAbierto(true)}>
+            Computar todo
           </button>
         </div>
       )}
@@ -151,10 +155,17 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
       )}
 
       <div>
-        <p className="mb-2 flex items-center gap-2 text-sm font-extrabold">
-          <IconHoy />
-          {ctx.selDay === ctx.fechaHoy ? 'Hoy' : `${nombreDia(diaSel?.dow ?? 0)} ${Number(ctx.selDay.slice(-2))}`}
-        </p>
+        <div className="mb-2 flex items-center justify-between">
+          <p className="flex items-center gap-2 text-sm font-extrabold">
+            <IconHoy />
+            {ctx.selDay === ctx.fechaHoy ? 'Hoy' : `${nombreDia(diaSel?.dow ?? 0)} ${Number(ctx.selDay.slice(-2))}`}
+          </p>
+          {computarDia.pendientes.length > 0 && (
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => computarDia.setAbierto(true)}>
+              Computar día
+            </button>
+          )}
+        </div>
         {lineasHoy.length > 0 ? (
           <div className="card divide-y divide-border px-4">
             {lineasHoy.map((l) => (
@@ -219,18 +230,36 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
         />
       </BottomSheet>
 
-      <BottomSheet abierto={envioAbierto} onCerrar={() => setEnvioAbierto(false)} titulo="Enviar mes">
+      <BottomSheet abierto={computarTodoAbierto} onCerrar={() => setComputarTodoAbierto(false)} titulo="Computar todo">
         <div className="space-y-4">
           <p className="text-sm">
-            Vas a enviar {lineasPendientes.length} línea{lineasPendientes.length === 1 ? '' : 's'} ({fmt(horasPendientes)} h) de{' '}
-            {formatoMesAnio(ctx.anio, ctx.mes)} para su aprobación. Las líneas enviadas dejan de ser editables.
+            Vas a computar {lineasPendientes.length} línea{lineasPendientes.length === 1 ? '' : 's'} ({fmt(horasPendientes)} h) de{' '}
+            {formatoMesAnio(ctx.anio, ctx.mes)} para su aprobación. Las líneas computadas dejan de ser editables.
           </p>
           <div className="flex gap-2">
-            <button type="button" className="btn flex-1 justify-center" onClick={() => setEnvioAbierto(false)}>
+            <button type="button" className="btn flex-1 justify-center" onClick={() => setComputarTodoAbierto(false)}>
               Cancelar
             </button>
-            <button type="button" className="btn btn-primary flex-1 justify-center" disabled={enviando} onClick={onEnviar}>
-              {enviando ? 'Enviando…' : 'Enviar'}
+            <button type="button" className="btn btn-primary flex-1 justify-center" disabled={computandoTodo} onClick={onComputarTodo}>
+              {computandoTodo ? 'Computando…' : 'Computar'}
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet abierto={computarDia.abierto} onCerrar={() => computarDia.setAbierto(false)} titulo="Computar día">
+        <div className="space-y-4">
+          <p className="text-sm">
+            Vas a computar {computarDia.pendientes.length} línea{computarDia.pendientes.length === 1 ? '' : 's'} ({fmt(computarDia.horas)} h) de{' '}
+            {ctx.selDay === ctx.fechaHoy ? 'hoy' : `${nombreDia(diaSel?.dow ?? 0)} ${Number(ctx.selDay.slice(-2))}`} para su aprobación. Las líneas
+            computadas dejan de ser editables.
+          </p>
+          <div className="flex gap-2">
+            <button type="button" className="btn flex-1 justify-center" onClick={() => computarDia.setAbierto(false)}>
+              Cancelar
+            </button>
+            <button type="button" className="btn btn-primary flex-1 justify-center" disabled={computarDia.computando} onClick={computarDia.confirmar}>
+              {computarDia.computando ? 'Computando…' : 'Computar'}
             </button>
           </div>
         </div>

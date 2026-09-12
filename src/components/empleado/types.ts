@@ -64,6 +64,7 @@ export interface EmpleadoCtx {
   ajustarHorasLinea: (id: string, horas: number) => Promise<void>;
   eliminarLinea: (id: string) => Promise<void>;
   solicitarAusencia: (tipo: 'vacaciones' | 'baja_medica' | 'otro_permiso', inicio: string, fin: string) => Promise<boolean>;
-  /** true = éxito (o nada que enviar). false si el RPC dio error -- el modal de confirmación debe quedarse abierto. */
-  enviarPendientes: () => Promise<boolean>;
+  /** true = éxito (o nada que computar). false si el RPC dio error -- la confirmación debe quedarse abierta. */
+  computarDia: (fecha: string) => Promise<boolean>;
+  computarTodo: () => Promise<boolean>;
 }

@@ -42,7 +42,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, email, rol, forz
   const [staged, setStaged] = useState<Staged | null>(null);
 
   const { dias, loading: diasLoading } = useDiasMes(anio, mes, empresaId);
-  const { porDia, insertar, insertarLote, ajustarHoras, eliminar, enviarPendientes: enviarPendientesHook } = useImputacionesMes(anio, mes);
+  const { porDia, insertar, insertarLote, ajustarHoras, eliminar, computarDia: computarDiaHook, computarTodo: computarTodoHook } = useImputacionesMes(anio, mes);
   const { ausencias, solicitar } = useAusenciasMes(anio, mes);
   const { paraFechas: proyectosParaFechas } = useProyectosAsignados();
   const { grupos } = useCategoriasTareas();
@@ -181,13 +181,23 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, email, rol, forz
     else toast('Eliminada');
   }
 
-  async function enviarPendientes() {
-    const { error, n } = await enviarPendientesHook();
+  async function computarDia(fecha: string) {
+    const { error, n } = await computarDiaHook(fecha);
     if (error) {
       toast(error, 'error');
       return false;
     }
-    if (n > 0) toast(`${n} línea${n === 1 ? '' : 's'} enviada${n === 1 ? '' : 's'}`);
+    if (n > 0) toast('Día computado ✓');
+    return true;
+  }
+
+  async function computarTodo() {
+    const { error, n } = await computarTodoHook();
+    if (error) {
+      toast(error, 'error');
+      return false;
+    }
+    if (n > 0) toast(`${n} línea${n === 1 ? '' : 's'} computada${n === 1 ? '' : 's'} ✓`);
     return true;
   }
 
@@ -240,7 +250,8 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, email, rol, forz
     ajustarHorasLinea,
     eliminarLinea,
     solicitarAusencia,
-    enviarPendientes,
+    computarDia,
+    computarTodo,
   };
 
   return isDesktop ? <ShellEscritorio {...ctx} /> : <ShellMovil {...ctx} />;

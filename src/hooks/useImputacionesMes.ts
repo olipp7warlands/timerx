@@ -151,7 +151,7 @@ export function useImputacionesMes(anio: number, mes: number) {
       if (!error) await recargar();
       // RLS bloquea sin error (0 filas) si la línea ya no está en borrador/rechazada: no es un éxito silencioso.
       if (!error && (data?.length ?? 0) === 0) {
-        return { error: 'No se pudo modificar: la línea ya no está en borrador (puede que se haya enviado o aprobado).' };
+        return { error: 'No se pudo modificar: la línea ya no está en borrador (puede que se haya computado o aprobado).' };
       }
       return { error: mensajeError(error) };
     },
@@ -164,15 +164,15 @@ export function useImputacionesMes(anio: number, mes: number) {
       const { data, error } = await supabase.from('imputacion').delete().eq('id', id).select('id');
       if (!error) await recargar();
       if (!error && (data?.length ?? 0) === 0) {
-        return { error: 'No se pudo eliminar: la línea ya no está en borrador (puede que se haya enviado o aprobado).' };
+        return { error: 'No se pudo eliminar: la línea ya no está en borrador (puede que se haya computado o aprobado).' };
       }
       return { error: mensajeError(error) };
     },
     [recargar]
   );
 
-  /** Envía a aprobación TODAS las líneas borrador/rechazada del mes cargado. */
-  const enviarPendientes = useCallback(async () => {
+  /** Computa (envía a aprobación) TODAS las líneas borrador/rechazada del mes cargado -- la escoba para rezagadas. */
+  const computarTodo = useCallback(async () => {
     const ids = Object.values(porDia)
       .flat()
       .filter((l) => l.estado === 'borrador' || l.estado === 'rechazada')
@@ -185,5 +185,19 @@ export function useImputacionesMes(anio: number, mes: number) {
     return { error: mensajeError(error), n: data ?? 0 };
   }, [porDia, recargar]);
 
-  return { porDia, loading, insertar, insertarLote, ajustarHoras, eliminar, enviarPendientes, recargar };
+  /** Computa (envía a aprobación) solo las líneas borrador/rechazada del día dado -- la acción principal. Mismo RPC que computarTodo, acotado por los ids que se le pasan. */
+  const computarDia = useCallback(
+    async (fecha: string) => {
+      const ids = (porDia[fecha] ?? []).filter((l) => l.estado === 'borrador' || l.estado === 'rechazada').map((l) => l.id);
+      if (ids.length === 0) return { error: null, n: 0 };
+
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc('enviar_imputaciones', { p_ids: ids });
+      if (!error) await recargar();
+      return { error: mensajeError(error), n: data ?? 0 };
+    },
+    [porDia, recargar]
+  );
+
+  return { porDia, loading, insertar, insertarLote, ajustarHoras, eliminar, computarDia, computarTodo, recargar };
 }

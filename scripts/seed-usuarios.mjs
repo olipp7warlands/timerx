@@ -50,24 +50,27 @@ const EMPRESA = {
 };
 
 // UUIDs fijos de perfil, referenciados luego por supabase/seed_datos.sql.
+// Dominio @wowinx.com (no sirtana.net): son cuentas de demo, no reciben correo
+// real -- el recovery por email queda muerto para ellas, irrelevante con
+// contraseña compartida conocida y MODO_EMAIL=log (ver nota en PLAN.md).
 const USUARIOS = [
-  { id: '10000000-0000-0000-0000-000000000001', email: 'oliver.perez+cristian@sirtana.net', nombre: 'Cristian Haro', rol: 'admin_grupo', empresa_id: EMPRESA.wowinx },
-  { id: '10000000-0000-0000-0000-000000000002', email: 'oliver.perez+veronica@sirtana.net', nombre: 'Verónica Salguero', rol: 'empleado', empresa_id: EMPRESA.wowinx },
-  { id: '10000000-0000-0000-0000-000000000003', email: 'oliver.perez+andres@sirtana.net', nombre: 'Andrés Fuentes', rol: 'empleado', empresa_id: EMPRESA.wowinx },
-  { id: '10000000-0000-0000-0000-000000000004', email: 'oliver.perez+leo@sirtana.net', nombre: 'Leo Silva', rol: 'empleado', empresa_id: EMPRESA.wowinx },
-  { id: '10000000-0000-0000-0000-000000000005', email: 'oliver.perez+sara@sirtana.net', nombre: 'Sara Martín', rol: 'empleado', empresa_id: EMPRESA.wowinx },
-  { id: '10000000-0000-0000-0000-000000000006', email: 'oliver.perez+anaruiz@sirtana.net', nombre: 'Ana Ruiz', rol: 'empleado', empresa_id: EMPRESA.legal_norte },
+  { id: '10000000-0000-0000-0000-000000000001', email: 'cristian.haro@wowinx.com', nombre: 'Cristian Haro', rol: 'admin_grupo', empresa_id: EMPRESA.wowinx },
+  { id: '10000000-0000-0000-0000-000000000002', email: 'veronica.salguero@wowinx.com', nombre: 'Verónica Salguero', rol: 'empleado', empresa_id: EMPRESA.wowinx },
+  { id: '10000000-0000-0000-0000-000000000003', email: 'andres.fuentes@wowinx.com', nombre: 'Andrés Fuentes', rol: 'empleado', empresa_id: EMPRESA.wowinx },
+  { id: '10000000-0000-0000-0000-000000000004', email: 'leo.silva@wowinx.com', nombre: 'Leo Silva', rol: 'empleado', empresa_id: EMPRESA.wowinx },
+  { id: '10000000-0000-0000-0000-000000000005', email: 'sara.martin@wowinx.com', nombre: 'Sara Martín', rol: 'empleado', empresa_id: EMPRESA.wowinx },
+  { id: '10000000-0000-0000-0000-000000000006', email: 'ana.ruiz@wowinx.com', nombre: 'Ana Ruiz', rol: 'empleado', empresa_id: EMPRESA.legal_norte },
   // Cosme y Daniel: el mock los muestra con email @wowinx.com y departamento 3B3
   // (PLAN.md sección 6 los agrupaba junto a "Jurídico", pero el mock manda como fuente de UI).
-  { id: '10000000-0000-0000-0000-000000000007', email: 'oliver.perez+cosme@sirtana.net', nombre: 'Cosme Hernandez', rol: 'empleado', empresa_id: EMPRESA.wowinx },
-  { id: '10000000-0000-0000-0000-000000000008', email: 'oliver.perez+daniel@sirtana.net', nombre: 'Daniel Ramírez', rol: 'empleado', empresa_id: EMPRESA.wowinx },
-  { id: '10000000-0000-0000-0000-000000000009', email: 'oliver.perez+marta@sirtana.net', nombre: 'Marta Gil', rol: 'empleado', empresa_id: EMPRESA.legal_norte },
+  { id: '10000000-0000-0000-0000-000000000007', email: 'cosme.hernandez@wowinx.com', nombre: 'Cosme Hernandez', rol: 'empleado', empresa_id: EMPRESA.wowinx },
+  { id: '10000000-0000-0000-0000-000000000008', email: 'daniel.ramirez@wowinx.com', nombre: 'Daniel Ramírez', rol: 'empleado', empresa_id: EMPRESA.wowinx },
+  { id: '10000000-0000-0000-0000-000000000009', email: 'marta.gil@wowinx.com', nombre: 'Marta Gil', rol: 'empleado', empresa_id: EMPRESA.legal_norte },
   // Enrique Robles es un EMPLEADO de Málaga CF SAD (el mock lo usa como moroso:
   // vacaciones rechazadas, filas de faltantes). PLAN.md sección 6 pide "Enrique
   // Robles + 1 admin_empresa Málaga" -- son DOS personas distintas, no la misma.
-  { id: '10000000-0000-0000-0000-000000000010', email: 'oliver.perez+enrique@sirtana.net', nombre: 'Enrique Robles', rol: 'empleado', empresa_id: EMPRESA.malaga_cf },
+  { id: '10000000-0000-0000-0000-000000000010', email: 'enrique.robles@wowinx.com', nombre: 'Enrique Robles', rol: 'empleado', empresa_id: EMPRESA.malaga_cf },
   // El admin_empresa de Málaga que pedía PLAN.md, sin nombre propio en el plan original.
-  { id: '10000000-0000-0000-0000-000000000011', email: 'oliver.perez+marina@sirtana.net', nombre: 'Marina Ortega', rol: 'admin_empresa', empresa_id: EMPRESA.malaga_cf },
+  { id: '10000000-0000-0000-0000-000000000011', email: 'marina.ortega@wowinx.com', nombre: 'Marina Ortega', rol: 'admin_empresa', empresa_id: EMPRESA.malaga_cf },
 ];
 
 for (const u of USUARIOS) {
