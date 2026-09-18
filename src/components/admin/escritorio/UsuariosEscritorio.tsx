@@ -53,7 +53,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
       return;
     }
     setEnviando(true);
-    const { error } = await invitarUsuario({
+    const { error, modo } = await invitarUsuario({
       email: form.email,
       nombre: form.nombre,
       empresaId: form.empresaId,
@@ -66,7 +66,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
       toast(error, 'error');
       return;
     }
-    toast(`Invitación enviada a ${form.email}`);
+    toast(modo === 'invitar' ? `Invitación enviada a ${form.email}` : `Cuenta creada para ${form.email} (sin correo): dale acceso con «Restablecer contraseña» en su ficha`);
     setForm({ email: '', nombre: '', empresaId: info.empresaId, departamentoId: '', rol: 'empleado', categoriaId: '' });
     recargar();
   }

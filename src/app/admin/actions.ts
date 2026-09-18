@@ -4,7 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { createClient as createSessionClient } from '@/lib/supabase/server';
 import { getPerfilServer } from '@/lib/supabase/perfil';
 import { procesarRecordatorios } from '@/lib/recordatorios/enviar';
-import { altaUsuario, type AltaUsuarioInput } from '@/lib/usuarios/alta';
+import { altaUsuario, modoAltaDesdeEntorno, type AltaUsuarioInput, type ModoAlta } from '@/lib/usuarios/alta';
 
 const VENTANA_DIAS_RECORDATORIO = 5;
 
@@ -19,11 +19,14 @@ function generarPasswordTemporal(): string {
 export type InvitarUsuarioInput = AltaUsuarioInput;
 
 /**
- * Invitación real vía Admin API (service_role) -- solo puede correr en servidor.
+ * Alta manual de UN usuario vía Admin API (service_role) -- solo puede correr en servidor. Misma operación y
+ * mismo comportamiento que el importador masivo (`altaUsuario` + `MODO_EMAIL`): `real` invita por email;
+ * cualquier otro valor (demo) crea la cuenta confirmada, sin contraseña y sin correo (acceso vía "Restablecer
+ * contraseña" en su ficha). Devuelve `modo` para que la UI diga la verdad sobre lo que ha pasado.
  * handle_new_user() (001) lee empresa_id/nombre/rol de user_metadata y crea el perfil.
  * Un admin_empresa solo puede invitar dentro de su propia empresa y nunca a admin_grupo.
  */
-export async function invitarUsuario(input: InvitarUsuarioInput): Promise<{ error: string | null }> {
+export async function invitarUsuario(input: InvitarUsuarioInput): Promise<{ error: string | null; modo?: ModoAlta }> {
   const perfil = await getPerfilServer();
   if (!perfil || !['admin_grupo', 'admin_empresa'].includes(perfil.rol)) {
     return { error: 'Sin permisos para invitar usuarios' };
@@ -36,8 +39,9 @@ export async function invitarUsuario(input: InvitarUsuarioInput): Promise<{ erro
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { error } = await altaUsuario(supabaseAdmin, input, 'invitar');
-  return { error };
+  const modo = modoAltaDesdeEntorno();
+  const { error } = await altaUsuario(supabaseAdmin, input, modo);
+  return { error, modo };
 }
 
 /**

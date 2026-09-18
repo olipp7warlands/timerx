@@ -10,10 +10,11 @@ export interface AltaUsuarioInput {
 }
 
 /**
- * - `invitar`: invitación real por email (`inviteUserByEmail`). Producción.
- * - `sin-email`: la cuenta nace confirmada y SIN contraseña, sin enviar nada (`createUser`). Demo con
- *   `MODO_EMAIL=log`, igual que nacieron las 11 cuentas de demo: los correos de demo (@wowinx.com) no
- *   tienen buzón, y una alta masiva por invitación los rebotaría y agotaría el límite del SMTP de Supabase.
+ * Modo único para el alta manual (`invitarUsuario`) y la masiva (importador), vía `modoAltaDesdeEntorno()`:
+ * - `invitar`: invitación real por email (`inviteUserByEmail`). Producción (`MODO_EMAIL=real`).
+ * - `sin-email`: la cuenta nace confirmada y SIN contraseña, sin enviar nada (`createUser`). Demo
+ *   (`MODO_EMAIL` distinto de `real`), igual que nacieron las 11 cuentas de demo: los correos de demo (@wowinx.com)
+ *   no tienen buzón, así que una invitación rebotaría en silencio y agotaría el límite del SMTP de Supabase.
  *   El acceso llega con "Restablecer contraseña" desde la ficha del usuario.
  */
 export type ModoAlta = 'invitar' | 'sin-email';

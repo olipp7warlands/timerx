@@ -29,7 +29,7 @@ El resto de este runbook asume proyecto nuevo — los pasos 1-2 son creación de
 ## 2. Usuarios reales
 
 - [ ] **Cero usuarios por seed script** (`scripts/seed-usuarios.mjs` es solo para desarrollo/demo — no ejecutar contra producción).
-- [ ] Alta exclusivamente por invitación real (`inviteUserByEmail`, sección Usuarios del panel), con el email real de cada persona — uno a uno o con el importador masivo (Usuarios → Importar / Exportar). **El importador solo invita por email con `MODO_EMAIL=real`** (con cualquier otro valor crea cuentas sin contraseña y sin correo, comportamiento de demo). Requiere además **SMTP propio en Supabase Auth** (el integrado tiene un límite de correos/hora muy bajo: un import se revertiría entero al primer fallo).
+- [ ] Alta exclusivamente por invitación real (`inviteUserByEmail`, sección Usuarios del panel), con el email real de cada persona — uno a uno o con el importador masivo (Usuarios → Importar / Exportar). **Tanto el alta manual como el importador solo invitan por email con `MODO_EMAIL=real`** (con cualquier otro valor crean cuentas sin contraseña y sin correo, comportamiento de demo): definir `MODO_EMAIL=real` en Railway es requisito de producción, y el envío real de invitaciones aún no está probado. Requiere además **SMTP propio en Supabase Auth** (el integrado tiene un límite de correos/hora muy bajo: un import se revertiría entero al primer fallo).
 - [ ] **Sin contraseña compartida.** `scripts/set-passwords.mjs` (contraseña `Horas2026!`) es solo para la demo — cada usuario real define su propia contraseña al aceptar la invitación, con reset propio vía el flujo estándar de Supabase Auth.
 
 ## 3. Railway
