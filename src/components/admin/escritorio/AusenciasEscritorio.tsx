@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { useAusenciasAdmin } from '@/hooks/admin/useAusenciasAdmin';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { rangoDias } from '@/lib/horas/calendario';
+import { ImportadorBloque } from '../compartido/ImportadorBloque';
+import type { AdminInfo } from '../types';
 
 const ETIQUETA_TIPO: Record<string, string> = { vacaciones: 'Vacaciones', baja_medica: 'Baja médica', otro_permiso: 'Otro permiso' };
 const ETIQUETA_ESTADO: Record<string, string> = { pendiente: 'Pendiente', aprobada: 'Aprobada', rechazada: 'Rechazada', cancelada: 'Cancelada' };
 
-export function AusenciasEscritorio() {
-  const { ausencias, loading, aprobar, rechazar } = useAusenciasAdmin();
+export function AusenciasEscritorio({ info }: { info: AdminInfo }) {
+  const { ausencias, loading, aprobar, rechazar, recargar } = useAusenciasAdmin();
   const toast = useToast();
   const [orden, setOrden] = useState<'pendientes' | 'recientes'>('pendientes');
 
@@ -35,6 +37,23 @@ export function AusenciasEscritorio() {
   }
 
   return (
+    <div className="space-y-4">
+    {info.rol === 'admin_grupo' && (
+      <div className="card">
+        <div className="card-head">
+          <h2 className="text-sm font-extrabold">Importar / Exportar</h2>
+        </div>
+        <div className="card-body">
+          <ImportadorBloque
+            tipo="vacaciones"
+            titulo="Vacaciones"
+            descripcion="Plan anual de vacaciones (o bajas/permisos) desde Excel. Nacen aprobadas, como hechos consumados; nunca duplica ni pisa. Todo o nada."
+            onImportado={recargar}
+          />
+        </div>
+      </div>
+    )}
+
     <div className="card">
       <div className="card-head">
         <h2 className="text-sm font-extrabold">Solicitudes de ausencia</h2>
@@ -87,6 +106,7 @@ export function AusenciasEscritorio() {
           Al aprobarse, los días quedan bloqueados en el registro del empleado y cuentan como ausencia en el informe FTE.
         </p>
       </div>
+    </div>
     </div>
   );
 }

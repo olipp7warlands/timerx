@@ -21,7 +21,7 @@ El resto de este runbook asume proyecto nuevo — los pasos 1-2 son creación de
 ## 1. Proyecto Supabase nuevo
 
 - [ ] Crear proyecto Supabase limpio.
-- [ ] Aplicar migraciones **001 a 012 en orden** desde `supabase/migrations/` (`supabase db push` contra el proyecto nuevo, tras `supabase link`).
+- [ ] Aplicar migraciones **001 a 017 en orden** desde `supabase/migrations/` (`supabase db push` contra el proyecto nuevo, tras `supabase link`).
 - [ ] **NO ejecutar `supabase/seed_datos.sql` tal cual** — mezcla datos de catálogo reutilizables (estructura de tarifas, ejemplo de asignaciones) con datos 100% ficticios de la demo (empresas Wowinx/Málaga CF SAD/Legal Norte, imputaciones, ausencias, las 3 líneas `enviada` de F5). Nada de `seed_datos.sql` debe llegar a producción sin reescribirse con datos reales.
 - [ ] Sembrar solo lo que sea catálogo real y estable: empresas reales del cliente, categorías/subcategorías reales (`categoria`/`subcategoria`), festivos reales del calendario laboral real, `ajuste` con los valores reales (`jornada_horas`, `tope_horas_dia`, etc. — revisar si los defaults de 002 sirven o hay que ajustarlos al cliente real).
 - [ ] Confirmar `RLS` activo en todas las tablas (ya lo está por las migraciones; verificar con una consulta de sesión anónima que da 0 filas, mismo patrón usado en las verificaciones de F3).
@@ -29,7 +29,7 @@ El resto de este runbook asume proyecto nuevo — los pasos 1-2 son creación de
 ## 2. Usuarios reales
 
 - [ ] **Cero usuarios por seed script** (`scripts/seed-usuarios.mjs` es solo para desarrollo/demo — no ejecutar contra producción).
-- [ ] Alta exclusivamente por invitación real (`inviteUserByEmail`, sección Usuarios del panel), uno a uno, con el email real de cada persona.
+- [ ] Alta exclusivamente por invitación real (`inviteUserByEmail`, sección Usuarios del panel), con el email real de cada persona — uno a uno o con el importador masivo (Usuarios → Importar / Exportar). **El importador solo invita por email con `MODO_EMAIL=real`** (con cualquier otro valor crea cuentas sin contraseña y sin correo, comportamiento de demo). Requiere además **SMTP propio en Supabase Auth** (el integrado tiene un límite de correos/hora muy bajo: un import se revertiría entero al primer fallo).
 - [ ] **Sin contraseña compartida.** `scripts/set-passwords.mjs` (contraseña `Horas2026!`) es solo para la demo — cada usuario real define su propia contraseña al aceptar la invitación, con reset propio vía el flujo estándar de Supabase Auth.
 
 ## 3. Railway

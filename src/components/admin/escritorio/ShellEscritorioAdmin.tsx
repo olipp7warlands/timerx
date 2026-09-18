@@ -85,7 +85,7 @@ export function ShellEscritorioAdmin({ info }: Props) {
       <main className="min-w-0 flex-1 p-8">
         {seccion === 'inicio' && <InicioEscritorio info={info} onIrA={(s) => nav.ir(s)} />}
         {seccion === 'usuarios' && <UsuariosEscritorio info={info} />}
-        {seccion === 'ausencias' && <AusenciasEscritorio />}
+        {seccion === 'ausencias' && <AusenciasEscritorio info={info} />}
         {seccion === 'empresas' && <EmpresasEscritorio info={info} />}
         {seccion === 'proyectos' && <ProyectosEscritorio info={info} />}
         {seccion === 'categorias' && <CategoriasEscritorio info={info} />}

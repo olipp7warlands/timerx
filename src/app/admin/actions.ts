@@ -4,6 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { createClient as createSessionClient } from '@/lib/supabase/server';
 import { getPerfilServer } from '@/lib/supabase/perfil';
 import { procesarRecordatorios } from '@/lib/recordatorios/enviar';
+import { altaUsuario, type AltaUsuarioInput } from '@/lib/usuarios/alta';
 
 const VENTANA_DIAS_RECORDATORIO = 5;
 
@@ -15,14 +16,7 @@ function generarPasswordTemporal(): string {
   return `${palabra}-${numero}`;
 }
 
-export interface InvitarUsuarioInput {
-  email: string;
-  nombre: string;
-  empresaId: string;
-  departamentoId?: string | null;
-  rol: 'empleado' | 'responsable_proyecto' | 'admin_empresa' | 'admin_grupo';
-  categoriaId?: string | null;
-}
+export type InvitarUsuarioInput = AltaUsuarioInput;
 
 /**
  * Invitación real vía Admin API (service_role) -- solo puede correr en servidor.
@@ -42,26 +36,8 @@ export async function invitarUsuario(input: InvitarUsuarioInput): Promise<{ erro
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(input.email, {
-    data: {
-      empresa_id: input.empresaId,
-      nombre: input.nombre,
-      rol: input.rol,
-    },
-  });
-  if (error) return { error: error.message };
-
-  if (input.departamentoId || input.categoriaId) {
-    const { data: nuevo } = await supabaseAdmin.from('perfil').select('id').eq('email', input.email).single();
-    if (nuevo) {
-      await supabaseAdmin
-        .from('perfil')
-        .update({ departamento_id: input.departamentoId ?? null, categoria_id: input.categoriaId ?? null })
-        .eq('id', nuevo.id);
-    }
-  }
-
-  return { error: null };
+  const { error } = await altaUsuario(supabaseAdmin, input, 'invitar');
+  return { error };
 }
 
 /**

@@ -12,6 +12,7 @@ import { useAprobacionImputaciones } from '@/hooks/admin/useAprobacionImputacion
 import { useAusenciasAdmin } from '@/hooks/admin/useAusenciasAdmin';
 import { useFichaUsuario } from '@/hooks/admin/useFichaUsuario';
 import { useBalanceMesEmpleado } from '@/hooks/admin/useBalanceMesEmpleado';
+import { useCosteVigente } from '@/hooks/admin/useCosteVigente';
 import { enviarRecordatorioEmpleado, restablecerPasswordEmpleado } from '@/app/admin/actions';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { ModalCentrado } from '@/components/empleado/compartido/ModalCentrado';
@@ -47,6 +48,8 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
   const { categorias } = useCategorias();
   const { proyectos } = useProyectosAdmin();
   const { balance, loading: loadingBalance } = useBalanceMesEmpleado(usuario.id, anio, mes);
+  // Dato salarial: solo admin_grupo -- ni se consulta para el resto de roles (además de la RLS de coste_empleado).
+  const { coste, loading: loadingCoste } = useCosteVigente(usuario.id, esAdminGrupo);
   const { porProyecto, ultimas, loading: loadingFicha } = useFichaUsuario(usuario.id, anio, mes);
   const { asignaciones, loading: loadingAsig, recargar: recargarAsig } = useAsignacionesEmpleado(usuario.id);
   const { asignar, finalizar } = useAsignaciones();
@@ -182,6 +185,15 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
             </span>{' '}
             · {usuario.activo ? 'Activo' : 'Inactivo'}
           </p>
+          {esAdminGrupo && (
+            <p className="micro mt-1" data-testid="coste-vigente">
+              Coste/hora vigente:{' '}
+              <span className="mono font-extrabold text-ink-primary">
+                {loadingCoste ? '…' : coste ? `${coste.costeHora.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €/h` : 'sin coste registrado'}
+              </span>
+              {coste && <> · desde {coste.desde.split('-').reverse().join('/')}</>}
+            </p>
+          )}
         </div>
       </div>
 

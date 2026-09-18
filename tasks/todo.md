@@ -2,28 +2,20 @@
 
 > Orden fijado por el usuario: el Lote 1.5 va ANTES de cualquier rasgo nuevo (no estaba desplegado: `/admin/usuarios` → 404 en prod, `origin/main` == Lote 1).
 
-## Lote 1.5 — Estructura de URLs
-
-### Decisiones de diseño (cerradas)
-- Catch-all opcional por lado: `src/app/[[...seccion]]/page.tsx` (empleado: `/inicio|/imputar|/calendario`, `/` → `/inicio`) y `src/app/admin/[[...seccion]]/page.tsx` (`/admin/<seccion>[/<id>]`, `/admin` → `/admin/inicio`). Mismo shell único; se borran `app/page.tsx` y `app/admin/page.tsx`.
-- **Única fuente de verdad = URL** (`usePathname`/`useSearchParams`). `useState` de sección/pestaña/ficha desaparecen.
-- **Desviación consciente de "navegar = router.push"**: se navega con `window.history.pushState/replaceState` (documentado en Next 16 como integrado con el router: sincroniza `usePathname`/`useSearchParams`, y `popstate` lo gestiona el router). Motivo: `router.push` a una página dinámica = viaje RSC + `getUser()` del middleware en CADA clic de pestaña/sección (latencia visible; hoy es instantáneo). El servidor sigue validando en carga fría/F5/enlace profundo. Se verifica atrás/adelante en navegador real.
-- Fichas: ficha derivada de la URL; con datos cargando se espera (nunca redirigir al listado); solo tras cargar y sin el id → `replace` al listado + toast.
-- Hand-offs efímeros (`?empleado=`, `?invitar=`): se consumen en un efecto y se limpian con `replaceState`.
-- Deep-link sin sesión → `/login?next=<ruta+query>`; `next` validado como ruta interna (login y `/auth/callback`).
-- Debug (`/debug/movil*`): modo aislado con estado local (solo dev, 404 en prod) para no romper su verificación visual.
-
-### Pasos
-- [ ] `src/lib/nav/`: `ruta-segura.ts`, `rutas.ts` (parse/build), `navegar.ts`
-- [ ] Empleado: page catch-all + `EmpleadoApp` deriva `tab` de la URL
-- [ ] Admin: page catch-all + `AdminApp` (contexto de navegación) + shells + secciones (usuarios/proyectos/empresas/control/inicio)
-- [ ] Login/callback: `next` seguro; layout admin sin redirect que pierda el deep-link
-- [ ] Build + lint sin regresión (82 problemas preexistentes)
-- [ ] Verificación local (matriz a–g) en navegador real
-- [ ] Commit + push + redeploy + matriz completa contra producción
+## Lote 1.5 — Estructura de URLs — HECHO (commit 9adb75f, desplegado, matriz repetida en producción)
+- [x] `src/lib/nav/` (rutas, navegar, ruta-segura) · catch-all empleado y admin · `NavAdmin` (contexto) · `EmpleadoApp` deriva la pestaña de la URL
+- [x] Guardas (ficha cargando ≠ redirigir), segmentos desconocidos → base, deep-link sin sesión → `/login?next=`, `next` validado (login y callback)
+- [x] Hallazgo: bfcache restauraba la pantalla del usuario anterior tras logout → `GuardaBfcache`
+- [x] Matriz a–g en local (navegador real) y en producción
+- Pendiente de verificar por el usuario: login real con `?next=` (exige teclear contraseña) y gesto atrás de un Android real
 
 ## Lote 3 — Importadores (usuarios, coste/hora, vacaciones)
-(Se detalla al cerrar el 1.5.)
+- [x] Migraciones 016 (coste_empleado, v_coste_vigente) y 017 (importar_ausencias) aplicadas y pusheadas (d73d16d)
+- [x] Patrón común `src/lib/importadores/` + UI `ImportadorBloque` + rutas plantillas/export
+- [x] Usuarios (alta compartida con `invitarUsuario`), coste/hora (+ ficha admin_grupo), vacaciones (RPC transaccional)
+- [x] Verificación local completa (ver PLAN.md): round-trip, error cazado, reversión, RLS Cristian/Marina, regresión byte-idéntica
+- [ ] Commit + push + redeploy + ciclo completo contra producción con reversión y conteos antes/después
 
 ## Revisión
-(pendiente)
+- Línea base (antes de tocar datos): `scratchpad/base_conteos.txt` y `snap_base` (sha256 756660c9…). Tras cada prueba se compara.
+- Decisión a revisar por el usuario: el importador de usuarios respeta `MODO_EMAIL` (demo = sin contraseña ni correo); `invitarUsuario` manual sigue invitando por email.

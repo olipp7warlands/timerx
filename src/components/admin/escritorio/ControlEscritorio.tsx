@@ -30,18 +30,16 @@ export function ControlEscritorio() {
   const descripcionObligatoria = useDescripcionObligatoria();
   const toast = useToast();
 
-  const [form, setForm] = useState({ empleadoId: '', proyectoId: '', subcategoriaId: '', fecha: '', horas: '', descripcion: '' });
-  const { proyectoIdsParaFecha } = useAsignacionesEmpleado(form.empleadoId);
-  const [enviandoRecordatorios, setEnviandoRecordatorios] = useState(false);
-
-  // Hand-off efímero `?empleado=<id>` (imputación directa desde la ficha): se aplica una vez y se limpia de la URL.
+  // Hand-off efímero `?empleado=<id>` (imputación directa desde la ficha): la sección se monta al llegar, así que
+  // basta con leerlo como valor inicial; después se limpia de la URL para que atrás/adelante no lo re-apliquen.
   const empleadoPreseleccionado = nav.consulta.get('empleado');
+  const [form, setForm] = useState({ empleadoId: empleadoPreseleccionado ?? '', proyectoId: '', subcategoriaId: '', fecha: '', horas: '', descripcion: '' });
   const { limpiarConsulta } = nav;
   useEffect(() => {
-    if (!empleadoPreseleccionado) return;
-    setForm((f) => ({ ...f, empleadoId: empleadoPreseleccionado }));
-    limpiarConsulta();
+    if (empleadoPreseleccionado) limpiarConsulta();
   }, [empleadoPreseleccionado, limpiarConsulta]);
+  const { proyectoIdsParaFecha } = useAsignacionesEmpleado(form.empleadoId);
+  const [enviandoRecordatorios, setEnviandoRecordatorios] = useState(false);
 
   const empleadoSeleccionado = usuarios.find((u) => u.id === form.empleadoId);
   const categoriasFiltradas = empleadoSeleccionado?.departamentoId

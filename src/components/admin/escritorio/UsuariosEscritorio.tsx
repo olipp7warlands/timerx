@@ -9,6 +9,7 @@ import { useToast } from '@/components/empleado/compartido/Toast';
 import { invitarUsuario } from '@/app/admin/actions';
 import { ETIQUETA_ROL } from '@/lib/auth/roles';
 import { FichaUsuarioEscritorio } from './FichaUsuarioEscritorio';
+import { ImportadorBloque } from '../compartido/ImportadorBloque';
 import { useNavAdmin } from '../NavAdmin';
 import type { AdminInfo } from '../types';
 
@@ -22,18 +23,17 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
 
   const esAdminGrupo = info.rol === 'admin_grupo';
   const [busqueda, setBusqueda] = useState('');
-  const [form, setForm] = useState({ email: '', nombre: '', empresaId: info.empresaId, departamentoId: '', rol: 'empleado', categoriaId: '' });
-  const [enviando, setEnviando] = useState(false);
-  const [depNombre, setDepNombre] = useState('');
-
-  // Hand-off efímero `?invitar=<empresaId>` (desde la ficha de empresa): se aplica una vez y se limpia de la URL.
+  // Hand-off efímero `?invitar=<empresaId>` (desde la ficha de empresa): la sección se monta al llegar, así que
+  // basta con leerlo como valor inicial; después se limpia de la URL para que atrás/adelante no lo re-apliquen.
   const invitarEmpresaId = nav.consulta.get('invitar');
+  const [form, setForm] = useState({ email: '', nombre: '', empresaId: invitarEmpresaId ?? info.empresaId, departamentoId: '', rol: 'empleado', categoriaId: '' });
   const { limpiarConsulta } = nav;
   useEffect(() => {
-    if (!invitarEmpresaId) return;
-    setForm((f) => ({ ...f, empresaId: invitarEmpresaId }));
-    limpiarConsulta();
+    if (invitarEmpresaId) limpiarConsulta();
   }, [invitarEmpresaId, limpiarConsulta]);
+
+  const [enviando, setEnviando] = useState(false);
+  const [depNombre, setDepNombre] = useState('');
 
   // Ficha derivada de la URL. Con datos aún cargando se ESPERA (nunca se redirige al listado);
   // solo si tras cargar el id no existe (o la RLS no lo muestra) se vuelve al listado con aviso.
@@ -165,6 +165,33 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
         </div>
       </div>
 
+      <div className="stack space-y-4">
+      {esAdminGrupo && (
+        <div className="card">
+          <div className="card-head">
+            <h2 className="text-sm font-extrabold">Importar / Exportar</h2>
+          </div>
+          <div className="card-body space-y-5">
+            <ImportadorBloque
+              tipo="usuarios"
+              titulo="Usuarios"
+              descripcion="Altas masivas desde Excel. Solo crea usuarios nuevos (un email existente es un error). Todo o nada."
+              exportHref="/api/export/usuarios"
+              exportEtiqueta="Exportar usuarios"
+              onImportado={recargar}
+            />
+            <hr className="border-border" />
+            <ImportadorBloque
+              tipo="coste"
+              titulo="Coste/hora (dato salarial)"
+              descripcion="Coste interno por hora, versionado por fecha (no es la tarifa de refacturación). Solo el admin del grupo lo ve."
+              exportHref="/api/export/coste"
+              exportEtiqueta="Exportar coste vigente"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="card">
         <div className="card-head">
           <h2 className="text-sm font-extrabold">
@@ -219,6 +246,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
             El responsable de departamento aprueba ausencias y vigila las imputaciones faltantes de su equipo.
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

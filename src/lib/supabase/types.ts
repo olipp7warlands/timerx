@@ -140,6 +140,38 @@ export type Database = {
           },
         ]
       }
+      coste_empleado: {
+        Row: {
+          coste_hora: number
+          creado_en: string
+          desde: string
+          id: string
+          perfil_id: string
+        }
+        Insert: {
+          coste_hora: number
+          creado_en?: string
+          desde: string
+          id?: string
+          perfil_id: string
+        }
+        Update: {
+          coste_hora?: number
+          creado_en?: string
+          desde?: string
+          id?: string
+          perfil_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coste_empleado_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departamento: {
         Row: {
           activo: boolean
@@ -808,6 +840,22 @@ export type Database = {
           },
         ]
       }
+      v_coste_vigente: {
+        Row: {
+          coste_hora: number | null
+          desde: string | null
+          perfil_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coste_empleado_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_imputacion_valorada: {
         Row: {
           anio: number | null
@@ -1024,6 +1072,7 @@ export type Database = {
         Args: { p_anio: number; p_empresa: string; p_mes: number }
         Returns: number
       }
+      importar_ausencias: { Args: { p_filas: Json }; Returns: number }
       imputar_directo: {
         Args: {
           p_descripcion?: string
