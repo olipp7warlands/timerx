@@ -19,4 +19,4 @@
 ## Revisión
 - Línea base (antes de tocar datos): `scratchpad/base_conteos.txt` y `snap_base` (sha256 756660c9…). Tras cada prueba se compara.
 - Decisiones cerradas por el usuario: alta manual e importador unificados bajo `MODO_EMAIL` (demo = confirmada + reset; producción = invitación); vacaciones sobre horas registradas = error (documentado en Instrucciones).
-- [ ] Seguimiento: unificar `invitarUsuario` + verificar alta manual en demo (cuenta nace, reset da acceso, revertir) + tabla en PLAN.md
+- [x] Seguimiento (4ec3140): unificar `invitarUsuario` + verificar alta manual en demo (cuenta nace, reset da acceso, revertir) + tabla en PLAN.md
