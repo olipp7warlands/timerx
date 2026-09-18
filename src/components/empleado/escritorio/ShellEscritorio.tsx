@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useState } from 'react';
 import type { EmpleadoCtx } from '../types';
 import { MenuUsuarioDesktop } from '@/components/ui/MenuUsuario';
@@ -69,9 +71,9 @@ export function ShellEscritorio(ctx: EmpleadoCtx) {
           </button>
           <MenuUsuarioDesktop nombre={ctx.nombre} email={ctx.email} rol={ctx.rol} />
           {!mini && (ctx.rol === 'admin_empresa' || ctx.rol === 'admin_grupo') && (
-            <a href="/admin" className="btn btn-sm flex-1 justify-center">
+            <Link href="/admin" className="btn btn-sm flex-1 justify-center">
               Panel admin
-            </a>
+            </Link>
           )}
         </div>
       </aside>

@@ -12,17 +12,11 @@ import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import { enviarRecordatoriosManual } from '@/app/admin/actions';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { TablaPendientesImputacion } from '../compartido/TablaPendientesImputacion';
+import { useNavAdmin } from '../NavAdmin';
 import { fmt } from '@/lib/horas/calendario';
 
-interface Props {
-  /** Empleado preseleccionado desde "Imputación directa" de la ficha de usuario -- se consume una vez y se limpia en el padre. */
-  empleadoPreseleccionado?: string | null;
-  onConsumirPreseleccion?: () => void;
-  /** Hand-off genérico: fila de la tabla de faltantes -> ficha de ese usuario. */
-  onIrAUsuario?: (usuarioId: string) => void;
-}
-
-export function ControlEscritorio({ empleadoPreseleccionado, onConsumirPreseleccion, onIrAUsuario }: Props = {}) {
+export function ControlEscritorio() {
+  const nav = useNavAdmin();
   const hoy = useMemo(() => new Date(), []);
   const desdeMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
   const hastaHoy = hoy.toISOString().slice(0, 10);
@@ -40,12 +34,14 @@ export function ControlEscritorio({ empleadoPreseleccionado, onConsumirPreselecc
   const { proyectoIdsParaFecha } = useAsignacionesEmpleado(form.empleadoId);
   const [enviandoRecordatorios, setEnviandoRecordatorios] = useState(false);
 
+  // Hand-off efímero `?empleado=<id>` (imputación directa desde la ficha): se aplica una vez y se limpia de la URL.
+  const empleadoPreseleccionado = nav.consulta.get('empleado');
+  const { limpiarConsulta } = nav;
   useEffect(() => {
-    if (empleadoPreseleccionado) {
-      setForm((f) => ({ ...f, empleadoId: empleadoPreseleccionado }));
-      onConsumirPreseleccion?.();
-    }
-  }, [empleadoPreseleccionado, onConsumirPreseleccion]);
+    if (!empleadoPreseleccionado) return;
+    setForm((f) => ({ ...f, empleadoId: empleadoPreseleccionado }));
+    limpiarConsulta();
+  }, [empleadoPreseleccionado, limpiarConsulta]);
 
   const empleadoSeleccionado = usuarios.find((u) => u.id === form.empleadoId);
   const categoriasFiltradas = empleadoSeleccionado?.departamentoId
@@ -187,7 +183,7 @@ export function ControlEscritorio({ empleadoPreseleccionado, onConsumirPreselecc
                     key={`${f.perfilId}-${f.fecha}`}
                     className="row-link hover:bg-subtle"
                     onClick={(e) => {
-                      if (!(e.target as HTMLElement).closest('button')) onIrAUsuario?.(f.perfilId);
+                      if (!(e.target as HTMLElement).closest('button')) nav.ir('usuarios', { fichaId: f.perfilId });
                     }}
                   >
                     <td className="border-b border-border px-2.5 py-2.5 font-extrabold">

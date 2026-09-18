@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { rutaInternaSegura } from '@/lib/nav/ruta-segura';
 
 type Modo = 'password' | 'enlace' | 'olvido';
 
@@ -12,6 +13,11 @@ function mensajeError(mensaje: string): string {
     return 'Este correo no está dado de alta. Pide acceso a tu administrador.';
   }
   return mensaje;
+}
+
+/** Destino tras el login: `?next=` del enlace profundo, validado como ruta interna. Se lee al enviar (no en render): sin Suspense. */
+function destinoTrasLogin(): string {
+  return rutaInternaSegura(new URLSearchParams(window.location.search).get('next'));
 }
 
 export default function LoginPage() {
@@ -36,7 +42,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push('/');
+    router.replace(destinoTrasLogin());
     router.refresh();
   }
 
@@ -67,7 +73,7 @@ export default function LoginPage() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback`, shouldCreateUser: false },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(destinoTrasLogin())}`, shouldCreateUser: false },
     });
 
     if (error) {

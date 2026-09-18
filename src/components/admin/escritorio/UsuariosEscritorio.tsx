@@ -9,21 +9,11 @@ import { useToast } from '@/components/empleado/compartido/Toast';
 import { invitarUsuario } from '@/app/admin/actions';
 import { ETIQUETA_ROL } from '@/lib/auth/roles';
 import { FichaUsuarioEscritorio } from './FichaUsuarioEscritorio';
+import { useNavAdmin } from '../NavAdmin';
 import type { AdminInfo } from '../types';
 
-export interface PreseleccionUsuarios {
-  usuarioId?: string;
-  empresaIdInvitar?: string;
-}
-
-interface Props {
-  info: AdminInfo;
-  onIrAControl: (empleadoId: string) => void;
-  preseleccion?: PreseleccionUsuarios;
-  onConsumirPreseleccion?: () => void;
-}
-
-export function UsuariosEscritorio({ info, onIrAControl, preseleccion, onConsumirPreseleccion }: Props) {
+export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
+  const nav = useNavAdmin();
   const { usuarios, loading, recargar, actualizar, desactivar } = useUsuarios();
   const { departamentos, crear: crearDepartamento } = useDepartamentos();
   const { empresas } = useEmpresas();
@@ -32,22 +22,30 @@ export function UsuariosEscritorio({ info, onIrAControl, preseleccion, onConsumi
 
   const esAdminGrupo = info.rol === 'admin_grupo';
   const [busqueda, setBusqueda] = useState('');
-  const [seleccionadoId, setSeleccionadoId] = useState<string | null>(null);
   const [form, setForm] = useState({ email: '', nombre: '', empresaId: info.empresaId, departamentoId: '', rol: 'empleado', categoriaId: '' });
   const [enviando, setEnviando] = useState(false);
   const [depNombre, setDepNombre] = useState('');
 
+  // Hand-off efímero `?invitar=<empresaId>` (desde la ficha de empresa): se aplica una vez y se limpia de la URL.
+  const invitarEmpresaId = nav.consulta.get('invitar');
+  const { limpiarConsulta } = nav;
   useEffect(() => {
-    if (!preseleccion) return;
-    // Ambas ramas fijan directamente por id (sin `find` contra una lista que
-    // pueda no haber cargado aún) -- seguro consumir de inmediato.
-    if (preseleccion.usuarioId) setSeleccionadoId(preseleccion.usuarioId);
-    if (preseleccion.empresaIdInvitar) setForm((f) => ({ ...f, empresaId: preseleccion.empresaIdInvitar! }));
-    onConsumirPreseleccion?.();
-  }, [preseleccion, onConsumirPreseleccion]);
+    if (!invitarEmpresaId) return;
+    setForm((f) => ({ ...f, empresaId: invitarEmpresaId }));
+    limpiarConsulta();
+  }, [invitarEmpresaId, limpiarConsulta]);
+
+  // Ficha derivada de la URL. Con datos aún cargando se ESPERA (nunca se redirige al listado);
+  // solo si tras cargar el id no existe (o la RLS no lo muestra) se vuelve al listado con aviso.
+  const seleccionado = nav.fichaId ? usuarios.find((u) => u.id === nav.fichaId) ?? null : null;
+  const fichaInexistente = !!nav.fichaId && !loading && !seleccionado;
+  useEffect(() => {
+    if (!fichaInexistente) return;
+    toast('Ese usuario no existe o no está en tu ámbito', 'error');
+    nav.ir('usuarios', { reemplazar: true });
+  }, [fichaInexistente]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtrados = usuarios.filter((u) => u.nombre.toLowerCase().includes(busqueda.toLowerCase()));
-  const seleccionado = usuarios.find((u) => u.id === seleccionadoId) ?? null;
 
   async function enviarInvitacion() {
     if (!form.email || !form.nombre) {
@@ -83,13 +81,14 @@ export function UsuariosEscritorio({ info, onIrAControl, preseleccion, onConsumi
     }
   }
 
-  if (seleccionado) {
+  if (nav.fichaId) {
+    if (!seleccionado) return <p className="p-4 text-sm text-ink-tertiary">Cargando…</p>;
     return (
       <FichaUsuarioEscritorio
         info={info}
         usuario={seleccionado}
-        onVolver={() => setSeleccionadoId(null)}
-        onIrAControl={onIrAControl}
+        onVolver={() => nav.ir('usuarios')}
+        onIrAControl={(empleadoId) => nav.ir('control', { query: { empleado: empleadoId } })}
         onActualizar={actualizar}
         onDesactivar={desactivar}
       />
@@ -194,7 +193,7 @@ export function UsuariosEscritorio({ info, onIrAControl, preseleccion, onConsumi
                     key={u.id}
                     className="row-link hover:bg-subtle"
                     onClick={(e) => {
-                      if (!(e.target as HTMLElement).closest('button')) setSeleccionadoId(u.id);
+                      if (!(e.target as HTMLElement).closest('button')) nav.ir('usuarios', { fichaId: u.id });
                     }}
                   >
                     <td className="border-b border-border px-2.5 py-2.5 font-extrabold">{u.nombre}</td>
@@ -207,7 +206,7 @@ export function UsuariosEscritorio({ info, onIrAControl, preseleccion, onConsumi
                     </td>
                     <td className="border-b border-border px-2.5 py-2.5">{u.categoriaNombre ?? '—'}</td>
                     <td className="border-b border-border px-2.5 py-2.5 text-right">
-                      <button type="button" className="btn btn-sm" onClick={() => setSeleccionadoId(u.id)}>
+                      <button type="button" className="btn btn-sm" onClick={() => nav.ir('usuarios', { fichaId: u.id })}>
                         Ver
                       </button>
                     </td>

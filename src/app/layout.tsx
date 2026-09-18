@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Nunito, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
+import { GuardaBfcache } from '@/components/ui/GuardaBfcache';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -39,7 +40,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="color-scheme" content="light dark" />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body>{children}</body>
+      <body>
+        <GuardaBfcache />
+        {children}
+      </body>
     </html>
   );
 }

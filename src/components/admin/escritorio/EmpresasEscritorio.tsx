@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useEmpresas } from '@/hooks/admin/useEmpresas';
 import { useHorasPorEmpresaYProyecto } from '@/hooks/admin/useHorasPorEmpresaYProyecto';
 import { useRefacturacion } from '@/hooks/admin/useRefacturacion';
@@ -9,25 +9,19 @@ import { useUsuarios } from '@/hooks/admin/useUsuarios';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { Donut } from '../compartido/Donut';
 import { FichaEmpresaEscritorio } from './FichaEmpresaEscritorio';
+import { useNavAdmin } from '../NavAdmin';
 import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
 
 const GRISES = ['var(--ink-primary)', 'var(--ink-secondary)', 'var(--ink-tertiary)', 'var(--ink-disabled)', 'var(--border-strong)'];
 
-interface Props {
-  info: AdminInfo;
-  onIrAProyecto: (proyectoId: string) => void;
-  onIrAUsuario: (usuarioId: string) => void;
-  onIrAInvitarUsuario: (empresaId: string) => void;
-  onIrARefacturacion: () => void;
-}
-
-export function EmpresasEscritorio({ info, onIrAProyecto, onIrAUsuario, onIrAInvitarUsuario, onIrARefacturacion }: Props) {
+export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
+  const nav = useNavAdmin();
   const hoy = new Date();
   const anio = hoy.getFullYear();
   const mes = hoy.getMonth() + 1;
 
-  const { empresas, crear, actualizar, desactivar } = useEmpresas();
+  const { empresas, loading, crear, actualizar, desactivar } = useEmpresas();
   const { porEmpresa, porProyecto } = useHorasPorEmpresaYProyecto(anio, mes);
   const { lineas: refact } = useRefacturacion(anio, mes);
   const { proyectos, crear: crearProyecto } = useProyectosAdmin();
@@ -37,8 +31,16 @@ export function EmpresasEscritorio({ info, onIrAProyecto, onIrAUsuario, onIrAInv
   const esAdminGrupo = info.rol === 'admin_grupo';
   const [nombre, setNombre] = useState('');
   const [cif, setCif] = useState('');
-  const [seleccionadoId, setSeleccionadoId] = useState<string | null>(null);
-  const seleccionado = empresas.find((e) => e.id === seleccionadoId) ?? null;
+
+  // Ficha derivada de la URL. Con `empresas` aún cargando se ESPERA (nunca se redirige al listado);
+  // solo si tras cargar el id no existe se vuelve al listado con aviso.
+  const seleccionado = nav.fichaId ? empresas.find((e) => e.id === nav.fichaId) ?? null : null;
+  const fichaInexistente = !!nav.fichaId && !loading && !seleccionado;
+  useEffect(() => {
+    if (!fichaInexistente) return;
+    toast('Esa empresa no existe', 'error');
+    nav.ir('empresas', { reemplazar: true });
+  }, [fichaInexistente]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function crearEmpresa() {
     if (!nombre) return;
@@ -51,7 +53,8 @@ export function EmpresasEscritorio({ info, onIrAProyecto, onIrAUsuario, onIrAInv
     }
   }
 
-  if (seleccionado) {
+  if (nav.fichaId) {
+    if (!seleccionado) return <p className="p-4 text-sm text-ink-tertiary">Cargando…</p>;
     return (
       <FichaEmpresaEscritorio
         info={info}
@@ -62,14 +65,14 @@ export function EmpresasEscritorio({ info, onIrAProyecto, onIrAUsuario, onIrAInv
         porProyecto={porProyecto}
         horasEmpresa={porEmpresa.find((e) => e.empresaId === seleccionado.id)?.horas ?? 0}
         mes={mes}
-        onVolver={() => setSeleccionadoId(null)}
+        onVolver={() => nav.ir('empresas')}
         onActualizar={actualizar}
         onDesactivar={desactivar}
         onCrearProyecto={crearProyecto}
-        onIrAProyecto={onIrAProyecto}
-        onIrAUsuario={onIrAUsuario}
-        onIrAInvitarUsuario={onIrAInvitarUsuario}
-        onIrARefacturacion={onIrARefacturacion}
+        onIrAProyecto={(proyectoId) => nav.ir('proyectos', { fichaId: proyectoId })}
+        onIrAUsuario={(usuarioId) => nav.ir('usuarios', { fichaId: usuarioId })}
+        onIrAInvitarUsuario={(empresaId) => nav.ir('usuarios', { query: { invitar: empresaId } })}
+        onIrARefacturacion={() => nav.ir('refacturacion')}
       />
     );
   }
@@ -134,7 +137,7 @@ export function EmpresasEscritorio({ info, onIrAProyecto, onIrAUsuario, onIrAInv
                       key={e.id}
                       className="row-link hover:bg-subtle"
                       onClick={(ev) => {
-                        if (!(ev.target as HTMLElement).closest('button')) setSeleccionadoId(e.id);
+                        if (!(ev.target as HTMLElement).closest('button')) nav.ir('empresas', { fichaId: e.id });
                       }}
                     >
                       <td className="border-b border-border px-2.5 py-2.5 font-extrabold">{e.nombre}</td>
@@ -149,7 +152,7 @@ export function EmpresasEscritorio({ info, onIrAProyecto, onIrAUsuario, onIrAInv
                         </span>
                       </td>
                       <td className="border-b border-border px-2.5 py-2.5 text-right">
-                        <button type="button" className="btn btn-sm" onClick={() => setSeleccionadoId(e.id)}>
+                        <button type="button" className="btn btn-sm" onClick={() => nav.ir('empresas', { fichaId: e.id })}>
                           Ver
                         </button>
                       </td>

@@ -1,50 +1,41 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useProyectosAdmin, type ProyectoAdmin } from '@/hooks/admin/useProyectosAdmin';
+import { useProyectosAdmin } from '@/hooks/admin/useProyectosAdmin';
 import { useEmpresas } from '@/hooks/admin/useEmpresas';
 import { useHorasPorEmpresaYProyecto } from '@/hooks/admin/useHorasPorEmpresaYProyecto';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { Donut } from '../compartido/Donut';
 import { FichaProyectoEscritorio } from './FichaProyectoEscritorio';
+import { useNavAdmin } from '../NavAdmin';
 import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
 
 const GRISES = ['var(--ink-primary)', 'var(--ink-secondary)', 'var(--ink-tertiary)', 'var(--ink-disabled)', 'var(--border-strong)'];
 
-interface Props {
-  info: AdminInfo;
-  /** Id de proyecto a abrir directamente (hand-off desde la ficha de empresa). */
-  preseleccion?: string | null;
-  onConsumirPreseleccion?: () => void;
-}
-
-export function ProyectosEscritorio({ info, preseleccion, onConsumirPreseleccion }: Props) {
+export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
+  const nav = useNavAdmin();
   const hoy = new Date();
   const anio = hoy.getFullYear();
   const mes = hoy.getMonth() + 1;
 
-  const { proyectos, crear } = useProyectosAdmin();
+  const { proyectos, loading, crear } = useProyectosAdmin();
   const { empresas } = useEmpresas();
   const { porProyecto } = useHorasPorEmpresaYProyecto(anio, mes);
   const toast = useToast();
 
   const esAdminGrupo = info.rol === 'admin_grupo';
-  const [seleccionado, setSeleccionado] = useState<ProyectoAdmin | null>(null);
   const [form, setForm] = useState({ empresaId: info.empresaId, codigo: '', nombre: '' });
 
+  // Ficha derivada de la URL. Con `proyectos` aún cargando se ESPERA (nunca se redirige al listado);
+  // solo si tras cargar el id no existe (o la RLS no lo muestra) se vuelve al listado con aviso.
+  const seleccionado = nav.fichaId ? proyectos.find((p) => p.id === nav.fichaId) ?? null : null;
+  const fichaInexistente = !!nav.fichaId && !loading && !seleccionado;
   useEffect(() => {
-    if (!preseleccion) return;
-    const p = proyectos.find((x) => x.id === preseleccion);
-    // Solo se consume el hand-off si realmente se encontró el proyecto -- `proyectos`
-    // casi siempre sigue cargando cuando este efecto corre por primera vez tras
-    // cambiar de sección; consumir sin éxito perdería la preselección para siempre
-    // (el efecto no volvería a correr al no cambiar ya `preseleccion`).
-    if (p) {
-      setSeleccionado(p);
-      onConsumirPreseleccion?.();
-    }
-  }, [preseleccion, proyectos, onConsumirPreseleccion]);
+    if (!fichaInexistente) return;
+    toast('Ese proyecto no existe o no está en tu ámbito', 'error');
+    nav.ir('proyectos', { reemplazar: true });
+  }, [fichaInexistente]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function crearProyecto() {
     if (!form.codigo || !form.nombre) {
@@ -59,8 +50,9 @@ export function ProyectosEscritorio({ info, preseleccion, onConsumirPreseleccion
     }
   }
 
-  if (seleccionado) {
-    return <FichaProyectoEscritorio proyecto={seleccionado} anio={anio} mes={mes} onVolver={() => setSeleccionado(null)} />;
+  if (nav.fichaId) {
+    if (!seleccionado) return <p className="p-4 text-sm text-ink-tertiary">Cargando…</p>;
+    return <FichaProyectoEscritorio proyecto={seleccionado} anio={anio} mes={mes} onVolver={() => nav.ir('proyectos')} />;
   }
 
   const totalHoras = porProyecto.reduce((s, p) => s + p.horas, 0);
@@ -124,7 +116,7 @@ export function ProyectosEscritorio({ info, preseleccion, onConsumirPreseleccion
                     key={p.id}
                     className="row-link hover:bg-subtle"
                     onClick={(e) => {
-                      if (!(e.target as HTMLElement).closest('button')) setSeleccionado(p);
+                      if (!(e.target as HTMLElement).closest('button')) nav.ir('proyectos', { fichaId: p.id });
                     }}
                   >
                     <td className="border-b border-border px-2.5 py-2.5 font-extrabold">{p.nombre}</td>
@@ -137,7 +129,7 @@ export function ProyectosEscritorio({ info, preseleccion, onConsumirPreseleccion
                       </span>
                     </td>
                     <td className="border-b border-border px-2.5 py-2.5 text-right">
-                      <button type="button" className="btn btn-sm" onClick={() => setSeleccionado(p)}>
+                      <button type="button" className="btn btn-sm" onClick={() => nav.ir('proyectos', { fichaId: p.id })}>
                         Ver
                       </button>
                     </td>

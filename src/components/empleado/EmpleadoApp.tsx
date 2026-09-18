@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
 import { useDiasMes } from '@/hooks/useDiasMes';
 import { useImputacionesMes, type ImputacionLinea, type NuevaLinea } from '@/hooks/useImputacionesMes';
@@ -11,6 +12,8 @@ import { useBalanceMes } from '@/hooks/useBalanceMes';
 import { useMaxHorasDia } from '@/hooks/useMaxHorasDia';
 import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import { ausenciaEnFecha, fmt } from '@/lib/horas/calendario';
+import { navegar } from '@/lib/nav/navegar';
+import { parseRutaEmpleado } from '@/lib/nav/rutas';
 import { ToastProvider, useToast } from './compartido/Toast';
 import { ShellMovil } from './movil/ShellMovil';
 import { ShellEscritorio } from './escritorio/ShellEscritorio';
@@ -38,7 +41,13 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, email, rol, depa
   const mes = hoy.getMonth() + 1;
   const fechaHoy = hoy.toISOString().slice(0, 10);
 
-  const [tab, setTab] = useState<Tab>('inicio');
+  // La pestaña se DERIVA de la URL (/inicio, /imputar, /calendario): única fuente de verdad, cambiar de pestaña = navegar.
+  // Solo /debug/movil (verificación visual, 404 en producción) no vive bajo esas rutas y usa estado local.
+  const pathname = usePathname();
+  const aislado = !!forzarLayout;
+  const [tabLocal, setTabLocal] = useState<Tab>('inicio');
+  const tab: Tab = aislado ? tabLocal : parseRutaEmpleado(pathname.split('/').filter(Boolean)) ?? 'inicio';
+  const setTab = useCallback((t: Tab) => (aislado ? setTabLocal(t) : navegar(`/${t}`)), [aislado]);
   const [selDay, setSelDay] = useState(fechaHoy);
   const [staged, setStaged] = useState<Staged | null>(null);
 

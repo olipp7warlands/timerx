@@ -1,10 +1,13 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useState } from 'react';
 import { MenuUsuarioDesktop } from '@/components/ui/MenuUsuario';
 import { IconReloj, IconChevronLeft, IconChevronRight } from '@/components/ui/icons';
 import { GRUPOS_SECCIONES } from '../secciones';
-import type { AdminInfo, SeccionAdmin } from '../types';
+import { useNavAdmin } from '../NavAdmin';
+import type { AdminInfo } from '../types';
 import { InicioEscritorio } from './InicioEscritorio';
 import { UsuariosEscritorio } from './UsuariosEscritorio';
 import { AusenciasEscritorio } from './AusenciasEscritorio';
@@ -20,31 +23,12 @@ import { AjustesEscritorio } from './AjustesEscritorio';
 
 interface Props {
   info: AdminInfo;
-  seccion: SeccionAdmin;
-  setSeccion: (s: SeccionAdmin) => void;
 }
 
-export function ShellEscritorioAdmin({ info, seccion, setSeccion }: Props) {
+export function ShellEscritorioAdmin({ info }: Props) {
   const [mini, setMini] = useState(false);
-
-  /**
-   * Hand-off genérico entre secciones: "ir a X con este dato preseleccionado".
-   * Sustituye el estado puntual que antes solo servía para Control -- ahora
-   * también cubre abrir una ficha de Proyectos/Usuarios o precargar el
-   * formulario de invitación con una empresa, todo desde la ficha de empresa.
-   */
-  const [handoff, setHandoff] = useState<{ seccion: SeccionAdmin; data: any } | null>(null);
-
-  function irA(seccionDestino: SeccionAdmin, data?: any) {
-    setHandoff(data !== undefined ? { seccion: seccionDestino, data } : null);
-    setSeccion(seccionDestino);
-  }
-  function handoffPara(seccionActual: SeccionAdmin) {
-    return handoff?.seccion === seccionActual ? handoff.data : undefined;
-  }
-  function consumirHandoff() {
-    setHandoff(null);
-  }
+  const nav = useNavAdmin();
+  const seccion = nav.seccion;
 
   return (
     <div className="flex min-h-screen bg-bg">
@@ -75,7 +59,7 @@ export function ShellEscritorioAdmin({ info, seccion, setSeccion }: Props) {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setSeccion(item.id)}
+                onClick={() => nav.ir(item.id)}
                 className={`relative flex items-center gap-2.5 w-full rounded-xl px-3 py-2 text-left text-sm font-extrabold ${
                   item.id === seccion ? 'bg-subtle text-ink-primary' : 'text-ink-tertiary'
                 } ${mini ? 'justify-center' : ''}`}
@@ -91,44 +75,23 @@ export function ShellEscritorioAdmin({ info, seccion, setSeccion }: Props) {
         <div className="mt-auto flex items-center gap-2 border-t border-border pt-3">
           <MenuUsuarioDesktop nombre={info.nombre} email={info.email} rol={info.rol} />
           {!mini && (
-            <a href="/" className="btn btn-sm flex-1 justify-center">
+            <Link href="/inicio" className="btn btn-sm flex-1 justify-center">
               App empleado
-            </a>
+            </Link>
           )}
         </div>
       </aside>
 
       <main className="min-w-0 flex-1 p-8">
-        {seccion === 'inicio' && <InicioEscritorio info={info} onIrA={setSeccion} />}
-        {seccion === 'usuarios' && (
-          <UsuariosEscritorio
-            info={info}
-            onIrAControl={(empleadoId) => irA('control', { empleadoId })}
-            preseleccion={handoffPara('usuarios')}
-            onConsumirPreseleccion={consumirHandoff}
-          />
-        )}
+        {seccion === 'inicio' && <InicioEscritorio info={info} onIrA={(s) => nav.ir(s)} />}
+        {seccion === 'usuarios' && <UsuariosEscritorio info={info} />}
         {seccion === 'ausencias' && <AusenciasEscritorio />}
-        {seccion === 'empresas' && (
-          <EmpresasEscritorio
-            info={info}
-            onIrAProyecto={(proyectoId) => irA('proyectos', { proyectoId })}
-            onIrAUsuario={(usuarioId) => irA('usuarios', { usuarioId })}
-            onIrAInvitarUsuario={(empresaId) => irA('usuarios', { empresaIdInvitar: empresaId })}
-            onIrARefacturacion={() => irA('refacturacion')}
-          />
-        )}
-        {seccion === 'proyectos' && <ProyectosEscritorio info={info} preseleccion={handoffPara('proyectos')?.proyectoId} onConsumirPreseleccion={consumirHandoff} />}
+        {seccion === 'empresas' && <EmpresasEscritorio info={info} />}
+        {seccion === 'proyectos' && <ProyectosEscritorio info={info} />}
         {seccion === 'categorias' && <CategoriasEscritorio info={info} />}
         {seccion === 'calendario' && <CalendarioEscritorio info={info} />}
         {seccion === 'mapa' && <MapaEscritorio info={info} />}
-        {seccion === 'control' && (
-          <ControlEscritorio
-            empleadoPreseleccionado={handoffPara('control')?.empleadoId ?? null}
-            onConsumirPreseleccion={consumirHandoff}
-            onIrAUsuario={(usuarioId) => irA('usuarios', { usuarioId })}
-          />
-        )}
+        {seccion === 'control' && <ControlEscritorio />}
         {seccion === 'tarifas' && <TarifasEscritorio info={info} />}
         {seccion === 'refacturacion' && <RefacturacionEscritorio info={info} />}
         {seccion === 'ajustes' && <AjustesEscritorio info={info} />}

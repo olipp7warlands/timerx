@@ -1,9 +1,12 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useState } from 'react';
 import { MenuUsuarioMovil } from '@/components/ui/MenuUsuario';
 import { IconMenu, IconReloj } from '@/components/ui/icons';
 import { GRUPOS_SECCIONES, SECCIONES_MOVIL_FUNCIONALES } from '../secciones';
+import { useNavAdmin } from '../NavAdmin';
 import type { AdminInfo, SeccionAdmin } from '../types';
 import { InicioMovil } from './InicioMovil';
 import { AusenciasMovil } from './AusenciasMovil';
@@ -25,14 +28,10 @@ const ETIQUETAS: Record<SeccionAdmin, string> = {
   ajustes: 'Ajustes',
 };
 
-interface Props {
-  info: AdminInfo;
-  seccion: SeccionAdmin;
-  setSeccion: (s: SeccionAdmin) => void;
-}
-
-export function ShellMovilAdmin({ info, seccion, setSeccion }: Props) {
+export function ShellMovilAdmin({ info }: { info: AdminInfo }) {
   const [drawerAbierto, setDrawerAbierto] = useState(false);
+  const nav = useNavAdmin();
+  const seccion = nav.seccion;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-bg pb-11">
@@ -84,7 +83,7 @@ export function ShellMovilAdmin({ info, seccion, setSeccion }: Props) {
                 key={item.id}
                 type="button"
                 onClick={() => {
-                  setSeccion(item.id);
+                  nav.ir(item.id);
                   setDrawerAbierto(false);
                 }}
                 className={`relative flex items-center gap-2.5 w-full rounded-xl px-3 py-2 text-left text-sm font-extrabold ${
@@ -98,9 +97,9 @@ export function ShellMovilAdmin({ info, seccion, setSeccion }: Props) {
             ))}
           </div>
         ))}
-        <a href="/admin" className="btn mt-auto w-full justify-center border-t border-border pt-3">
+        <Link href="/admin" className="btn mt-auto w-full justify-center border-t border-border pt-3">
           Panel de escritorio
-        </a>
+        </Link>
       </aside>
     </div>
   );

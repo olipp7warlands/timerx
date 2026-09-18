@@ -5,7 +5,9 @@ const ROLES_ADMIN = ['admin_grupo', 'admin_empresa'];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const perfil = await getPerfilServer();
-  if (!perfil || !ROLES_ADMIN.includes(perfil.rol)) redirect('/');
+  // Sin sesión NO se redirige aquí: el layout no conoce la ruta, y la page
+  // redirige a /login?next=<ruta> para conservar el enlace profundo.
+  if (perfil && !ROLES_ADMIN.includes(perfil.rol)) redirect('/');
 
   return <>{children}</>;
 }
