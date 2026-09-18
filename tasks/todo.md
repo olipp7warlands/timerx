@@ -14,7 +14,7 @@
 - [x] Patrón común `src/lib/importadores/` + UI `ImportadorBloque` + rutas plantillas/export
 - [x] Usuarios (alta compartida con `invitarUsuario`), coste/hora (+ ficha admin_grupo), vacaciones (RPC transaccional)
 - [x] Verificación local completa (ver PLAN.md): round-trip, error cazado, reversión, RLS Cristian/Marina, regresión byte-idéntica
-- [ ] Commit + push + redeploy + ciclo completo contra producción con reversión y conteos antes/después
+- [x] Commit + push + redeploy (f28d9a1) + ciclo completo contra producción con reversión y conteos antes/después (idénticos)
 
 ## Revisión
 - Línea base (antes de tocar datos): `scratchpad/base_conteos.txt` y `snap_base` (sha256 756660c9…). Tras cada prueba se compara.
