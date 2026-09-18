@@ -230,6 +230,24 @@ Sin mock que replicar (ni el empleado ni el admin lo cubren en los HTML de refer
 
 Empresas: Wowinx SL (B-11223344), Málaga CF SAD (A-99887766), Legal Norte SL (B-55667788). Departamentos: 3B3 (responsable Cristian Haro), Jurídico, Diseño. Categorías/subcategorías y proyectos: los de los mocks (Interno no refacturable). Usuarios (11): Cristian Haro (admin_grupo), Verónica Salguero, Andrés Fuentes, Leo Silva, Sara Martín, Ana Ruiz (Legal Norte), Cosme Hernandez, Daniel Ramírez, Marta Gil (Jurídico), Enrique Robles (empleado moroso de Málaga, usado en los mocks con vacaciones rechazadas y faltantes) y Marina Ortega (admin_empresa de Málaga CF SAD — persona aparte, no es Enrique). Tarifas: Desarrollo 60, Diseño 55, Abogados 95 (origen Legal Norte), Ana Ruiz 110. Imputaciones de julio y agosto completas (meses cerrados), septiembre parcial replicando los números de los mocks; 1 baja aprobada (Andrés 01–02/09), 2 vacaciones pendientes. Mapa del grupo (F6): 6 áreas y 22 elementos, literales de la constante `MAPA` de los mocks (Infraestructura, Tecnología, Deportes, Dinero, Cultura, Entretenimiento), con `empresa_id` resuelto contra las 3 empresas ya sembradas.
 
+**Cuentas de la demo (13, leídas de `perfil`/`auth.users` el 2026-09-18)** — sin contraseñas: la compartida de la demo está en F6 Pulido y la de las cuentas personales la custodia el usuario.
+
+| Nombre | Email | Rol | Empresa | Origen |
+|---|---|---|---|---|
+| Cristian Haro | cristian.haro@wowinx.com | admin_grupo | Wowinx SL | seed |
+| Verónica Salguero | veronica.salguero@wowinx.com | empleado | Wowinx SL | seed |
+| Andrés Fuentes | andres.fuentes@wowinx.com | empleado | Wowinx SL | seed |
+| Leo Silva | leo.silva@wowinx.com | empleado | Wowinx SL | seed |
+| Sara Martín | sara.martin@wowinx.com | empleado | Wowinx SL | seed |
+| Ana Ruiz | ana.ruiz@wowinx.com | empleado | Legal Norte SL | seed |
+| Cosme Hernandez | cosme.hernandez@wowinx.com | empleado | Wowinx SL | seed |
+| Daniel Ramírez | daniel.ramirez@wowinx.com | empleado | Wowinx SL | seed |
+| Marta Gil | marta.gil@wowinx.com | empleado | Legal Norte SL | seed |
+| Enrique Robles | enrique.robles@wowinx.com | empleado | Málaga CF SAD | seed |
+| Marina Ortega | marina.ortega@wowinx.com | admin_empresa | Málaga CF SAD | seed |
+| Oliver Pérez | olcasan08@gmail.com | empleado | Wowinx SL | acceso real del propietario (invitación, 2026-09-08); **off-limits en pruebas** |
+| **Haizea** | haizea@wowinx.com | **admin_grupo** | Wowinx SL | **cuenta legítima creada fuera de las sesiones de supervisión (2026-09-14)**; confirmado con el usuario |
+
 ## 7. Prompt inicial para Claude Code
 
 ```
