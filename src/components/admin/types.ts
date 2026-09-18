@@ -8,6 +8,7 @@ export type SeccionAdmin =
   | 'calendario'
   | 'mapa'
   | 'control'
+  | 'soporte'
   | 'tarifas'
   | 'refacturacion'
   | 'ajustes';

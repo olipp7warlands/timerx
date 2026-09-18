@@ -9,14 +9,13 @@ import type { EmpleadoCtx } from '../types';
 
 export function CalendarioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
   const [ausenciaAbierta, setAusenciaAbierta] = useState(false);
-  const jornada = ctx.balance?.jornadaHoras ?? 0;
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
       <div className="card p-4">
         <CalendarGrid
           dias={ctx.dias}
-          estadoDia={(d) => estadoDia(d.fecha, d.laborable, sumaHoras(ctx.porDia[d.fecha] ?? []), jornada, ctx.fechaHoy)}
+          estadoDia={(d) => estadoDia(d.fecha, d.laborable, sumaHoras(ctx.porDia[d.fecha] ?? []), d.jornada, ctx.fechaHoy)}
           claseExtra={(d) => (ausenciaEnFecha(d.fecha, ctx.ausencias) ? CLASE_AUSENCIA_DIA : '')}
           onClickDia={(fecha) => {
             ctx.setSelDay(fecha);

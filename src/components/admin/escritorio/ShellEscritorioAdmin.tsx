@@ -20,6 +20,8 @@ import { ControlEscritorio } from './ControlEscritorio';
 import { TarifasEscritorio } from './TarifasEscritorio';
 import { RefacturacionEscritorio } from './RefacturacionEscritorio';
 import { AjustesEscritorio } from './AjustesEscritorio';
+import { SoporteAdmin } from '../compartido/SoporteAdmin';
+import { useTicketsAbiertos } from '@/hooks/admin/useTicketsAbiertos';
 
 interface Props {
   info: AdminInfo;
@@ -29,6 +31,7 @@ export function ShellEscritorioAdmin({ info }: Props) {
   const [mini, setMini] = useState(false);
   const nav = useNavAdmin();
   const seccion = nav.seccion;
+  const { abiertos, recargar: recargarAbiertos } = useTicketsAbiertos();
 
   return (
     <div className="flex min-h-screen bg-bg">
@@ -67,6 +70,15 @@ export function ShellEscritorioAdmin({ info }: Props) {
                 {item.id === seccion && <span className="absolute -left-3 top-2 bottom-2 w-[3px] rounded-r bg-ink-primary" />}
                 <item.Icono />
                 {!mini && item.etiqueta}
+                {item.id === 'soporte' && abiertos > 0 && (
+                  <span
+                    className={`mono rounded-full bg-accent px-1.5 py-px text-[10.5px] font-extrabold text-on-accent ${mini ? 'absolute right-1 top-1' : 'ml-auto'}`}
+                    aria-label={`${abiertos} tickets abiertos`}
+                    data-testid="badge-soporte"
+                  >
+                    {abiertos}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -92,6 +104,7 @@ export function ShellEscritorioAdmin({ info }: Props) {
         {seccion === 'calendario' && <CalendarioEscritorio info={info} />}
         {seccion === 'mapa' && <MapaEscritorio info={info} />}
         {seccion === 'control' && <ControlEscritorio />}
+        {seccion === 'soporte' && <SoporteAdmin onCambioEstado={recargarAbiertos} />}
         {seccion === 'tarifas' && <TarifasEscritorio info={info} />}
         {seccion === 'refacturacion' && <RefacturacionEscritorio info={info} />}
         {seccion === 'ajustes' && <AjustesEscritorio info={info} />}

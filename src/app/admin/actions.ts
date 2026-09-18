@@ -5,24 +5,17 @@ import { createClient as createSessionClient } from '@/lib/supabase/server';
 import { getPerfilServer } from '@/lib/supabase/perfil';
 import { procesarRecordatorios } from '@/lib/recordatorios/enviar';
 import { altaUsuario, modoAltaDesdeEntorno, type AltaUsuarioInput, type ModoAlta } from '@/lib/usuarios/alta';
+import { generarPasswordTemporal, PASSWORD_MIN } from '@/lib/usuarios/password';
 
 const VENTANA_DIAS_RECORDATORIO = 5;
-
-const PALABRAS_PASSWORD = ['Roble', 'Nube', 'Rio', 'Monte', 'Brisa', 'Lago', 'Pino', 'Alba', 'Cielo', 'Prado', 'Faro', 'Bosque'];
-
-function generarPasswordTemporal(): string {
-  const palabra = PALABRAS_PASSWORD[Math.floor(Math.random() * PALABRAS_PASSWORD.length)];
-  const numero = Math.floor(1000 + Math.random() * 9000);
-  return `${palabra}-${numero}`;
-}
 
 export type InvitarUsuarioInput = AltaUsuarioInput;
 
 /**
- * Alta manual de UN usuario vía Admin API (service_role) -- solo puede correr en servidor. Misma operación y
- * mismo comportamiento que el importador masivo (`altaUsuario` + `MODO_EMAIL`): `real` invita por email;
- * cualquier otro valor (demo) crea la cuenta confirmada, sin contraseña y sin correo (acceso vía "Restablecer
- * contraseña" en su ficha). Devuelve `modo` para que la UI diga la verdad sobre lo que ha pasado.
+ * Alta manual de UN usuario vía Admin API (service_role) -- solo puede correr en servidor. Misma operación que el
+ * importador (`altaUsuario`). Con `password` (decisión "sin email"): la cuenta nace confirmada y con esa contraseña
+ * inicial, que el admin entrega en mano. Sin `password`: comportamiento por `MODO_EMAIL` (dormido salvo `real`).
+ * Devuelve `modo` para que la UI diga la verdad sobre lo que ha pasado.
  * handle_new_user() (001) lee empresa_id/nombre/rol de user_metadata y crea el perfil.
  * Un admin_empresa solo puede invitar dentro de su propia empresa y nunca a admin_grupo.
  */
@@ -34,12 +27,15 @@ export async function invitarUsuario(input: InvitarUsuarioInput): Promise<{ erro
   if (perfil.rol === 'admin_empresa' && (input.empresaId !== perfil.empresa_id || input.rol === 'admin_grupo')) {
     return { error: 'Un admin de empresa solo puede invitar dentro de su propia empresa' };
   }
+  if (input.password && input.password.length < PASSWORD_MIN) {
+    return { error: `La contraseña inicial debe tener al menos ${PASSWORD_MIN} caracteres` };
+  }
 
   const supabaseAdmin = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const modo = modoAltaDesdeEntorno();
+  const modo: ModoAlta = input.password ? 'con-password' : modoAltaDesdeEntorno();
   const { error } = await altaUsuario(supabaseAdmin, input, modo);
   return { error, modo };
 }

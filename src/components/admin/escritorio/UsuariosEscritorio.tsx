@@ -8,6 +8,7 @@ import { useCategorias } from '@/hooks/admin/useCategorias';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { invitarUsuario } from '@/app/admin/actions';
 import { ETIQUETA_ROL } from '@/lib/auth/roles';
+import { generarPasswordTemporal } from '@/lib/usuarios/password';
 import { FichaUsuarioEscritorio } from './FichaUsuarioEscritorio';
 import { ImportadorBloque } from '../compartido/ImportadorBloque';
 import { useNavAdmin } from '../NavAdmin';
@@ -26,7 +27,9 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
   // Hand-off efímero `?invitar=<empresaId>` (desde la ficha de empresa): la sección se monta al llegar, así que
   // basta con leerlo como valor inicial; después se limpia de la URL para que atrás/adelante no lo re-apliquen.
   const invitarEmpresaId = nav.consulta.get('invitar');
-  const [form, setForm] = useState({ email: '', nombre: '', empresaId: invitarEmpresaId ?? info.empresaId, departamentoId: '', rol: 'empleado', categoriaId: '' });
+  const [form, setForm] = useState({ email: '', nombre: '', empresaId: invitarEmpresaId ?? info.empresaId, departamentoId: '', rol: 'empleado', categoriaId: '', password: '' });
+  /** Alta recién hecha con contraseña inicial: se muestra UNA vez para que el admin la copie y la entregue en mano. */
+  const [altaCreada, setAltaCreada] = useState<{ email: string; password: string } | null>(null);
   const { limpiarConsulta } = nav;
   useEffect(() => {
     if (invitarEmpresaId) limpiarConsulta();
@@ -47,6 +50,13 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
 
   const filtrados = usuarios.filter((u) => u.nombre.toLowerCase().includes(busqueda.toLowerCase()));
 
+  // El azar se genera FUERA del updater de estado: React (StrictMode) puede invocar el updater más de una vez y una función
+  // impura dejaría en el campo una contraseña y en el estado otra distinta (bug real hallado en la verificación).
+  function generarPassword() {
+    const password = generarPasswordTemporal();
+    setForm((f) => ({ ...f, password }));
+  }
+
   async function enviarInvitacion() {
     if (!form.email || !form.nombre) {
       toast('Email y nombre son obligatorios', 'error');
@@ -60,14 +70,20 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
       departamentoId: form.departamentoId || null,
       rol: form.rol as 'empleado' | 'responsable_proyecto' | 'admin_empresa' | 'admin_grupo',
       categoriaId: form.categoriaId || null,
+      password: form.password || null,
     });
     setEnviando(false);
     if (error) {
       toast(error, 'error');
       return;
     }
-    toast(modo === 'invitar' ? `Invitación enviada a ${form.email}` : `Cuenta creada para ${form.email} (sin correo): dale acceso con «Restablecer contraseña» en su ficha`);
-    setForm({ email: '', nombre: '', empresaId: info.empresaId, departamentoId: '', rol: 'empleado', categoriaId: '' });
+    if (modo === 'con-password') {
+      toast(`Cuenta creada para ${form.email}`);
+      setAltaCreada({ email: form.email, password: form.password });
+    } else {
+      toast(modo === 'invitar' ? `Invitación enviada a ${form.email}` : `Cuenta creada para ${form.email} (sin contraseña ni correo): dale acceso con «Restablecer contraseña» en su ficha`);
+    }
+    setForm({ email: '', nombre: '', empresaId: info.empresaId, departamentoId: '', rol: 'empleado', categoriaId: '', password: '' });
     recargar();
   }
 
@@ -145,9 +161,35 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                 </option>
               ))}
             </select>
+            <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Contraseña inicial</label>
+            <div className="flex gap-2">
+              <input
+                className="input mono flex-1"
+                value={form.password}
+                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                placeholder="Opcional · mín. 8 caracteres"
+                autoComplete="off"
+              />
+              <button type="button" className="btn btn-sm" onClick={generarPassword}>
+                Generar
+              </button>
+            </div>
+            <p className="mt-1.5 text-[11px] font-semibold text-ink-tertiary">Se la entregas en mano. Sin contraseña, la cuenta nace sin acceso hasta «Restablecer contraseña» en su ficha.</p>
             <button type="button" className="btn btn-primary full" disabled={enviando} onClick={enviarInvitacion}>
-              {enviando ? 'Enviando…' : 'Enviar invitación'}
+              {enviando ? 'Creando…' : 'Crear usuario'}
             </button>
+            {altaCreada && (
+              <div className="mt-3 rounded-xl border border-border bg-subtle p-3 text-xs" data-testid="alta-creada">
+                <p className="font-extrabold">Cuenta creada · {altaCreada.email}</p>
+                <p className="mt-1">
+                  Contraseña inicial: <span className="mono font-extrabold">{altaCreada.password}</span>
+                </p>
+                <p className="mt-1 text-ink-tertiary">Cópiala ahora y entrégasela en mano: no se vuelve a mostrar.</p>
+                <button type="button" className="btn btn-sm mt-2" onClick={() => setAltaCreada(null)}>
+                  Entendido
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

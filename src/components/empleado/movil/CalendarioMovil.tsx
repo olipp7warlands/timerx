@@ -4,14 +4,13 @@ import { IconAvion } from '@/components/ui/icons';
 import type { EmpleadoCtx } from '../types';
 
 export function CalendarioMovil({ ctx }: { ctx: EmpleadoCtx }) {
-  const jornada = ctx.balance?.jornadaHoras ?? 0;
 
   return (
     <div className="space-y-4 pt-2">
       <div className="card p-3">
         <CalendarGrid
           dias={ctx.dias}
-          estadoDia={(d) => estadoDia(d.fecha, d.laborable, sumaHoras(ctx.porDia[d.fecha] ?? []), jornada, ctx.fechaHoy)}
+          estadoDia={(d) => estadoDia(d.fecha, d.laborable, sumaHoras(ctx.porDia[d.fecha] ?? []), d.jornada, ctx.fechaHoy)}
           claseExtra={(d) => (ausenciaEnFecha(d.fecha, ctx.ausencias) ? CLASE_AUSENCIA_DIA : '')}
           onClickDia={(fecha) => {
             ctx.setSelDay(fecha);

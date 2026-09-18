@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { construirDiasMes, type DiaMes } from '@/lib/horas/calendario';
+import type { DiaMes } from '@/lib/horas/calendario';
 
-/** Días del mes con flag laborable (isodow<=5 y sin festivo propio/de grupo), réplica de es_laborable(). */
+/**
+ * Días del mes con su jornada y si son laborables, servidos por `jornada_dias_mes()` (019): fuente única en BD
+ * (jornada semanal por empresa + festivos). Sustituye la réplica en TypeScript de es_laborable(), que tenía el
+ * fin de semana cableado y una jornada plana.
+ */
 export function useDiasMes(anio: number, mes: number, empresaId: string | undefined) {
   const [dias, setDias] = useState<DiaMes[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,20 +19,14 @@ export function useDiasMes(anio: number, mes: number, empresaId: string | undefi
 
     async function cargar() {
       setLoading(true);
-      const supabase = createClient();
-      const desde = `${anio}-${String(mes).padStart(2, '0')}-01`;
-      const hasta = new Date(anio, mes, 0).toISOString().slice(0, 10);
-
-      const { data } = await supabase
-        .from('festivo')
-        .select('fecha, empresa_id')
-        .gte('fecha', desde)
-        .lte('fecha', hasta)
-        .or(`empresa_id.is.null,empresa_id.eq.${empresaId}`);
-
+      const { data } = await createClient().rpc('jornada_dias_mes', { p_anio: anio, p_mes: mes, p_empresa: empresaId! });
       if (cancelado) return;
-      const fechasFestivo = new Set((data ?? []).map((f) => f.fecha));
-      setDias(construirDiasMes(anio, mes, fechasFestivo));
+      setDias(
+        (data ?? []).map((d) => {
+          const [y, m, dd] = d.fecha.split('-').map(Number);
+          return { fecha: d.fecha, dow: new Date(y, m - 1, dd).getDay(), laborable: d.laborable, jornada: Number(d.jornada) };
+        })
+      );
       setLoading(false);
     }
 

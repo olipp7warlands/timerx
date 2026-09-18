@@ -14,6 +14,8 @@ interface CalendarGridProps {
   claseExtra?: (dia: DiaMes) => string;
   /** Deshabilita el día además de `!dia.laborable` (p.ej. proyecto no vigente ese día). */
   deshabilitadoExtra?: (dia: DiaMes) => boolean;
+  /** Vistas de solo lectura (resumen del día de un finde/festivo): los días no laborables también son pulsables. */
+  permitirNoLaborables?: boolean;
   onClickDia: (fecha: string) => void;
 }
 
@@ -22,7 +24,7 @@ interface CalendarGridProps {
  * El significado de "modo" (elegir 1 día / marcar varios / rango de 2 toques) vive en quien lo
  * consume, vía `estadoDia`/`claseExtra`/`onClickDia` — este componente solo pinta y delega clics.
  */
-export function CalendarGrid({ dias, estadoDia, claseExtra, deshabilitadoExtra, onClickDia }: CalendarGridProps) {
+export function CalendarGrid({ dias, estadoDia, claseExtra, deshabilitadoExtra, permitirNoLaborables, onClickDia }: CalendarGridProps) {
   const offset = dias[0]?.dow ?? 0;
 
   return (
@@ -41,7 +43,7 @@ export function CalendarGrid({ dias, estadoDia, claseExtra, deshabilitadoExtra, 
           <button
             key={dia.fecha}
             type="button"
-            disabled={!dia.laborable || (deshabilitadoExtra?.(dia) ?? false)}
+            disabled={(!permitirNoLaborables && !dia.laborable) || (deshabilitadoExtra?.(dia) ?? false)}
             onClick={() => onClickDia(dia.fecha)}
             className={`card flex aspect-square flex-col items-center justify-center gap-0.5 text-xs font-extrabold disabled:opacity-40 ${claseExtra?.(dia) ?? ''}`}
           >

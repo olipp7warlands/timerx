@@ -12,6 +12,8 @@ interface IrOpts {
   query?: Record<string, string>;
   /** `replace` en vez de `push` (p. ej. ficha inexistente: no dejar la URL rota en el historial). */
   reemplazar?: boolean;
+  /** Cambio de estado DENTRO de la misma vista (p. ej. día seleccionado): no saltar al inicio de la página. */
+  conservarScroll?: boolean;
 }
 
 export interface NavAdmin {
@@ -40,7 +42,7 @@ function ProveedorUrl({ children }: { children: React.ReactNode }) {
   const ir = useCallback((seccion: SeccionAdmin, opts?: IrOpts) => {
     const url = urlAdmin(seccion, opts);
     if (opts?.reemplazar) reemplazar(url);
-    else navegar(url);
+    else navegar(url, { conservarScroll: opts?.conservarScroll });
   }, []);
   const limpiarConsulta = useCallback(() => reemplazar(pathname), [pathname]);
 

@@ -42,7 +42,7 @@ export const importadorUsuarios = definir<FilaUsuario>({
       'ALTA SOLAMENTE: este importador crea usuarios nuevos. Un email que ya existe es un error de fila (no se actualiza ni se pisa); la edición masiva no está incluida.',
       'TODO O NADA: si el análisis detecta un solo error no se importa ninguna fila. El informe indica la fila y el motivo de cada error; corrígelos en el archivo y vuelve a subirlo.',
       'El archivo exportado desde la sección Usuarios se puede reimportar tal cual: la columna «activo» se ignora, y como todos esos emails ya existen dará errores de duplicado y ninguna alta.',
-      'Acceso: en entorno de demo (MODO_EMAIL=log) las cuentas se crean confirmadas y SIN contraseña, sin enviar ningún correo; el acceso se da con «Restablecer contraseña» en la ficha del usuario. En producción real (MODO_EMAIL=real) cada persona recibe una invitación por email para fijar su propia contraseña.',
+      'Acceso: las cuentas se crean confirmadas y SIN contraseña, sin enviar ningún correo (la herramienta no envía email). El acceso se da con «Restablecer contraseña» en la ficha de cada usuario, que muestra una contraseña temporal una sola vez para entregarla en mano; después la persona la cambia desde el menú de su avatar.',
     ],
   },
 

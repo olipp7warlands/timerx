@@ -17,6 +17,7 @@ import { enviarRecordatorioEmpleado, restablecerPasswordEmpleado } from '@/app/a
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { ModalCentrado } from '@/components/empleado/compartido/ModalCentrado';
 import { TablaPendientesImputacion } from '../compartido/TablaPendientesImputacion';
+import { MiniCalendarioUsuario } from './MiniCalendarioUsuario';
 import { confirmar } from '@/components/ui/confirmar';
 import { ETIQUETA_ROL, type RolUsuario } from '@/lib/auth/roles';
 import { fmt, formatoMes } from '@/lib/horas/calendario';
@@ -322,6 +323,8 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
           )}
         </div>
       </div>
+
+      {balance && <MiniCalendarioUsuario empleadoId={usuario.id} empresaId={usuario.empresaId} ausencias={ausenciasUsuario} />}
 
       <ModalCentrado abierto={passwordGenerada !== null} onCerrar={() => setPasswordGenerada(null)} titulo="Contraseña temporal">
         <div className="space-y-3">

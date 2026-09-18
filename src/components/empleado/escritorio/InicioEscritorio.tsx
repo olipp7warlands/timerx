@@ -14,10 +14,9 @@ import type { EmpleadoCtx } from '../types';
 export function InicioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
   const [historicoAbierto, setHistoricoAbierto] = useState(false);
   const computarDia = useComputarDia(ctx, ctx.fechaHoy);
-  const jornada = ctx.balance?.jornadaHoras ?? 0;
   const diaHoy = ctx.dias.find((d) => d.fecha === ctx.fechaHoy);
   const totalHoy = sumaHoras(ctx.porDia[ctx.fechaHoy] ?? []);
-  const reqHoy = diaHoy?.laborable ? jornada : 0;
+  const reqHoy = diaHoy?.laborable ? diaHoy.jornada : 0;
   const balanceMes = ctx.balance ? ctx.balance.horasImputadas - ctx.balance.requeridasEfectivas : null;
   const restanteHoy = reqHoy - totalHoy;
 
@@ -115,7 +114,7 @@ export function InicioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
         </div>
         <CalendarGrid
           dias={ctx.dias}
-          estadoDia={(d) => estadoDia(d.fecha, d.laborable, sumaHoras(ctx.porDia[d.fecha] ?? []), jornada, ctx.fechaHoy)}
+          estadoDia={(d) => estadoDia(d.fecha, d.laborable, sumaHoras(ctx.porDia[d.fecha] ?? []), d.jornada, ctx.fechaHoy)}
           claseExtra={(d) => (ausenciaEnFecha(d.fecha, ctx.ausencias) ? CLASE_AUSENCIA_DIA : '')}
           onClickDia={(fecha) => {
             ctx.setSelDay(fecha);

@@ -264,6 +264,32 @@ export type Database = {
         }
         Relationships: []
       }
+      empresa_jornada: {
+        Row: {
+          dia_semana: number
+          empresa_id: string
+          horas: number
+        }
+        Insert: {
+          dia_semana: number
+          empresa_id: string
+          horas: number
+        }
+        Update: {
+          dia_semana?: number
+          empresa_id?: string
+          horas?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresa_jornada_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       festivo: {
         Row: {
           empresa_id: string | null
@@ -806,6 +832,86 @@ export type Database = {
           },
         ]
       }
+      ticket: {
+        Row: {
+          creado_en: string
+          creado_por: string
+          descripcion: string
+          estado: Database["public"]["Enums"]["ticket_estado"]
+          id: string
+          ref: string
+          tipo: Database["public"]["Enums"]["ticket_tipo"]
+          titulo: string
+        }
+        Insert: {
+          creado_en?: string
+          creado_por: string
+          descripcion: string
+          estado?: Database["public"]["Enums"]["ticket_estado"]
+          id?: string
+          ref?: string
+          tipo: Database["public"]["Enums"]["ticket_tipo"]
+          titulo: string
+        }
+        Update: {
+          creado_en?: string
+          creado_por?: string
+          descripcion?: string
+          estado?: Database["public"]["Enums"]["ticket_estado"]
+          id?: string
+          ref?: string
+          tipo?: Database["public"]["Enums"]["ticket_tipo"]
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_comentario: {
+        Row: {
+          autor_id: string
+          creado_en: string
+          id: string
+          texto: string
+          ticket_id: string
+        }
+        Insert: {
+          autor_id: string
+          creado_en?: string
+          id?: string
+          texto: string
+          ticket_id: string
+        }
+        Update: {
+          autor_id?: string
+          creado_en?: string
+          id?: string
+          texto?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_comentario_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_comentario_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "ticket"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       v_ausencia_dias: {
@@ -1005,6 +1111,7 @@ export type Database = {
         Args: { p_empleado: string; p_empresa: string }
         Returns: boolean
       }
+      empresa_de_perfil: { Args: { p_perfil: string }; Returns: string }
       empresa_de_proyecto: { Args: { p_proyecto: string }; Returns: string }
       enviar_imputaciones: { Args: { p_ids: string[] }; Returns: number }
       es_admin_grupo: { Args: never; Returns: boolean }
@@ -1064,6 +1171,16 @@ export type Database = {
           proyecto: string
         }[]
       }
+      horas_ausencia_en_mes: {
+        Args: {
+          p_anio: number
+          p_empresa: string
+          p_fecha_fin: string
+          p_fecha_inicio: string
+          p_mes: number
+        }
+        Returns: number
+      }
       horas_requeridas: {
         Args: { p_desde: string; p_empresa: string; p_hasta: string }
         Returns: number
@@ -1084,6 +1201,18 @@ export type Database = {
         }
         Returns: string
       }
+      jornada_del_dia: {
+        Args: { p_empresa: string; p_fecha: string }
+        Returns: number
+      }
+      jornada_dias_mes: {
+        Args: { p_anio: number; p_empresa: string; p_mes: number }
+        Returns: {
+          fecha: string
+          jornada: number
+          laborable: boolean
+        }[]
+      }
       jornada_horas: { Args: never; Returns: number }
       periodo_cerrado: {
         Args: { p_empresa: string; p_fecha: string }
@@ -1093,6 +1222,7 @@ export type Database = {
         Args: { p_ausencia: string }
         Returns: boolean
       }
+      puede_ver_ticket: { Args: { p_ticket: string }; Returns: boolean }
       rechazar_ausencia: {
         Args: { p_id: string; p_motivo: string }
         Returns: undefined
@@ -1100,6 +1230,16 @@ export type Database = {
       rechazar_imputaciones: {
         Args: { p_ids: string[]; p_motivo: string }
         Returns: number
+      }
+      requeridas_efectivas: {
+        Args: { p_anio: number; p_mes: number }
+        Returns: {
+          email: string
+          horas_ausencia: number
+          horas_requeridas: number
+          perfil_id: string
+          requeridas_efectivas: number
+        }[]
       }
       resolver_tarifa: {
         Args: {
@@ -1121,6 +1261,18 @@ export type Database = {
         }
         Returns: string
       }
+      ticket_hilo: {
+        Args: { p_ticket: string }
+        Returns: {
+          autor_es_admin: boolean
+          autor_id: string
+          autor_nombre: string
+          creado_en: string
+          id: string
+          texto: string
+        }[]
+      }
+      ticket_ref_resincronizar: { Args: never; Returns: number }
       tiene_ausencia_aprobada: {
         Args: { p_fecha: string; p_perfil: string }
         Returns: boolean
@@ -1140,6 +1292,8 @@ export type Database = {
         | "admin_empresa"
         | "responsable_proyecto"
         | "empleado"
+      ticket_estado: "abierto" | "en_curso" | "resuelto"
+      ticket_tipo: "incidencia" | "mejora" | "consulta"
       tipo_ausencia: "vacaciones" | "baja_medica" | "otro_permiso"
     }
     CompositeTypes: {
@@ -1286,6 +1440,8 @@ export const Constants = {
         "responsable_proyecto",
         "empleado",
       ],
+      ticket_estado: ["abierto", "en_curso", "resuelto"],
+      ticket_tipo: ["incidencia", "mejora", "consulta"],
       tipo_ausencia: ["vacaciones", "baja_medica", "otro_permiso"],
     },
   },

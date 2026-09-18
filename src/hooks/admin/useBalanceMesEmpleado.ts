@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { getJornadaHoras, requeridasEfectivas } from '@/lib/horas/requeridas-efectivas';
+import { getHorasAusenciaMes, requeridasEfectivas } from '@/lib/horas/requeridas-efectivas';
 
 export interface BalanceMesEmpleado {
   horasRequeridas: number;
@@ -10,7 +10,6 @@ export interface BalanceMesEmpleado {
   diasVacaciones: number;
   diasBaja: number;
   diasPermiso: number;
-  jornadaHoras: number;
   requeridasEfectivas: number;
   balance: number;
 }
@@ -34,9 +33,9 @@ export function useBalanceMesEmpleado(empleadoId: string | null, anio: number, m
     }
     setLoading(true);
     const supabase = createClient();
-    const [{ data }, jornadaHoras] = await Promise.all([
+    const [{ data }, ausencias] = await Promise.all([
       supabase.rpc('balance_mes_empleado', { p_empleado_id: empleadoId, p_anio: anio, p_mes: mes }),
-      getJornadaHoras(supabase),
+      getHorasAusenciaMes(supabase, anio, mes),
     ]);
 
     const fila = data?.[0];
@@ -48,10 +47,7 @@ export function useBalanceMesEmpleado(empleadoId: string | null, anio: number, m
 
     const efectivas = requeridasEfectivas({
       horasRequeridas: fila.horas_requeridas,
-      diasVacaciones: fila.dias_vacaciones,
-      diasBaja: fila.dias_baja,
-      diasPermiso: fila.dias_permiso,
-      jornadaHoras,
+      horasAusencia: ausencias.porPerfil.get(empleadoId) ?? 0,
     });
 
     setBalance({
@@ -60,7 +56,6 @@ export function useBalanceMesEmpleado(empleadoId: string | null, anio: number, m
       diasVacaciones: fila.dias_vacaciones,
       diasBaja: fila.dias_baja,
       diasPermiso: fila.dias_permiso,
-      jornadaHoras,
       requeridasEfectivas: efectivas,
       balance: fila.horas_imputadas - efectivas,
     });

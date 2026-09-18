@@ -15,13 +15,13 @@ El resto de este runbook asume proyecto nuevo — los pasos 1-2 son creación de
 
 - [x] Decisión de proyecto Supabase/Railway nuevo cerrada con el usuario.
 - [ ] Dominio propio disponible para producción (no `*.up.railway.app`).
-- [x] Decisiones de F6 sobre recordatorios cerradas (Bloque A construido y desplegado: cron + botón manual, `MODO_EMAIL='log'` por defecto — cuenta/dominio Resend reales siguen sin confirmar, ver tabla final).
+- [x] Decisión de correo cerrada: **la herramienta no envía email** (ver "Futuro opcional: activar email" al final). Cron y botón Recordar siguen en modo `log` (registran sin enviar); no hay que configurar Resend ni SMTP.
 - [ ] Datos reales del cliente: empresas reales, categorías/subcategorías reales, tarifas reales, lista real de empleados con sus emails — nada de esto existe todavía como artefacto reutilizable, hay que recopilarlo antes de sembrar el proyecto nuevo.
 
 ## 1. Proyecto Supabase nuevo
 
 - [ ] Crear proyecto Supabase limpio.
-- [ ] Aplicar migraciones **001 a 017 en orden** desde `supabase/migrations/` (`supabase db push` contra el proyecto nuevo, tras `supabase link`).
+- [ ] Aplicar migraciones **001 a 019 en orden** desde `supabase/migrations/` (`supabase db push` contra el proyecto nuevo, tras `supabase link`).
 - [ ] **NO ejecutar `supabase/seed_datos.sql` tal cual** — mezcla datos de catálogo reutilizables (estructura de tarifas, ejemplo de asignaciones) con datos 100% ficticios de la demo (empresas Wowinx/Málaga CF SAD/Legal Norte, imputaciones, ausencias, las 3 líneas `enviada` de F5). Nada de `seed_datos.sql` debe llegar a producción sin reescribirse con datos reales.
 - [ ] Sembrar solo lo que sea catálogo real y estable: empresas reales del cliente, categorías/subcategorías reales (`categoria`/`subcategoria`), festivos reales del calendario laboral real, `ajuste` con los valores reales (`jornada_horas`, `tope_horas_dia`, etc. — revisar si los defaults de 002 sirven o hay que ajustarlos al cliente real).
 - [ ] Confirmar `RLS` activo en todas las tablas (ya lo está por las migraciones; verificar con una consulta de sesión anónima que da 0 filas, mismo patrón usado en las verificaciones de F3).
@@ -29,13 +29,13 @@ El resto de este runbook asume proyecto nuevo — los pasos 1-2 son creación de
 ## 2. Usuarios reales
 
 - [ ] **Cero usuarios por seed script** (`scripts/seed-usuarios.mjs` es solo para desarrollo/demo — no ejecutar contra producción).
-- [ ] Alta exclusivamente por invitación real (`inviteUserByEmail`, sección Usuarios del panel), con el email real de cada persona — uno a uno o con el importador masivo (Usuarios → Importar / Exportar). **Tanto el alta manual como el importador solo invitan por email con `MODO_EMAIL=real`** (con cualquier otro valor crean cuentas sin contraseña y sin correo, comportamiento de demo): definir `MODO_EMAIL=real` en Railway es requisito de producción, y el envío real de invitaciones aún no está probado. Requiere además **SMTP propio en Supabase Auth** (el integrado tiene un límite de correos/hora muy bajo: un import se revertiría entero al primer fallo).
-- [ ] **Sin contraseña compartida.** `scripts/set-passwords.mjs` (contraseña `Horas2026!`) es solo para la demo — cada usuario real define su propia contraseña al aceptar la invitación, con reset propio vía el flujo estándar de Supabase Auth.
+- [ ] Alta **sin correo**: uno a uno desde Usuarios (campo "Contraseña inicial" + botón Generar, que la deja visible para copiarla y entregarla en mano) o en lote con el importador (Usuarios → Importar / Exportar: las cuentas nacen sin contraseña y el admin da acceso con "Restablecer contraseña" en la ficha, que muestra una temporal una sola vez). Con el email real de cada persona.
+- [ ] **Sin contraseña compartida.** `scripts/set-passwords.mjs` (contraseña `Horas2026!`) es solo para la demo — cada usuario recibe su contraseña inicial en mano y la cambia desde el menú del avatar ("Cambiar contraseña", ya existe). El flujo "¿Olvidaste tu contraseña?" de `/login` queda **inerte también en producción** (depende del correo): si alguien olvida la contraseña, un admin usa "Restablecer contraseña" en su ficha.
 
 ## 3. Railway
 
 - [ ] Servicio nuevo (o al menos un `environment` de producción real separado, si se decide compartir proyecto Railway — a decidir junto con la pregunta de la sección 0).
-- [ ] Variables (`railway variable set`, nunca en texto plano en el repo): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — todas del proyecto Supabase **nuevo**, nunca reutilizar las de la demo. `RESEND_API_KEY` si F6 ya está construido y decidido.
+- [ ] Variables (`railway variable set`, nunca en texto plano en el repo): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — todas del proyecto Supabase **nuevo**, nunca reutilizar las de la demo. (No hace falta `RESEND_API_KEY` ni `MODO_EMAIL`: sin correo.)
 - [ ] `railway domain` con dominio propio del cliente/producto, no el genérico `*.up.railway.app` de la demo — requiere configurar DNS.
 - [ ] Redeploy tras fijar las `NEXT_PUBLIC_*` (se compilan en build time, no runtime — mismo aviso que en F3.5).
 - [ ] `poweredByHeader: false` ya está en `next.config.ts`, no requiere acción.
@@ -64,6 +64,21 @@ Lista de repaso explícito antes de dar F6/producción por cerrada:
 | Seed ficticio completo | `scripts/seed-usuarios.mjs`, `supabase/seed.sql`, `supabase/seed_datos.sql` | Empresas (Wowinx SL, Málaga CF SAD, Legal Norte), proyectos (Ximeras, Triatix...), imputaciones y ausencias son todas de ejemplo. |
 | 3 líneas `enviada` de F5 | `supabase/seed_datos.sql` §8 (Leo Silva, Sara Martín) | Añadidas explícitamente para que la bandeja de aprobación se enseñe poblada en la demo. |
 | Dominio `timerx-production.up.railway.app` | Railway (F3.5) | Dominio genérico de demo, no de marca/cliente. |
+| Tickets T-014..T-017 (sembrados por la migración 018, guardados: solo si existen los perfiles demo) | `supabase/migrations/018_soporte_tickets.sql` | Datos ficticios de demo; en un proyecto nuevo la migración NO los inserta (no hay perfiles demo). |
+| `ajuste.jornada_horas` = 8 en la demo | tabla `ajuste` / `empresa_jornada` | La 019 siembra la jornada semanal de cada empresa desde ese valor (8 en la demo). En producción real, definir la jornada semanal real por empresa en Calendario. |
 | `olcasan08@gmail.com` (Oliver Pérez) como empleado invitado | Seed real vía invitación (post-F3.5) | Es la vía de acceso del propietario del proyecto a la demo desde el móvil, no un usuario real del cliente. |
 | 12h sin tarifa "a propósito" en Wowinx, septiembre | Datos reales insertados durante F3/F4 para poder enseñar el bloqueo de cierre | Escenario deliberadamente roto para demostrar `cerrar_periodo()`. |
 | `additional_redirect_urls` con `localhost`/`127.0.0.1` | `supabase/config.toml` | Solo tiene sentido si producción sigue siendo el mismo proyecto que se usa para desarrollar localmente — revisar según la decisión de la sección 0. |
+
+## Futuro opcional: activar email
+
+Decisión de producto **definitiva por ahora: sin email**. Todo lo que dependía del correo queda DORMIDO, no retirado:
+
+| Pieza | Estado hoy (demo y producción) | Para activarlo (futuro) |
+|---|---|---|
+| Invitaciones (`inviteUserByEmail`) | Dormido: el alta manual y el importador crean la cuenta confirmada sin enviar nada (`createUser`). El modo `invitar` sigue en `src/lib/usuarios/alta.ts` | `MODO_EMAIL=real` **y SMTP propio en Supabase Auth** (el integrado admite muy pocos correos/hora: un import de N personas se revertiría entero al primer fallo) |
+| Recovery ("¿Olvidaste tu contraseña?", `/login` → `/reset-password`) | Construido y correcto, pero **inerte**: sin correo no llega el enlace | Mismo SMTP propio + dominio de envío verificado |
+| Recordatorios (cron diario + botón Recordar / "Recordar por email") | Se mantienen: **registran en `recordatorio_log` sin enviar** (`MODO_EMAIL` distinto de `real`) | Cuenta Resend + dominio verificado + `RESEND_API_KEY` + `MODO_EMAIL=real` |
+| Magic link de acceso | Solo para verificación técnica con cuentas de demo | — |
+
+Nada de esto es prerrequisito de producción.

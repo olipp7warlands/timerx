@@ -26,7 +26,6 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
   const [pickerAbierto, setPickerAbierto] = useState(false);
   const [computarTodoAbierto, setComputarTodoAbierto] = useState(false);
   const [computandoTodo, setComputandoTodo] = useState(false);
-  const jornada = ctx.balance?.jornadaHoras ?? 0;
   const descripcionObligatoria = useDescripcionObligatoria();
 
   const lineasPendientes = Object.values(ctx.porDia)
@@ -46,7 +45,7 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
   const computarDia = useComputarDia(ctx, ctx.selDay);
   const lineasHoy = ctx.porDia[ctx.selDay] ?? [];
   const totalDia = sumaHoras(lineasHoy);
-  const reqDia = diaSel?.laborable ? jornada : 0;
+  const reqDia = diaSel?.laborable ? diaSel.jornada : 0;
 
   const prev = diaAdyacenteLaborable(ctx.dias, ctx.selDay, -1);
   const next = diaAdyacenteLaborable(ctx.dias, ctx.selDay, 1);
@@ -215,7 +214,7 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
       <BottomSheet abierto={pickerAbierto} onCerrar={() => setPickerAbierto(false)} titulo="Elige el día">
         <CalendarGrid
           dias={ctx.dias}
-          estadoDia={(d) => estadoDia(d.fecha, d.laborable, sumaHoras(ctx.porDia[d.fecha] ?? []), jornada, ctx.fechaHoy)}
+          estadoDia={(d) => estadoDia(d.fecha, d.laborable, sumaHoras(ctx.porDia[d.fecha] ?? []), d.jornada, ctx.fechaHoy)}
           claseExtra={(d) =>
             ausenciaEnFecha(d.fecha, ctx.ausencias)
               ? CLASE_AUSENCIA_DIA

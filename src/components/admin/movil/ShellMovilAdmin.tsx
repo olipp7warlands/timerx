@@ -12,6 +12,8 @@ import { InicioMovil } from './InicioMovil';
 import { AusenciasMovil } from './AusenciasMovil';
 import { OtraSeccionMovil } from './OtraSeccionMovil';
 import { MapaMovil } from './MapaMovil';
+import { SoporteAdmin } from '../compartido/SoporteAdmin';
+import { useTicketsAbiertos } from '@/hooks/admin/useTicketsAbiertos';
 
 const ETIQUETAS: Record<SeccionAdmin, string> = {
   inicio: 'Inicio',
@@ -23,6 +25,7 @@ const ETIQUETAS: Record<SeccionAdmin, string> = {
   calendario: 'Calendario',
   mapa: 'Mapa',
   control: 'Control',
+  soporte: 'Soporte',
   tarifas: 'Tarifas',
   refacturacion: 'Refacturaciones',
   ajustes: 'Ajustes',
@@ -32,6 +35,7 @@ export function ShellMovilAdmin({ info }: { info: AdminInfo }) {
   const [drawerAbierto, setDrawerAbierto] = useState(false);
   const nav = useNavAdmin();
   const seccion = nav.seccion;
+  const { abiertos, recargar: recargarAbiertos } = useTicketsAbiertos();
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-bg pb-11">
@@ -59,6 +63,7 @@ export function ShellMovilAdmin({ info }: { info: AdminInfo }) {
         {seccion === 'inicio' && <InicioMovil />}
         {seccion === 'ausencias' && <AusenciasMovil />}
         {seccion === 'mapa' && <MapaMovil />}
+        {seccion === 'soporte' && <SoporteAdmin movil onCambioEstado={recargarAbiertos} />}
         {!SECCIONES_MOVIL_FUNCIONALES.includes(seccion) && <OtraSeccionMovil titulo={ETIQUETAS[seccion]} />}
       </div>
 
@@ -93,6 +98,11 @@ export function ShellMovilAdmin({ info }: { info: AdminInfo }) {
                 {item.id === seccion && <span className="absolute -left-3 top-2 bottom-2 w-[3px] rounded-r bg-ink-primary" />}
                 <item.Icono />
                 {item.etiqueta}
+                {item.id === 'soporte' && abiertos > 0 && (
+                  <span className="mono ml-auto rounded-full bg-accent px-1.5 py-px text-[10.5px] font-extrabold text-on-accent" aria-label={`${abiertos} tickets abiertos`} data-testid="badge-soporte">
+                    {abiertos}
+                  </span>
+                )}
               </button>
             ))}
           </div>

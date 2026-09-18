@@ -4,6 +4,8 @@ export interface DiaMes {
   fecha: string; // 'YYYY-MM-DD'
   dow: number; // 0=domingo … 6=sábado
   laborable: boolean;
+  /** Horas que exige ese día (jornada_del_dia de SU empresa). Con `laborable` falso no se exige nada (día 0 h o festivo). */
+  jornada: number;
 }
 
 const DOW_NOMBRES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -16,19 +18,6 @@ function toISO(anio: number, mes: number, dia: number) {
   return `${anio}-${pad(mes)}-${pad(dia)}`;
 }
 
-/** Réplica de es_laborable(): lunes a viernes y no festivo (grupo o de la propia empresa). */
-export function construirDiasMes(anio: number, mes: number, fechasFestivo: Set<string>): DiaMes[] {
-  const nDias = new Date(anio, mes, 0).getDate();
-  const dias: DiaMes[] = [];
-  for (let d = 1; d <= nDias; d++) {
-    const fecha = toISO(anio, mes, d);
-    const dow = new Date(anio, mes - 1, d).getDay();
-    const esFinde = dow === 0 || dow === 6;
-    dias.push({ fecha, dow, laborable: !esFinde && !fechasFestivo.has(fecha) });
-  }
-  return dias;
-}
-
 export function diaAdyacenteLaborable(dias: DiaMes[], fecha: string, dir: 1 | -1): string | null {
   let i = dias.findIndex((d) => d.fecha === fecha) + dir;
   while (i >= 0 && i < dias.length && !dias[i].laborable) i += dir;
@@ -39,7 +28,7 @@ export function nombreDia(dow: number): string {
   return DOW_NOMBRES[dow];
 }
 
-const MES_NOMBRES = [
+export const MES_NOMBRES = [
   'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
 ];

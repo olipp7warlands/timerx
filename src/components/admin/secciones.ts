@@ -8,6 +8,7 @@ import {
   IconCalendario,
   IconMapa,
   IconControl,
+  IconSoporte,
   IconTarifas,
   IconRefacturacion,
   IconAjustes,
@@ -20,7 +21,7 @@ export interface GrupoSeccion {
   items: { id: SeccionAdmin; etiqueta: string; Icono: (props: IconProps) => React.JSX.Element }[];
 }
 
-/** Los 5 grupos / 11 secciones, réplica exacta del sidebar de panel_administracion.html y del drawer de admin_movil.html. */
+/** Los 5 grupos / 12 secciones (Soporte tras Control), réplica exacta del sidebar de panel_administracion.html y del drawer de admin_movil.html. */
 export const GRUPOS_SECCIONES: GrupoSeccion[] = [
   { etiqueta: 'General', items: [{ id: 'inicio', etiqueta: 'Inicio', Icono: IconRejilla }] },
   {
@@ -44,6 +45,7 @@ export const GRUPOS_SECCIONES: GrupoSeccion[] = [
     etiqueta: 'Operación',
     items: [
       { id: 'control', etiqueta: 'Control', Icono: IconControl },
+      { id: 'soporte', etiqueta: 'Soporte', Icono: IconSoporte },
       { id: 'tarifas', etiqueta: 'Tarifas', Icono: IconTarifas },
       { id: 'refacturacion', etiqueta: 'Refacturaciones', Icono: IconRefacturacion },
     ],
@@ -52,4 +54,4 @@ export const GRUPOS_SECCIONES: GrupoSeccion[] = [
 ];
 
 /** Secciones con pantalla propia en móvil (F3 Paso 3); el resto remite a escritorio. */
-export const SECCIONES_MOVIL_FUNCIONALES: SeccionAdmin[] = ['inicio', 'ausencias', 'mapa'];
+export const SECCIONES_MOVIL_FUNCIONALES: SeccionAdmin[] = ['inicio', 'ausencias', 'mapa', 'soporte'];

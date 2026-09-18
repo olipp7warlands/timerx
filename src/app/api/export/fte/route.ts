@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import ExcelJS from 'exceljs';
 import { createClient } from '@/lib/supabase/server';
-import { requeridasEfectivas, getJornadaHoras } from '@/lib/horas/requeridas-efectivas';
+import { requeridasEfectivas, getHorasAusenciaMes } from '@/lib/horas/requeridas-efectivas';
 
 interface FilaFte {
   empleado: string;
@@ -32,9 +32,9 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = await createClient();
-  const [{ data, error }, jornadaHoras] = await Promise.all([
+  const [{ data, error }, ausencias] = await Promise.all([
     supabase.rpc('fte_mes', { p_anio: anio, p_mes: mes }),
-    getJornadaHoras(supabase),
+    getHorasAusenciaMes(supabase, anio, mes),
   ]);
 
   if (error) {
@@ -111,10 +111,7 @@ export async function GET(request: NextRequest) {
     const horasImputadas = Number(f.horas_imputadas_total);
     const reqEfectivas = requeridasEfectivas({
       horasRequeridas: Number(f.horas_requeridas),
-      diasVacaciones: f.dias_vacaciones,
-      diasBaja: f.dias_baja,
-      diasPermiso: f.dias_permiso,
-      jornadaHoras,
+      horasAusencia: ausencias.porEmail.get(f.email) ?? 0,
     });
 
     sheet.addRow({
