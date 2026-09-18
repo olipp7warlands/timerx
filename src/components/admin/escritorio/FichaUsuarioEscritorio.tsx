@@ -12,8 +12,9 @@ import { useAprobacionImputaciones } from '@/hooks/admin/useAprobacionImputacion
 import { useAusenciasAdmin } from '@/hooks/admin/useAusenciasAdmin';
 import { useFichaUsuario } from '@/hooks/admin/useFichaUsuario';
 import { useBalanceMesEmpleado } from '@/hooks/admin/useBalanceMesEmpleado';
-import { enviarRecordatorioEmpleado } from '@/app/admin/actions';
+import { enviarRecordatorioEmpleado, restablecerPasswordEmpleado } from '@/app/admin/actions';
 import { useToast } from '@/components/empleado/compartido/Toast';
+import { ModalCentrado } from '@/components/empleado/compartido/ModalCentrado';
 import { TablaPendientesImputacion } from '../compartido/TablaPendientesImputacion';
 import { confirmar } from '@/components/ui/confirmar';
 import { ETIQUETA_ROL, type RolUsuario } from '@/lib/auth/roles';
@@ -65,6 +66,8 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
     rol: usuario.rol as RolUsuario,
   });
   const [enviandoRecordatorio, setEnviandoRecordatorio] = useState(false);
+  const [restableciendo, setRestableciendo] = useState(false);
+  const [passwordGenerada, setPasswordGenerada] = useState<string | null>(null);
 
   const hoyStr = hoy.toISOString().slice(0, 10);
   const asignacionesVigentes = asignaciones.filter((a) => !a.hasta || a.hasta >= hoyStr);
@@ -100,6 +103,17 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
       return;
     }
     toast(procesados === 0 ? (omitidos > 0 ? 'Ya recibió un recordatorio hoy' : 'Sin faltantes que recordar') : `Recordatorio enviado a ${usuario.nombre}`);
+  }
+
+  async function onRestablecerPassword() {
+    setRestableciendo(true);
+    const { error, password } = await restablecerPasswordEmpleado(usuario.id);
+    setRestableciendo(false);
+    if (error || !password) {
+      toast(error ?? 'No se pudo restablecer la contraseña', 'error');
+      return;
+    }
+    setPasswordGenerada(password);
   }
 
   function toggleEditando() {
@@ -212,6 +226,104 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
           </div>
         </div>
       )}
+
+      <div className="card mb-4">
+        <div className="card-head">
+          <h2 className="text-sm font-extrabold">Acciones sobre el usuario</h2>
+        </div>
+        <div className="card-body">
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn btn-sm" disabled={enviandoRecordatorio} onClick={onRecordar}>
+              {enviandoRecordatorio ? 'Enviando…' : 'Recordar por email'}
+            </button>
+            <button type="button" className="btn btn-sm" onClick={() => onIrAControl(usuario.id)}>
+              Imputación directa ›
+            </button>
+            {puedeEditar && (
+              <>
+                <button type="button" className="btn btn-sm" onClick={toggleEditando}>
+                  Editar datos
+                </button>
+                <button type="button" className="btn btn-sm" disabled={restableciendo} onClick={onRestablecerPassword}>
+                  {restableciendo ? 'Restableciendo…' : 'Restablecer contraseña'}
+                </button>
+                <button type="button" className="btn btn-sm text-ink-tertiary" onClick={handleDesactivar}>
+                  Desactivar usuario
+                </button>
+              </>
+            )}
+          </div>
+
+          {editando && puedeEditar && (
+            <div className="mt-3.5 space-y-2">
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5">
+                <div>
+                  <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Empresa empleadora</label>
+                  <select className="input" disabled={!esAdminGrupo} value={draft.empresaId} onChange={(e) => setDraft((d) => ({ ...d, empresaId: e.target.value }))}>
+                    {empresas.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Departamento</label>
+                  <select className="input" value={draft.departamentoId} onChange={(e) => setDraft((d) => ({ ...d, departamentoId: e.target.value }))}>
+                    <option value="">Sin departamento</option>
+                    {departamentos.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Categoría</label>
+                  <select className="input" value={draft.categoriaId} onChange={(e) => setDraft((d) => ({ ...d, categoriaId: e.target.value }))}>
+                    <option value="">Sin categoría</option>
+                    {categorias.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Rol</label>
+                  <select className="input" disabled={!esAdminGrupo} value={draft.rol} onChange={(e) => setDraft((d) => ({ ...d, rol: e.target.value as RolUsuario }))}>
+                    <option value="empleado">Empleado</option>
+                    <option value="responsable_proyecto">Responsable de proyecto</option>
+                    {esAdminGrupo && <option value="admin_empresa">Admin de empresa</option>}
+                    {esAdminGrupo && <option value="admin_grupo">Admin del grupo</option>}
+                  </select>
+                </div>
+              </div>
+              <button type="button" className="btn btn-primary btn-sm" onClick={onGuardarEdicion}>
+                Guardar cambios
+              </button>
+            </div>
+          )}
+
+          {!puedeEditar && (
+            <p className="mt-3 text-xs text-ink-tertiary">Cambiar empresa/rol/departamento, restablecer contraseña y desactivar solo lo puede hacer un admin de su propia empresa (o admin del grupo).</p>
+          )}
+        </div>
+      </div>
+
+      <ModalCentrado abierto={passwordGenerada !== null} onCerrar={() => setPasswordGenerada(null)} titulo="Contraseña temporal">
+        <div className="space-y-3">
+          <p className="text-sm text-ink-secondary">Entrégala en mano ahora — no volverá a mostrarse.</p>
+          <p className="mono card rounded-xl bg-subtle p-3 text-center text-lg font-extrabold">{passwordGenerada}</p>
+          <button
+            type="button"
+            className="btn full justify-center"
+            onClick={() => passwordGenerada && navigator.clipboard.writeText(passwordGenerada)}
+          >
+            Copiar
+          </button>
+        </div>
+      </ModalCentrado>
 
       <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3.5">
         <div className="card">
@@ -391,87 +503,6 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
             </tbody>
           </table>
           <p className="foot px-3 pb-2.5 pt-3 text-xs text-ink-tertiary">Historial completo en la app del empleado o vía imputación directa.</p>
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="card-head">
-          <h2 className="text-sm font-extrabold">Acciones sobre el usuario</h2>
-        </div>
-        <div className="card-body">
-          <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn btn-sm" disabled={enviandoRecordatorio} onClick={onRecordar}>
-              {enviandoRecordatorio ? 'Enviando…' : 'Recordar por email'}
-            </button>
-            <button type="button" className="btn btn-sm" onClick={() => onIrAControl(usuario.id)}>
-              Imputación directa ›
-            </button>
-            {puedeEditar && (
-              <>
-                <button type="button" className="btn btn-sm" onClick={toggleEditando}>
-                  Editar datos
-                </button>
-                <button type="button" className="btn btn-sm text-ink-tertiary" onClick={handleDesactivar}>
-                  Desactivar usuario
-                </button>
-              </>
-            )}
-          </div>
-
-          {editando && puedeEditar && (
-            <div className="mt-3.5 space-y-2">
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5">
-                <div>
-                  <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Empresa empleadora</label>
-                  <select className="input" disabled={!esAdminGrupo} value={draft.empresaId} onChange={(e) => setDraft((d) => ({ ...d, empresaId: e.target.value }))}>
-                    {empresas.map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Departamento</label>
-                  <select className="input" value={draft.departamentoId} onChange={(e) => setDraft((d) => ({ ...d, departamentoId: e.target.value }))}>
-                    <option value="">Sin departamento</option>
-                    {departamentos.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Categoría</label>
-                  <select className="input" value={draft.categoriaId} onChange={(e) => setDraft((d) => ({ ...d, categoriaId: e.target.value }))}>
-                    <option value="">Sin categoría</option>
-                    {categorias.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Rol</label>
-                  <select className="input" disabled={!esAdminGrupo} value={draft.rol} onChange={(e) => setDraft((d) => ({ ...d, rol: e.target.value as RolUsuario }))}>
-                    <option value="empleado">Empleado</option>
-                    <option value="responsable_proyecto">Responsable de proyecto</option>
-                    {esAdminGrupo && <option value="admin_empresa">Admin de empresa</option>}
-                    {esAdminGrupo && <option value="admin_grupo">Admin del grupo</option>}
-                  </select>
-                </div>
-              </div>
-              <button type="button" className="btn btn-primary btn-sm" onClick={onGuardarEdicion}>
-                Guardar cambios
-              </button>
-            </div>
-          )}
-
-          {!puedeEditar && (
-            <p className="mt-3 text-xs text-ink-tertiary">Cambiar empresa/rol/departamento y desactivar solo lo puede hacer un admin de su propia empresa (o admin del grupo).</p>
-          )}
         </div>
       </div>
     </div>

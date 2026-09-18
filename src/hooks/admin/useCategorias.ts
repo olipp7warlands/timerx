@@ -13,6 +13,7 @@ export interface Categoria {
   id: string;
   nombre: string;
   activa: boolean;
+  departamentoId: string | null;
   subcategorias: Subcategoria[];
 }
 
@@ -26,13 +27,14 @@ export function useCategorias() {
     const supabase = createClient();
     const { data } = await supabase
       .from('categoria')
-      .select('id, nombre, activa, subcategoria(id, nombre, activa)')
+      .select('id, nombre, activa, departamento_id, subcategoria(id, nombre, activa)')
       .order('nombre');
     setCategorias(
       (data ?? []).map((f: any) => ({
         id: f.id,
         nombre: f.nombre,
         activa: f.activa,
+        departamentoId: f.departamento_id,
         subcategorias: (f.subcategoria ?? []).sort((a: Subcategoria, b: Subcategoria) => a.nombre.localeCompare(b.nombre)),
       }))
     );
@@ -44,9 +46,9 @@ export function useCategorias() {
   }, [recargar]);
 
   const crearCategoria = useCallback(
-    async (nombre: string) => {
+    async (nombre: string, departamentoId: string | null = null) => {
       const supabase = createClient();
-      const { error } = await supabase.from('categoria').insert({ nombre });
+      const { error } = await supabase.from('categoria').insert({ nombre, departamento_id: departamentoId });
       if (!error) await recargar();
       return { error: error?.message ?? null };
     },

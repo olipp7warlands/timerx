@@ -56,6 +56,14 @@ insert into departamento (id, nombre) values
   ('00000000-0000-0000-0004-000000000002', 'Jurídico'),
   ('00000000-0000-0000-0004-000000000003', 'Diseño');
 
+-- 6. Categoría -> departamento (columna de la migración 015; va después de la
+-- sección 5 porque es una FK a departamento). Desarrollo/Diseño -> 3B3,
+-- Abogados -> Jurídico, Gestión queda global (NULL).
+update categoria set departamento_id = '00000000-0000-0000-0004-000000000001'
+  where id in ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0001-000000000002'); -- Desarrollo, Diseño
+update categoria set departamento_id = '00000000-0000-0000-0004-000000000002'
+  where id = '00000000-0000-0000-0001-000000000003'; -- Abogados
+
 -- ajuste y festivo ya vienen sembrados por la propia migración 002.
 
 -- 6. Mapa del grupo (áreas y elementos literales de mocks/panel_administracion.html,

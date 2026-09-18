@@ -192,9 +192,9 @@ html[data-theme="dark"] {
   }
 
   .input {
-    background: var(--bg-subtle);
+    background: var(--bg-surface);
     color: var(--ink-primary);
-    border: 1px solid transparent;
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 9px 12px;
     font: inherit;
@@ -204,8 +204,11 @@ html[data-theme="dark"] {
   }
   .input:focus {
     border-color: var(--ink-primary);
-    background: var(--bg-surface);
     outline: none;
+  }
+  .input:disabled {
+    background: var(--bg-subtle);
+    color: var(--ink-tertiary);
   }
   .input::placeholder {
     color: var(--ink-disabled);

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { MenuUsuarioMovil } from '@/components/ui/MenuUsuario';
 import { IconMenu, IconReloj } from '@/components/ui/icons';
 import { GRUPOS_SECCIONES, SECCIONES_MOVIL_FUNCIONALES } from '../secciones';
@@ -53,7 +52,6 @@ export function ShellMovilAdmin({ info, seccion, setSeccion }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <ThemeToggle />
           <MenuUsuarioMovil nombre={info.nombre} email={info.email} rol={info.rol} />
         </div>
       </header>

@@ -13,6 +13,7 @@ export default async function HomePage() {
       nombre={perfil.nombre}
       email={perfil.email}
       rol={perfil.rol}
+      departamentoId={perfil.departamento_id}
     />
   );
 }

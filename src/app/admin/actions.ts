@@ -7,6 +7,14 @@ import { procesarRecordatorios } from '@/lib/recordatorios/enviar';
 
 const VENTANA_DIAS_RECORDATORIO = 5;
 
+const PALABRAS_PASSWORD = ['Roble', 'Nube', 'Rio', 'Monte', 'Brisa', 'Lago', 'Pino', 'Alba', 'Cielo', 'Prado', 'Faro', 'Bosque'];
+
+function generarPasswordTemporal(): string {
+  const palabra = PALABRAS_PASSWORD[Math.floor(Math.random() * PALABRAS_PASSWORD.length)];
+  const numero = Math.floor(1000 + Math.random() * 9000);
+  return `${palabra}-${numero}`;
+}
+
 export interface InvitarUsuarioInput {
   email: string;
   nombre: string;
@@ -126,4 +134,34 @@ export async function enviarRecordatorioEmpleado(perfilId: string): Promise<{ er
   const modo = process.env.MODO_EMAIL === 'real' ? 'real' : 'log';
   const resultado = await procesarRecordatorios(filas, modo, fechaDesde, fechaHasta);
   return { error: null, ...resultado };
+}
+
+/**
+ * "Restablecer contraseña" de la ficha de usuario -- genera una temporal
+ * legible y la devuelve UNA vez para que el admin la entregue en mano.
+ * El objetivo se lee con la sesión real (RLS de perfil_select) en vez de
+ * confiar en el perfilId del cliente: service_role bypassa RLS, así que el
+ * ámbito admin_grupo/admin_empresa se replica aquí igual que en invitarUsuario.
+ */
+export async function restablecerPasswordEmpleado(perfilId: string): Promise<{ error: string | null; password: string | null }> {
+  const perfil = await getPerfilServer();
+  if (!perfil || !['admin_grupo', 'admin_empresa'].includes(perfil.rol)) {
+    return { error: 'Sin permisos para restablecer contraseñas', password: null };
+  }
+
+  const supabaseSesion = await createSessionClient();
+  const { data: objetivo } = await supabaseSesion.from('perfil').select('id, empresa_id').eq('id', perfilId).single();
+  if (!objetivo) return { error: 'Usuario no encontrado o fuera de tu ámbito', password: null };
+  if (perfil.rol === 'admin_empresa' && objetivo.empresa_id !== perfil.empresa_id) {
+    return { error: 'Un admin de empresa solo puede restablecer contraseñas de su propia empresa', password: null };
+  }
+
+  const password = generarPasswordTemporal();
+  const supabaseAdmin = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(objetivo.id, { password });
+  if (error) return { error: error.message, password: null };
+
+  return { error: null, password };
 }

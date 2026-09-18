@@ -8,7 +8,6 @@ import { CalendarioMovil } from './CalendarioMovil';
 import { NuevaImputacionSheet, type PasoInicial } from './NuevaImputacionSheet';
 import { HistorialSheet } from './HistorialSheet';
 import { MapaSheet } from './MapaSheet';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { MenuUsuarioMovil } from '@/components/ui/MenuUsuario';
 import { IconCasa, IconReloj, IconCalendario, IconMas, IconMapa } from '@/components/ui/icons';
 import { ausenciaEnFecha, formatoDiaLargo } from '@/lib/horas/calendario';
@@ -60,7 +59,6 @@ export function ShellMovil(ctx: EmpleadoCtx) {
           >
             <IconMapa />
           </button>
-          <ThemeToggle />
           <MenuUsuarioMovil nombre={ctx.nombre} email={ctx.email} rol={ctx.rol} />
         </div>
       </header>

@@ -7,7 +7,7 @@ import { CalendarGrid } from '../compartido/CalendarGrid';
 import { ModalHistorico } from './ModalHistorico';
 import { ModalCentrado } from '../compartido/ModalCentrado';
 import { useComputarDia } from '../compartido/useComputarDia';
-import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, fmt, estadoDia, sumaHoras, formatoMesAnio } from '@/lib/horas/calendario';
+import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, fmt, estadoDia, sumaHoras, formatoMesAnio, formatoDiaLargo } from '@/lib/horas/calendario';
 import { IconHistorial, IconCalendario } from '@/components/ui/icons';
 import type { EmpleadoCtx } from '../types';
 
@@ -27,7 +27,20 @@ export function InicioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
     .slice(0, 4);
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-6">
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-extrabold">Hola, {ctx.nombre.split(' ')[0]}</h1>
+          <p className="micro mt-0.5">
+            {formatoDiaLargo(ctx.fechaHoy)} · {ctx.empresaNombre}
+          </p>
+        </div>
+        <button type="button" className="btn btn-primary" onClick={() => ctx.setTab('imputar')}>
+          ＋ Imputar hoy
+        </button>
+      </div>
+
+      <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-6">
       <div className="space-y-4">
         <div className="grid grid-cols-[minmax(0,1fr)_260px] gap-4">
           <div className="card space-y-2 p-4">
@@ -140,6 +153,7 @@ export function InicioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
           </div>
         </div>
       </ModalCentrado>
+      </div>
     </div>
   );
 }

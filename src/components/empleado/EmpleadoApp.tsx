@@ -23,11 +23,12 @@ interface Props {
   nombre: string;
   email: string;
   rol: RolUsuario;
+  departamentoId?: string | null;
   /** Solo para verificación visual (/debug/movil, /debug/escritorio): fuerza el layout sin depender del viewport real. */
   forzarLayout?: 'movil' | 'escritorio';
 }
 
-function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, email, rol, forzarLayout }: Props) {
+function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, email, rol, departamentoId, forzarLayout }: Props) {
   const isDesktopReal = useIsDesktop();
   const isDesktop = forzarLayout ? forzarLayout === 'escritorio' : isDesktopReal;
   const toast = useToast();
@@ -45,7 +46,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, email, rol, forz
   const { porDia, insertar, insertarLote, ajustarHoras, eliminar, computarDia: computarDiaHook, computarTodo: computarTodoHook } = useImputacionesMes(anio, mes);
   const { ausencias, solicitar } = useAusenciasMes(anio, mes);
   const { paraFechas: proyectosParaFechas } = useProyectosAsignados();
-  const { grupos } = useCategoriasTareas();
+  const { grupos } = useCategoriasTareas(departamentoId);
   const { balance } = useBalanceMes(anio, mes);
   const { maxHorasDia } = useMaxHorasDia();
   const descripcionObligatoria = useDescripcionObligatoria();

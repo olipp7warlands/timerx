@@ -305,6 +305,10 @@
   .toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
 
   @media (prefers-reduced-motion:reduce){ .sheet,.overlay,.pbar i,.toast{transition:none} }
+
+  /* Campos de texto: blancos con borde fino; el gris queda solo para deshabilitados */
+  input:not([type=checkbox]):not([type=radio]), select, textarea{background:var(--bg-surface); border:1px solid var(--border)}
+  input:disabled, select:disabled, textarea:disabled{background:var(--bg-subtle); color:var(--ink-tertiary)}
 </style>
 </head>
 <body>

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { MenuUsuarioDesktop } from '@/components/ui/MenuUsuario';
 import { IconReloj, IconChevronLeft, IconChevronRight } from '@/components/ui/icons';
 import { GRUPOS_SECCIONES } from '../secciones';
@@ -90,7 +89,6 @@ export function ShellEscritorioAdmin({ info, seccion, setSeccion }: Props) {
         ))}
 
         <div className="mt-auto flex items-center gap-2 border-t border-border pt-3">
-          <ThemeToggle />
           <MenuUsuarioDesktop nombre={info.nombre} email={info.email} rol={info.rol} />
           {!mini && (
             <a href="/" className="btn btn-sm flex-1 justify-center">
@@ -125,7 +123,11 @@ export function ShellEscritorioAdmin({ info, seccion, setSeccion }: Props) {
         {seccion === 'calendario' && <CalendarioEscritorio info={info} />}
         {seccion === 'mapa' && <MapaEscritorio info={info} />}
         {seccion === 'control' && (
-          <ControlEscritorio empleadoPreseleccionado={handoffPara('control')?.empleadoId ?? null} onConsumirPreseleccion={consumirHandoff} />
+          <ControlEscritorio
+            empleadoPreseleccionado={handoffPara('control')?.empleadoId ?? null}
+            onConsumirPreseleccion={consumirHandoff}
+            onIrAUsuario={(usuarioId) => irA('usuarios', { usuarioId })}
+          />
         )}
         {seccion === 'tarifas' && <TarifasEscritorio info={info} />}
         {seccion === 'refacturacion' && <RefacturacionEscritorio info={info} />}

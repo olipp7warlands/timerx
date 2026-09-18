@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { ETIQUETA_ROL, type RolUsuario } from '@/lib/auth/roles';
 import { BottomSheet } from '@/components/empleado/compartido/BottomSheet';
+import { ModalCentrado } from '@/components/empleado/compartido/ModalCentrado';
+import { alternarTema } from './ThemeToggle';
+import { CambiarPasswordForm } from './CambiarPasswordForm';
 
 interface Props {
   nombre: string;
@@ -42,6 +45,7 @@ function Cabecera({ nombre, email, rol }: Props) {
 
 export function MenuUsuarioDesktop({ nombre, email, rol }: Props) {
   const [abierto, setAbierto] = useState(false);
+  const [passwordAbierto, setPasswordAbierto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -80,6 +84,25 @@ export function MenuUsuarioDesktop({ nombre, email, rol }: Props) {
           <button
             type="button"
             role="menuitem"
+            onClick={alternarTema}
+            className="block w-full px-3.5 py-2.5 text-left text-sm font-bold text-ink-primary hover:bg-subtle"
+          >
+            Cambiar tema
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setAbierto(false);
+              setPasswordAbierto(true);
+            }}
+            className="block w-full px-3.5 py-2.5 text-left text-sm font-bold text-ink-primary hover:bg-subtle"
+          >
+            Cambiar contraseña
+          </button>
+          <button
+            type="button"
+            role="menuitem"
             onClick={cerrarSesion}
             className="block w-full px-3.5 py-2.5 text-left text-sm font-bold text-ink-primary hover:bg-subtle"
           >
@@ -87,12 +110,17 @@ export function MenuUsuarioDesktop({ nombre, email, rol }: Props) {
           </button>
         </div>
       )}
+
+      <ModalCentrado abierto={passwordAbierto} onCerrar={() => setPasswordAbierto(false)} titulo="Cambiar contraseña">
+        <CambiarPasswordForm email={email} onExito={() => setPasswordAbierto(false)} />
+      </ModalCentrado>
     </div>
   );
 }
 
 export function MenuUsuarioMovil({ nombre, email, rol }: Props) {
   const [abierto, setAbierto] = useState(false);
+  const [passwordAbierto, setPasswordAbierto] = useState(false);
 
   return (
     <>
@@ -108,9 +136,25 @@ export function MenuUsuarioMovil({ nombre, email, rol }: Props) {
         <div className="border-b border-border pb-3">
           <Cabecera nombre={nombre} email={email} rol={rol} />
         </div>
-        <button type="button" onClick={cerrarSesion} className="btn btn-primary full mt-3 w-full justify-center">
+        <button type="button" onClick={alternarTema} className="btn full mt-3 w-full justify-center">
+          Cambiar tema
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setAbierto(false);
+            setPasswordAbierto(true);
+          }}
+          className="btn full mt-2 w-full justify-center"
+        >
+          Cambiar contraseña
+        </button>
+        <button type="button" onClick={cerrarSesion} className="btn btn-primary full mt-2 w-full justify-center">
           Cerrar sesión
         </button>
+      </BottomSheet>
+      <BottomSheet abierto={passwordAbierto} onCerrar={() => setPasswordAbierto(false)} titulo="Cambiar contraseña">
+        <CambiarPasswordForm email={email} onExito={() => setPasswordAbierto(false)} />
       </BottomSheet>
     </>
   );

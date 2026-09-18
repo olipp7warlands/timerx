@@ -18,9 +18,11 @@ interface Props {
   /** Empleado preseleccionado desde "Imputación directa" de la ficha de usuario -- se consume una vez y se limpia en el padre. */
   empleadoPreseleccionado?: string | null;
   onConsumirPreseleccion?: () => void;
+  /** Hand-off genérico: fila de la tabla de faltantes -> ficha de ese usuario. */
+  onIrAUsuario?: (usuarioId: string) => void;
 }
 
-export function ControlEscritorio({ empleadoPreseleccionado, onConsumirPreseleccion }: Props = {}) {
+export function ControlEscritorio({ empleadoPreseleccionado, onConsumirPreseleccion, onIrAUsuario }: Props = {}) {
   const hoy = useMemo(() => new Date(), []);
   const desdeMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
   const hastaHoy = hoy.toISOString().slice(0, 10);
@@ -45,7 +47,11 @@ export function ControlEscritorio({ empleadoPreseleccionado, onConsumirPreselecc
     }
   }, [empleadoPreseleccionado, onConsumirPreseleccion]);
 
-  const subcategorias = categorias.flatMap((c) => c.subcategorias.map((s) => ({ ...s, categoriaNombre: c.nombre })));
+  const empleadoSeleccionado = usuarios.find((u) => u.id === form.empleadoId);
+  const categoriasFiltradas = empleadoSeleccionado?.departamentoId
+    ? categorias.filter((c) => !c.departamentoId || c.departamentoId === empleadoSeleccionado.departamentoId)
+    : categorias;
+  const subcategorias = categoriasFiltradas.flatMap((c) => c.subcategorias.map((s) => ({ ...s, categoriaNombre: c.nombre })));
   const idsVigentes = proyectoIdsParaFecha(form.fecha);
   const proyectosDisponibles = proyectos.filter((p) => idsVigentes.includes(p.id));
   // Si el empleado/fecha cambian y el proyecto elegido deja de ser válido, se trata como
@@ -177,7 +183,13 @@ export function ControlEscritorio({ empleadoPreseleccionado, onConsumirPreselecc
               </thead>
               <tbody>
                 {faltantes.map((f) => (
-                  <tr key={`${f.perfilId}-${f.fecha}`} className="hover:bg-subtle">
+                  <tr
+                    key={`${f.perfilId}-${f.fecha}`}
+                    className="row-link hover:bg-subtle"
+                    onClick={(e) => {
+                      if (!(e.target as HTMLElement).closest('button')) onIrAUsuario?.(f.perfilId);
+                    }}
+                  >
                     <td className="border-b border-border px-2.5 py-2.5 font-extrabold">
                       {f.nombre}
                       <span className="block text-[11px] font-normal text-ink-tertiary">{f.email}</span>

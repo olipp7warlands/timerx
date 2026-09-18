@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useCategorias } from '@/hooks/admin/useCategorias';
+import { useDepartamentos } from '@/hooks/admin/useDepartamentos';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import type { AdminInfo } from '../types';
 
@@ -14,20 +15,23 @@ const CAT_COLOR: Record<string, string> = {
 
 export function CategoriasEscritorio({ info }: { info: AdminInfo }) {
   const { categorias, crearCategoria, crearSubcategoria } = useCategorias();
+  const { departamentos } = useDepartamentos();
   const toast = useToast();
   const esAdminGrupo = info.rol === 'admin_grupo';
 
   const [nombreCat, setNombreCat] = useState('');
+  const [deptCatId, setDeptCatId] = useState('');
   const [catId, setCatId] = useState('');
   const [nombreSub, setNombreSub] = useState('');
 
   async function onCrearCategoria() {
     if (!nombreCat) return;
-    const { error } = await crearCategoria(nombreCat);
+    const { error } = await crearCategoria(nombreCat, deptCatId || null);
     if (error) toast(error, 'error');
     else {
       toast(`Categoría "${nombreCat}" creada`);
       setNombreCat('');
+      setDeptCatId('');
     }
   }
 
@@ -52,6 +56,15 @@ export function CategoriasEscritorio({ info }: { info: AdminInfo }) {
             <div className="card-body">
               <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Nombre</label>
               <input className="input" value={nombreCat} onChange={(e) => setNombreCat(e.target.value)} placeholder="Desarrollo" />
+              <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Departamento</label>
+              <select className="input" value={deptCatId} onChange={(e) => setDeptCatId(e.target.value)}>
+                <option value="">Global (todos los departamentos)</option>
+                {departamentos.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.nombre}
+                  </option>
+                ))}
+              </select>
               <button type="button" className="btn full" onClick={onCrearCategoria}>
                 Crear categoría
               </button>
@@ -93,6 +106,7 @@ export function CategoriasEscritorio({ info }: { info: AdminInfo }) {
                   <span className="mr-2 inline-block h-[7px] w-[7px] rounded-full" style={{ background: CAT_COLOR[c.nombre] ?? 'var(--ink-disabled)' }} />
                   {c.nombre}
                 </h3>
+                <span className="micro">{departamentos.find((d) => d.id === c.departamentoId)?.nombre ?? 'Global'}</span>
               </div>
               <div className="mt-1.5">
                 {c.subcategorias.map((s) => (

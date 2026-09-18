@@ -9,8 +9,12 @@ export interface GrupoTareas {
   subcategorias: { id: string; nombre: string }[];
 }
 
-/** Catálogo completo de categorías/subcategorías activas (las 4 reales, no el subconjunto de los mocks). */
-export function useCategoriasTareas() {
+/**
+ * Catálogo completo de categorías/subcategorías activas (las 4 reales, no el subconjunto de los mocks).
+ * `departamentoId`: acota a globales (categoria.departamento_id NULL) + las del propio departamento.
+ * Sin departamento (null/undefined), se ven todas -- comportamiento previo, sin cambios.
+ */
+export function useCategoriasTareas(departamentoId?: string | null) {
   const [grupos, setGrupos] = useState<GrupoTareas[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,7 +26,7 @@ export function useCategoriasTareas() {
       const supabase = createClient();
       const { data } = await supabase
         .from('subcategoria')
-        .select('id, nombre, categoria_id, categoria:categoria_id(id, nombre)')
+        .select('id, nombre, categoria_id, categoria:categoria_id(id, nombre, departamento_id)')
         .eq('activa', true)
         .order('nombre');
 
@@ -31,6 +35,7 @@ export function useCategoriasTareas() {
       for (const s of data ?? []) {
         const cat = (s as any).categoria;
         if (!cat) continue;
+        if (departamentoId && cat.departamento_id && cat.departamento_id !== departamentoId) continue;
         if (!porCategoria.has(cat.id)) {
           porCategoria.set(cat.id, { categoriaId: cat.id, categoriaNombre: cat.nombre, subcategorias: [] });
         }
@@ -44,7 +49,7 @@ export function useCategoriasTareas() {
     return () => {
       cancelado = true;
     };
-  }, []);
+  }, [departamentoId]);
 
   return { grupos, loading };
 }

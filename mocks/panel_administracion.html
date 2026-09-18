@@ -240,6 +240,10 @@
   .mini{width:84px; text-align:center; font-family:var(--mono)}
 
   @media (max-width:920px){ .split{grid-template-columns:1fr} }
+
+  /* Campos de texto: blancos con borde fino; el gris queda solo para deshabilitados */
+  input:not([type=checkbox]):not([type=radio]), select, textarea{background:var(--bg-surface); border:1px solid var(--border)}
+  input:disabled, select:disabled, textarea:disabled{background:var(--bg-subtle); color:var(--ink-tertiary)}
 </style>
 </head>
 <body>
@@ -1222,6 +1226,26 @@
         <div class="kpi"><p class="v">${u.ausdias}</p><p class="l">Días de ausencia</p><p class="state"><span class="dot ${u.ausdias?'full':'off'}"></span>${u.ausdias?'aprobadas este mes':'ninguna este mes'}</p></div>
         <div class="kpi"><p class="v">${u.pend.length}</p><p class="l">Pendientes de aprobar</p><p class="state"><span class="dot ${u.pend.length?'hollow':'full'}"></span>${u.pend.length?'requieren tu revisión':'nada pendiente'}</p></div>
       </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head"><h2>Acciones sobre el usuario</h2></div>
+        <div class="card-body">
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <button class="btn btn-sm">Recordar por email</button>
+            <button class="btn btn-sm" data-go="control">Imputación directa ›</button>
+            <button class="btn btn-sm" id="u-editbtn">Editar datos</button>
+            <button class="btn btn-sm" style="color:var(--ink-tertiary)">Desactivar usuario</button>
+          </div>
+          <div id="u-editbox" style="display:none; margin-top:14px; display:none; gap:10px">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px">
+              <div><label>Empresa empleadora</label><select><option>Wowinx SL</option><option>Málaga CF SAD</option><option>Legal Norte SL</option></select></div>
+              <div><label>Departamento</label><select><option>3B3</option><option>Jurídico</option><option>Diseño</option></select></div>
+              <div><label>Categoría</label><select><option>Desarrollo</option><option>Diseño</option><option>Abogados</option><option>Gestión</option></select></div>
+              <div><label>Rol</label><select><option>Empleado</option><option>Responsable</option><option>Admin de empresa</option><option>Admin de grupo</option></select></div>
+            </div>
+            <button class="btn btn-primary btn-sm" id="u-guardar" style="margin-top:10px">Guardar cambios</button>
+          </div>
+        </div>
+      </div>
       <div class="split" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); margin-bottom:16px">
         <div class="card">
           <div class="card-head"><h2>Reparto del mes por proyecto</h2><span class="micro">Septiembre</span></div>
@@ -1265,26 +1289,7 @@
           </div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-head"><h2>Acciones sobre el usuario</h2></div>
-        <div class="card-body">
-          <div style="display:flex; gap:8px; flex-wrap:wrap">
-            <button class="btn btn-sm">Recordar por email</button>
-            <button class="btn btn-sm" data-go="control">Imputación directa ›</button>
-            <button class="btn btn-sm" id="u-editbtn">Editar datos</button>
-            <button class="btn btn-sm" style="color:var(--ink-tertiary)">Desactivar usuario</button>
-          </div>
-          <div id="u-editbox" style="display:none; margin-top:14px; display:none; gap:10px">
-            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px">
-              <div><label>Empresa empleadora</label><select><option>Wowinx SL</option><option>Málaga CF SAD</option><option>Legal Norte SL</option></select></div>
-              <div><label>Departamento</label><select><option>3B3</option><option>Jurídico</option><option>Diseño</option></select></div>
-              <div><label>Categoría</label><select><option>Desarrollo</option><option>Diseño</option><option>Abogados</option><option>Gestión</option></select></div>
-              <div><label>Rol</label><select><option>Empleado</option><option>Responsable</option><option>Admin de empresa</option><option>Admin de grupo</option></select></div>
-            </div>
-            <button class="btn btn-primary btn-sm" id="u-guardar" style="margin-top:10px">Guardar cambios</button>
-          </div>
-        </div>
-      </div>`;
+`;
     }
     det.style.display = 'block';
     AID('usu-lista').style.display = 'none';

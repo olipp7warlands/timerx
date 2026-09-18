@@ -114,20 +114,31 @@ export type Database = {
       categoria: {
         Row: {
           activa: boolean
+          departamento_id: string | null
           id: string
           nombre: string
         }
         Insert: {
           activa?: boolean
+          departamento_id?: string | null
           id?: string
           nombre: string
         }
         Update: {
           activa?: boolean
+          departamento_id?: string | null
           id?: string
           nombre?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categoria_departamento_id_fkey"
+            columns: ["departamento_id"]
+            isOneToOne: false
+            referencedRelation: "departamento"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       departamento: {
         Row: {
