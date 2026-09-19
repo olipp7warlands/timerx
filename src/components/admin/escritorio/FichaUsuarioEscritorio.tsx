@@ -21,7 +21,7 @@ import { TablaPendientesImputacion } from '../compartido/TablaPendientesImputaci
 import { MiniCalendarioUsuario } from './MiniCalendarioUsuario';
 import { confirmar } from '@/components/ui/confirmar';
 import { ETIQUETA_ROL, type RolUsuario } from '@/lib/auth/roles';
-import { esRolAdmin } from '@/lib/usuarios/permisos';
+import { esRolAdmin, puedeAdministrarPerfil } from '@/lib/usuarios/permisos';
 import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
 
@@ -44,7 +44,11 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
   const toast = useToast();
 
   const esAdminGrupo = info.rol === 'admin_grupo';
-  const puedeEditar = esAdminGrupo || usuario.empresaId === info.empresaId;
+  // Editar/desactivar: la regla de la policy `perfil_update_admin` (022). Una cuenta admin_* ajena solo la administra admin_grupo.
+  const puedeEditar = puedeAdministrarPerfil(info, { id: usuario.id, rol: usuario.rol as RolUsuario, empresaId: usuario.empresaId });
+  // Ámbito de empresa (como antes de la 022): gobierna el aviso de «otra empresa» y la resolución de ausencias, que no son edición de perfil.
+  const enMiAmbito = esAdminGrupo || usuario.empresaId === info.empresaId;
+  const esCuentaAdminAjena = enMiAmbito && !puedeEditar;
   // Restablecer la contraseña de una cuenta admin_* es de admin_grupo (el servidor lo impone: `errorRestablecer`).
   const puedeRestablecer = puedeEditar && (esAdminGrupo || !esRolAdmin(usuario.rol as RolUsuario));
 
@@ -202,7 +206,7 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
         </div>
       </div>
 
-      {!puedeEditar && (
+      {!enMiAmbito && (
         <p className="mb-3.5 text-xs font-semibold text-ink-tertiary">Empleado de otra empresa del grupo — ves su actividad en tus proyectos, pero no puedes editar sus datos.</p>
       )}
 
@@ -335,7 +339,11 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
             <p className="mt-3 text-xs text-ink-tertiary">La contraseña de una cuenta de administrador solo la restablece el admin del grupo.</p>
           )}
 
-          {!puedeEditar && (
+          {esCuentaAdminAjena && (
+            <p className="mt-3 text-xs text-ink-tertiary">Las cuentas de administrador solo las administra el admin del grupo: aquí ves sus datos, sin acciones de edición.</p>
+          )}
+
+          {!puedeEditar && !esCuentaAdminAjena && (
             <p className="mt-3 text-xs text-ink-tertiary">Editar sus datos, restablecer la contraseña y desactivar solo lo puede hacer un admin de su propia empresa (o del grupo); empresa y rol, solo el admin del grupo.</p>
           )}
         </div>
@@ -458,7 +466,7 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
                 <span className="micro">
                   · {a.fechaInicio} — {a.fechaFin}
                 </span>
-                {a.estado === 'pendiente' && puedeEditar ? (
+                {a.estado === 'pendiente' && enMiAmbito ? (
                   <span className="ml-auto flex items-center gap-1.5">
                     <button
                       type="button"

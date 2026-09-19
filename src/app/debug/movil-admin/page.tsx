@@ -19,6 +19,7 @@ export default async function DebugMovilAdminPage() {
     <div className="flex min-h-screen justify-center bg-[#333]">
       <div className="w-[390px] overflow-y-auto bg-bg" style={{ height: '844px', transform: 'translateZ(0)' }}>
         <AdminApp
+          id={perfil.id}
           rol={perfil.rol as 'admin_grupo' | 'admin_empresa'}
           empresaId={perfil.empresa_id}
           empresaNombre={perfil.empresa?.nombre ?? ''}

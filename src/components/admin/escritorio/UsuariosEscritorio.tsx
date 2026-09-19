@@ -10,6 +10,7 @@ import { invitarUsuario } from '@/app/admin/actions';
 import { confirmar } from '@/components/ui/confirmar';
 import { ETIQUETA_ROL, type RolUsuario } from '@/lib/auth/roles';
 import { generarPasswordTemporal } from '@/lib/usuarios/password';
+import { puedeAdministrarPerfil } from '@/lib/usuarios/permisos';
 import { FichaUsuarioEscritorio } from './FichaUsuarioEscritorio';
 import { ImportadorBloque } from '../compartido/ImportadorBloque';
 import { CeldaEditable } from '../compartido/CeldaEditable';
@@ -336,8 +337,8 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
               </thead>
               <tbody>
                 {filtrados.map((u) => {
-                  // Mismas reglas que la ficha: admin_grupo edita a todos; admin_empresa solo a los de su empresa (fuera de ámbito, celda normal).
-                  const puedeEditar = esAdminGrupo || u.empresaId === info.empresaId;
+                  // Mismas reglas que la ficha (`puedeAdministrarPerfil`, 022): admin_grupo edita a todos; admin_empresa, a los no-admin de su empresa y a sí mismo (si no, celda normal).
+                  const puedeEditar = puedeAdministrarPerfil(info, { id: u.id, rol: u.rol as RolUsuario, empresaId: u.empresaId });
                   const abierta = (campo: CampoInline) => celda?.id === u.id && celda.campo === campo;
                   const guardada = (campo: CampoInline) => celdaGuardada?.id === u.id && celdaGuardada.campo === campo;
                   return (

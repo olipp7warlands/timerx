@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { RolUsuario } from '@/lib/auth/roles';
 
+const SIN_PERMISO_PERFIL = 'No tienes permiso para modificar este perfil';
+
 export interface UsuarioAdmin {
   id: string;
   nombre: string;
@@ -81,9 +83,12 @@ export function useUsuarios() {
         ...(input.categoriaId !== undefined && { categoria_id: input.categoriaId }),
         ...(input.rol !== undefined && { rol: input.rol }),
       };
-      const { error } = await supabase.from('perfil').update(cambios).eq('id', id);
-      if (!error) await recargar();
-      return { error: error?.message ?? null };
+      const { data, error } = await supabase.from('perfil').update(cambios).eq('id', id).select('id');
+      if (error) return { error: error.message };
+      // RLS (perfil_update_admin, 022) no da error cuando la fila queda fuera de ámbito: da 0 filas. Nunca un falso «guardado».
+      if (!data?.length) return { error: SIN_PERMISO_PERFIL };
+      await recargar();
+      return { error: null };
     },
     [recargar]
   );
@@ -92,9 +97,11 @@ export function useUsuarios() {
   const desactivar = useCallback(
     async (id: string) => {
       const supabase = createClient();
-      const { error } = await supabase.from('perfil').update({ activo: false }).eq('id', id);
-      if (!error) await recargar();
-      return { error: error?.message ?? null };
+      const { data, error } = await supabase.from('perfil').update({ activo: false }).eq('id', id).select('id');
+      if (error) return { error: error.message };
+      if (!data?.length) return { error: SIN_PERMISO_PERFIL };
+      await recargar();
+      return { error: null };
     },
     [recargar]
   );

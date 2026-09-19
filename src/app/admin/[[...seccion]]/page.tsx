@@ -28,6 +28,7 @@ export default async function AdminPage({
 
   return (
     <AdminApp
+      id={perfil.id}
       rol={perfil.rol as 'admin_grupo' | 'admin_empresa'}
       empresaId={perfil.empresa_id}
       empresaNombre={perfil.empresa?.nombre ?? ''}

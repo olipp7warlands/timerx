@@ -40,3 +40,18 @@ export function errorRestablecer(actor: Actor, objetivo: { empresa_id: string; r
   if (esRolAdmin(objetivo.rol)) return 'Solo el admin del grupo puede restablecer la contraseña de una cuenta de administrador';
   return null;
 }
+
+/**
+ * ¿Puede `actor` (un admin) administrar -- editar datos, desactivar -- el perfil `objetivo`? Es la regla de la policy
+ * `perfil_update_admin` (022) para la UI, que no debe ofrecer lo que la BD va a bloquear en silencio (0 filas):
+ * admin_grupo administra todos; admin_empresa, los perfiles NO-admin de su empresa y el suyo propio.
+ * (Rol y empresa, además, solo los cambia admin_grupo: trigger de la 021.)
+ */
+export function puedeAdministrarPerfil(
+  actor: { id: string; rol: RolUsuario; empresaId: string },
+  objetivo: { id: string; rol: RolUsuario; empresaId: string }
+): boolean {
+  if (actor.rol === 'admin_grupo') return true;
+  if (actor.rol !== 'admin_empresa') return false;
+  return objetivo.empresaId === actor.empresaId && (!esRolAdmin(objetivo.rol) || objetivo.id === actor.id);
+}
