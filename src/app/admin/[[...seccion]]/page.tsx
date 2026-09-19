@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getPerfilServer } from '@/lib/supabase/perfil';
 import { AdminApp } from '@/components/admin/AdminApp';
+import { CuentaDesactivada } from '@/components/ui/CuentaDesactivada';
 import { BASE_ADMIN, parseRutaAdmin } from '@/lib/nav/rutas';
 
 /**
@@ -21,6 +22,7 @@ export default async function AdminPage({
     const qs = new URLSearchParams(Object.entries(await searchParams).flatMap(([k, v]) => (typeof v === 'string' ? [[k, v]] : []))).toString();
     redirect(`/login?next=${encodeURIComponent(`/admin${seccion.length ? `/${seccion.join('/')}` : ''}${qs ? `?${qs}` : ''}`)}`);
   }
+  if (perfil.activo === false) return <CuentaDesactivada nombre={perfil.nombre} />;
   if (!['admin_grupo', 'admin_empresa'].includes(perfil.rol)) redirect('/');
 
   // Sección desconocida, o sub-segmento en una sección sin fichas -> base del lado.

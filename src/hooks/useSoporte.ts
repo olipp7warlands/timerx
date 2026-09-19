@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { resultadoMutacion } from '@/lib/supabase/mutaciones';
 import { MES_NOMBRES, nombreDia } from '@/lib/horas/calendario';
 
 export type TipoTicket = 'incidencia' | 'mejora' | 'consulta';
@@ -108,9 +109,10 @@ export function useTickets({ soloMios = false }: { soloMios?: boolean } = {}) {
 
   const cambiarEstado = useCallback(
     async (id: string, estado: EstadoTicket) => {
-      const { error } = await createClient().from('ticket').update({ estado }).eq('id', id);
-      if (!error) await recargar();
-      return { error: error?.message ?? null };
+      const { data, error } = await createClient().from('ticket').update({ estado }).eq('id', id).select('id');
+      const r = resultadoMutacion(error, data);
+      if (!r.error) await recargar();
+      return r;
     },
     [recargar]
   );

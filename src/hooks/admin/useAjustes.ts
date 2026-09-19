@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { resultadoMutacion } from '@/lib/supabase/mutaciones';
 
 export interface Ajustes {
   jornadaHoras: number;
@@ -46,9 +47,10 @@ export function useAjustes() {
   const actualizar = useCallback(
     async (clave: keyof Ajustes, valor: number | boolean) => {
       const supabase = createClient();
-      const { error } = await supabase.from('ajuste').update({ valor }).eq('clave', CLAVE_DB[clave]);
-      if (!error) await recargar();
-      return { error: error?.message ?? null };
+      const { data, error } = await supabase.from('ajuste').update({ valor }).eq('clave', CLAVE_DB[clave]).select('clave');
+      const r = resultadoMutacion(error, data);
+      if (!r.error) await recargar();
+      return r;
     },
     [recargar]
   );

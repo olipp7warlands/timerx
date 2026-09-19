@@ -19,7 +19,7 @@ import type { AdminInfo } from '../types';
 
 export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
   const nav = useNavAdmin();
-  const { usuarios, loading, recargar, actualizar, desactivar } = useUsuarios();
+  const { usuarios, loading, recargar, actualizar, desactivar, reactivar } = useUsuarios();
   const { departamentos, crear: crearDepartamento } = useDepartamentos();
   const { empresas } = useEmpresas();
   const { categorias, crearCategoria } = useCategorias();
@@ -160,6 +160,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
         onIrAControl={(empleadoId) => nav.ir('control', { query: { empleado: empleadoId } })}
         onActualizar={actualizar}
         onDesactivar={desactivar}
+        onReactivar={reactivar}
       />
     );
   }
@@ -272,18 +273,21 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-head">
-            <h2 className="text-sm font-extrabold">Crear departamento</h2>
+        {/* Departamento es un catálogo GLOBAL (sin empresa_id): su escritura es solo admin_grupo (024, RLS `departamento_admin`). */}
+        {esAdminGrupo && (
+          <div className="card">
+            <div className="card-head">
+              <h2 className="text-sm font-extrabold">Crear departamento</h2>
+            </div>
+            <div className="card-body">
+              <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Nombre</label>
+              <input className="input" value={depNombre} onChange={(e) => setDepNombre(e.target.value)} placeholder="Tecnología" />
+              <button type="button" className="btn full" onClick={crearDep}>
+                Crear departamento
+              </button>
+            </div>
           </div>
-          <div className="card-body">
-            <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Nombre</label>
-            <input className="input" value={depNombre} onChange={(e) => setDepNombre(e.target.value)} placeholder="Tecnología" />
-            <button type="button" className="btn full" onClick={crearDep}>
-              Crear departamento
-            </button>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="stack space-y-4">

@@ -20,7 +20,7 @@ interface Props {
  * conservaría el árbol de componentes y el estado en memoria de hooks con
  * datos del usuario anterior tras signOut().
  */
-async function cerrarSesion() {
+export async function cerrarSesion() {
   await createClient().auth.signOut();
   window.location.assign('/login');
 }

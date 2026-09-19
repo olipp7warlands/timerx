@@ -106,5 +106,18 @@ export function useUsuarios() {
     [recargar]
   );
 
-  return { usuarios, loading, recargar, actualizar, desactivar };
+  /** Reactivar = `activo = true` (misma regla que desactivar: perfil_update_admin, 022). */
+  const reactivar = useCallback(
+    async (id: string) => {
+      const supabase = createClient();
+      const { data, error } = await supabase.from('perfil').update({ activo: true }).eq('id', id).select('id');
+      if (error) return { error: error.message };
+      if (!data?.length) return { error: SIN_PERMISO_PERFIL };
+      await recargar();
+      return { error: null };
+    },
+    [recargar]
+  );
+
+  return { usuarios, loading, recargar, actualizar, desactivar, reactivar };
 }

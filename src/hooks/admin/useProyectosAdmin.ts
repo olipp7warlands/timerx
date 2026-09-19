@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { resultadoMutacion } from '@/lib/supabase/mutaciones';
 
 export interface ProyectoAdmin {
   id: string;
@@ -68,9 +69,10 @@ export function useProyectosAdmin() {
   const cambiarTipologia = useCallback(
     async (id: string, areaId: string | null) => {
       const supabase = createClient();
-      const { error } = await supabase.from('proyecto').update({ area_id: areaId }).eq('id', id);
-      if (!error) await recargar();
-      return { error: error?.message ?? null };
+      const { data, error } = await supabase.from('proyecto').update({ area_id: areaId }).eq('id', id).select('id');
+      const r = resultadoMutacion(error, data);
+      if (!r.error) await recargar();
+      return r;
     },
     [recargar]
   );

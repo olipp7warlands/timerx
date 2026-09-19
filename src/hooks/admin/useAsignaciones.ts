@@ -3,6 +3,7 @@
 import { hoyMadrid } from '@/lib/fechas';
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { resultadoMutacion } from '@/lib/supabase/mutaciones';
 
 /**
  * Mutaciones de empleado_proyecto compartidas entre la ficha de usuario y la
@@ -26,8 +27,9 @@ export function useAsignaciones() {
   const finalizar = useCallback(async (empleadoId: string, proyectoId: string) => {
     const supabase = createClient();
     const hoy = hoyMadrid();
-    const { error } = await supabase.from('empleado_proyecto').update({ hasta: hoy }).eq('empleado_id', empleadoId).eq('proyecto_id', proyectoId);
-    return { error: error?.message ?? null };
+    const { data, error } = await supabase.from('empleado_proyecto').update({ hasta: hoy }).eq('empleado_id', empleadoId).eq('proyecto_id', proyectoId).select('empleado_id');
+    // RLS (ep_admin) acota admin_empresa a proyectos de su empresa: fuera de ámbito da 0 filas, no error.
+    return resultadoMutacion(error, data, 'No se pudo finalizar la asignación: el proyecto no es de tu empresa o ya no existe.');
   }, []);
 
   return { asignar, finalizar };

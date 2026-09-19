@@ -103,7 +103,7 @@ export function ShellEscritorioAdmin({ info }: Props) {
         {seccion === 'categorias' && <CategoriasEscritorio info={info} />}
         {seccion === 'calendario' && <CalendarioEscritorio info={info} />}
         {seccion === 'mapa' && <MapaEscritorio info={info} />}
-        {seccion === 'control' && <ControlEscritorio />}
+        {seccion === 'control' && <ControlEscritorio info={info} />}
         {seccion === 'soporte' && <SoporteAdmin onCambioEstado={recargarAbiertos} />}
         {seccion === 'tarifas' && <TarifasEscritorio info={info} />}
         {seccion === 'refacturacion' && <RefacturacionEscritorio info={info} />}

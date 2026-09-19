@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { getPerfilServer } from '@/lib/supabase/perfil';
+import { getPerfilActivoServer as getPerfilServer } from '@/lib/supabase/perfil';
 import { createClient as createSessionClient } from '@/lib/supabase/server';
 import { generarPlantilla, leerXlsx, type DefinicionPlantilla, type FilaLeida } from './xlsx';
 import type { ErrorFila, InformeImportacion, TipoImportacion } from './tipos';

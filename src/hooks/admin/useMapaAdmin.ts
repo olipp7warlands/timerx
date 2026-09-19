@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { resultadoMutacion } from '@/lib/supabase/mutaciones';
 
 export interface AreaAdmin {
   id: string;
@@ -100,9 +101,10 @@ export function useMapaAdmin() {
   const actualizarArea = useCallback(
     async (id: string, nombre: string, color: string) => {
       const supabase = createClient();
-      const { error } = await supabase.from('mapa_area').update({ nombre, color }).eq('id', id);
-      if (!error) await recargar();
-      return { error: error?.message ?? null };
+      const { data, error } = await supabase.from('mapa_area').update({ nombre, color }).eq('id', id).select('id');
+      const r = resultadoMutacion(error, data);
+      if (!r.error) await recargar();
+      return r;
     },
     [recargar]
   );
@@ -114,9 +116,10 @@ export function useMapaAdmin() {
         return { error: 'Esta área tiene elementos activos -- elimínalos o muévelos a otra área antes.' };
       }
       const supabase = createClient();
-      const { error } = await supabase.from('mapa_area').update({ activa: false }).eq('id', id);
-      if (!error) await recargar();
-      return { error: error?.message ?? null };
+      const { data, error } = await supabase.from('mapa_area').update({ activa: false }).eq('id', id).select('id');
+      const r = resultadoMutacion(error, data);
+      if (!r.error) await recargar();
+      return r;
     },
     [areas, recargar]
   );
@@ -125,13 +128,14 @@ export function useMapaAdmin() {
     async (id: string, dir: 'up' | 'down') => {
       const idx = areas.findIndex((a) => a.id === id);
       const otroIdx = dir === 'up' ? idx - 1 : idx + 1;
-      if (idx === -1 || otroIdx < 0 || otroIdx >= areas.length) return;
+      if (idx === -1 || otroIdx < 0 || otroIdx >= areas.length) return { error: null };
       const a = areas[idx];
       const b = areas[otroIdx];
       const supabase = createClient();
-      await supabase.from('mapa_area').update({ orden: b.orden }).eq('id', a.id);
-      await supabase.from('mapa_area').update({ orden: a.orden }).eq('id', b.id);
+      const r1 = await supabase.from('mapa_area').update({ orden: b.orden }).eq('id', a.id).select('id');
+      const r2 = await supabase.from('mapa_area').update({ orden: a.orden }).eq('id', b.id).select('id');
       await recargar();
+      return resultadoMutacion(r1.error ?? r2.error, [...(r1.data ?? []), ...(r2.data ?? [])]);
     },
     [areas, recargar]
   );
@@ -158,7 +162,7 @@ export function useMapaAdmin() {
   const actualizarItem = useCallback(
     async (id: string, input: ItemInput) => {
       const supabase = createClient();
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('mapa_item')
         .update({
           area_id: input.areaId,
@@ -168,9 +172,11 @@ export function useMapaAdmin() {
           empresa_id: input.empresaId || null,
           url: input.url || null,
         })
-        .eq('id', id);
-      if (!error) await recargar();
-      return { error: error?.message ?? null };
+        .eq('id', id)
+        .select('id');
+      const r = resultadoMutacion(error, data);
+      if (!r.error) await recargar();
+      return r;
     },
     [recargar]
   );
@@ -178,9 +184,10 @@ export function useMapaAdmin() {
   const eliminarItem = useCallback(
     async (id: string) => {
       const supabase = createClient();
-      const { error } = await supabase.from('mapa_item').update({ activo: false }).eq('id', id);
-      if (!error) await recargar();
-      return { error: error?.message ?? null };
+      const { data, error } = await supabase.from('mapa_item').update({ activo: false }).eq('id', id).select('id');
+      const r = resultadoMutacion(error, data);
+      if (!r.error) await recargar();
+      return r;
     },
     [recargar]
   );
@@ -188,17 +195,18 @@ export function useMapaAdmin() {
   const moverItem = useCallback(
     async (id: string, dir: 'up' | 'down') => {
       const item = items.find((i) => i.id === id);
-      if (!item) return;
+      if (!item) return { error: null };
       const mismaArea = items.filter((i) => i.areaId === item.areaId).sort((a, b) => a.orden - b.orden);
       const idx = mismaArea.findIndex((i) => i.id === id);
       const otroIdx = dir === 'up' ? idx - 1 : idx + 1;
-      if (otroIdx < 0 || otroIdx >= mismaArea.length) return;
+      if (otroIdx < 0 || otroIdx >= mismaArea.length) return { error: null };
       const a = mismaArea[idx];
       const b = mismaArea[otroIdx];
       const supabase = createClient();
-      await supabase.from('mapa_item').update({ orden: b.orden }).eq('id', a.id);
-      await supabase.from('mapa_item').update({ orden: a.orden }).eq('id', b.id);
+      const r1 = await supabase.from('mapa_item').update({ orden: b.orden }).eq('id', a.id).select('id');
+      const r2 = await supabase.from('mapa_item').update({ orden: a.orden }).eq('id', b.id).select('id');
       await recargar();
+      return resultadoMutacion(r1.error ?? r2.error, [...(r1.data ?? []), ...(r2.data ?? [])]);
     },
     [items, recargar]
   );

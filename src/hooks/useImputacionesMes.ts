@@ -183,6 +183,8 @@ export function useImputacionesMes(anio: number, mes: number) {
     const supabase = createClient();
     const { data, error } = await supabase.rpc('enviar_imputaciones', { p_ids: ids });
     if (!error) await recargar();
+    // La RPC devuelve cuántas líneas ha enviado y NO lanza con 0 (ya no estaban en borrador/rechazada): no es un «computado» falso.
+    if (!error && (data ?? 0) === 0) return { error: 'No se computó ninguna línea: ya no estaban en borrador.', n: 0 };
     return { error: mensajeError(error), n: data ?? 0 };
   }, [porDia, recargar]);
 
@@ -195,6 +197,7 @@ export function useImputacionesMes(anio: number, mes: number) {
       const supabase = createClient();
       const { data, error } = await supabase.rpc('enviar_imputaciones', { p_ids: ids });
       if (!error) await recargar();
+      if (!error && (data ?? 0) === 0) return { error: 'No se computó ninguna línea: ya no estaban en borrador.', n: 0 };
       return { error: mensajeError(error), n: data ?? 0 };
     },
     [porDia, recargar]

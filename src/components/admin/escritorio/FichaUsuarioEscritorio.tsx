@@ -21,7 +21,7 @@ import { TablaPendientesImputacion } from '../compartido/TablaPendientesImputaci
 import { MiniCalendarioUsuario } from './MiniCalendarioUsuario';
 import { confirmar } from '@/components/ui/confirmar';
 import { ETIQUETA_ROL, type RolUsuario } from '@/lib/auth/roles';
-import { esRolAdmin, puedeAdministrarPerfil } from '@/lib/usuarios/permisos';
+import { esRolAdmin, puedeAdministrarPerfil, puedeImputarDirecto } from '@/lib/usuarios/permisos';
 import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
 
@@ -34,9 +34,10 @@ interface Props {
   onIrAControl: (empleadoId: string) => void;
   onActualizar: (id: string, input: ActualizarUsuarioInput) => Promise<{ error: string | null }>;
   onDesactivar: (id: string) => Promise<{ error: string | null }>;
+  onReactivar: (id: string) => Promise<{ error: string | null }>;
 }
 
-export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, onActualizar, onDesactivar }: Props) {
+export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, onActualizar, onDesactivar, onReactivar }: Props) {
   const hoy = useMemo(() => new Date(), []);
   const anio = hoy.getFullYear();
   const mes = hoy.getMonth() + 1;
@@ -164,10 +165,16 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
   }
 
   async function handleDesactivar() {
-    if (!confirmar(`¿Desactivar a ${usuario.nombre}? Dejará de contar en pendientes/recordatorios. Su acceso NO se bloquea hoy: puede seguir iniciando sesión.`)) return;
+    if (!confirmar(`¿Desactivar a ${usuario.nombre}? Dejará de contar en pendientes y recordatorios y no podrá usar la aplicación: al entrar verá «Cuenta desactivada». Puedes reactivarla cuando quieras.`)) return;
     const { error } = await onDesactivar(usuario.id);
     if (error) toast(error, 'error');
     else toast(`${usuario.nombre} desactivado`);
+  }
+
+  async function handleReactivar() {
+    const { error } = await onReactivar(usuario.id);
+    if (error) toast(error, 'error');
+    else toast(`${usuario.nombre} reactivado`);
   }
 
   const iniciales = usuario.nombre
@@ -257,9 +264,11 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
             <button type="button" className="btn btn-sm" disabled={enviandoRecordatorio} onClick={onRecordar}>
               {enviandoRecordatorio ? 'Enviando…' : 'Recordar por email'}
             </button>
-            <button type="button" className="btn btn-sm" onClick={() => onIrAControl(usuario.id)}>
-              Imputación directa ›
-            </button>
+            {puedeImputarDirecto(info, usuario.empresaId) && (
+              <button type="button" className="btn btn-sm" onClick={() => onIrAControl(usuario.id)}>
+                Imputación directa ›
+              </button>
+            )}
             {puedeEditar && (
               <>
                 <button type="button" className="btn btn-sm" onClick={toggleEditando}>
@@ -270,9 +279,15 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
                     {restableciendo ? 'Restableciendo…' : 'Restablecer contraseña'}
                   </button>
                 )}
-                <button type="button" className="btn btn-sm text-ink-tertiary" onClick={handleDesactivar}>
-                  Desactivar usuario
-                </button>
+                {usuario.activo ? (
+                  <button type="button" className="btn btn-sm text-ink-tertiary" onClick={handleDesactivar}>
+                    Desactivar usuario
+                  </button>
+                ) : (
+                  <button type="button" className="btn btn-sm" onClick={handleReactivar}>
+                    Reactivar usuario
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -445,6 +460,7 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
             onRechazar={rechazar}
             mostrarEmpleado={false}
             mensajeVacio="Nada pendiente de aprobar de este usuario."
+            puedeResolver={(p) => esAdminGrupo || p.empresaDestinoId === info.empresaId}
           />
         </div>
       </div>

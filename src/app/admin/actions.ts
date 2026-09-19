@@ -3,7 +3,7 @@
 import { hoyMadrid, sumarDias } from '@/lib/fechas';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { createClient as createSessionClient } from '@/lib/supabase/server';
-import { getPerfilServer } from '@/lib/supabase/perfil';
+import { getPerfilActivoServer as getPerfilServer } from '@/lib/supabase/perfil';
 import { procesarRecordatorios } from '@/lib/recordatorios/enviar';
 import { altaUsuario, modoAltaDesdeEntorno, type AltaUsuarioInput, type ModoAlta } from '@/lib/usuarios/alta';
 import { generarPasswordTemporal, PASSWORD_MIN } from '@/lib/usuarios/password';

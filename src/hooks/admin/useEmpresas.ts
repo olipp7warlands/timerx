@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { resultadoMutacion } from '@/lib/supabase/mutaciones';
 
 export interface Empresa {
   id: string;
@@ -43,9 +44,10 @@ export function useEmpresas() {
   const actualizar = useCallback(
     async (id: string, input: { nombre: string; cif: string | null; areaId: string | null }) => {
       const supabase = createClient();
-      const { error } = await supabase.from('empresa').update({ nombre: input.nombre, cif: input.cif, area_id: input.areaId }).eq('id', id);
-      if (!error) await recargar();
-      return { error: error?.message ?? null };
+      const { data, error } = await supabase.from('empresa').update({ nombre: input.nombre, cif: input.cif, area_id: input.areaId }).eq('id', id).select('id');
+      const r = resultadoMutacion(error, data);
+      if (!r.error) await recargar();
+      return r;
     },
     [recargar]
   );
@@ -54,9 +56,10 @@ export function useEmpresas() {
   const desactivar = useCallback(
     async (id: string) => {
       const supabase = createClient();
-      const { error } = await supabase.from('empresa').update({ activa: false }).eq('id', id);
-      if (!error) await recargar();
-      return { error: error?.message ?? null };
+      const { data, error } = await supabase.from('empresa').update({ activa: false }).eq('id', id).select('id');
+      const r = resultadoMutacion(error, data);
+      if (!r.error) await recargar();
+      return r;
     },
     [recargar]
   );

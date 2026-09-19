@@ -55,3 +55,16 @@ export function puedeAdministrarPerfil(
   if (actor.rol !== 'admin_empresa') return false;
   return objetivo.empresaId === actor.empresaId && (!esRolAdmin(objetivo.rol) || objetivo.id === actor.id);
 }
+
+/**
+ * ¿Puede `actor` (un admin) imputar directo a un empleado de `empleadoEmpresaId` en un proyecto de `proyectoEmpresaId`?
+ * Es la regla de la RPC `imputar_directo` (024): una línea APROBADA no puede nacer saltándose al aprobador de destino.
+ * admin_grupo todo; admin_empresa solo si empleado Y proyecto son de SU empresa (los casos cruzados van por el flujo normal:
+ * el empleado computa y aprueba el destino). Sin `proyectoEmpresaId` solo se evalúa al empleado (filtro del selector).
+ */
+export function puedeImputarDirecto(actor: { rol: RolUsuario; empresaId: string }, empleadoEmpresaId: string, proyectoEmpresaId?: string): boolean {
+  if (actor.rol === 'admin_grupo') return true;
+  if (actor.rol !== 'admin_empresa') return false;
+  return empleadoEmpresaId === actor.empresaId && (proyectoEmpresaId === undefined || proyectoEmpresaId === actor.empresaId);
+}
+

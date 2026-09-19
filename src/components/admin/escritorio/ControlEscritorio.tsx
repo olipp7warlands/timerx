@@ -15,8 +15,10 @@ import { useToast } from '@/components/empleado/compartido/Toast';
 import { TablaPendientesImputacion } from '../compartido/TablaPendientesImputacion';
 import { useNavAdmin } from '../NavAdmin';
 import { fmt } from '@/lib/horas/calendario';
+import { puedeImputarDirecto } from '@/lib/usuarios/permisos';
+import type { AdminInfo } from '../types';
 
-export function ControlEscritorio() {
+export function ControlEscritorio({ info }: { info: AdminInfo }) {
   const nav = useNavAdmin();
   const hoy = useMemo(() => new Date(), []);
   const desdeMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
@@ -24,8 +26,11 @@ export function ControlEscritorio() {
 
   const { faltantes, loading, recargar } = useFaltantesAdmin(desdeMes, hastaHoy);
   const { imputar } = useImputarDirecto();
-  const { usuarios } = useUsuarios();
-  const { proyectos } = useProyectosAdmin();
+  const { usuarios: todosUsuarios } = useUsuarios();
+  const { proyectos: todosProyectos } = useProyectosAdmin();
+  // Imputación directa (RPC `imputar_directo`, 024): un admin_empresa solo con empleado Y proyecto de SU empresa; los selectores lo reflejan.
+  const usuarios = todosUsuarios.filter((u) => puedeImputarDirecto(info, u.empresaId));
+  const proyectos = todosProyectos.filter((p) => puedeImputarDirecto(info, info.empresaId, p.empresaId));
   const { categorias } = useCategorias();
   const { pendientes, loading: loadingPendientes, aprobar, rechazar } = useAprobacionImputaciones();
   const descripcionObligatoria = useDescripcionObligatoria();
@@ -42,7 +47,9 @@ export function ControlEscritorio() {
   const { proyectoIdsParaFecha } = useAsignacionesEmpleado(form.empleadoId);
   const [enviandoRecordatorios, setEnviandoRecordatorios] = useState(false);
 
-  const empleadoSeleccionado = usuarios.find((u) => u.id === form.empleadoId);
+  // Un `?empleado=` de fuera del ámbito (hand-off desde una ficha ajena) se trata como no seleccionado.
+  const empleadoIdEfectivo = usuarios.some((u) => u.id === form.empleadoId) ? form.empleadoId : '';
+  const empleadoSeleccionado = usuarios.find((u) => u.id === empleadoIdEfectivo);
   const categoriasFiltradas = empleadoSeleccionado?.departamentoId
     ? categorias.filter((c) => !c.departamentoId || c.departamentoId === empleadoSeleccionado.departamentoId)
     : categorias;
@@ -58,7 +65,7 @@ export function ControlEscritorio() {
   }
 
   async function guardarImputacion() {
-    if (!form.empleadoId || !proyectoIdEfectivo || !form.subcategoriaId || !form.fecha || !form.horas) {
+    if (!empleadoIdEfectivo || !proyectoIdEfectivo || !form.subcategoriaId || !form.fecha || !form.horas) {
       toast('Completa empleado, proyecto, subcategoría, fecha y horas', 'error');
       return;
     }
@@ -67,7 +74,7 @@ export function ControlEscritorio() {
       return;
     }
     const { error } = await imputar({
-      empleadoId: form.empleadoId,
+      empleadoId: empleadoIdEfectivo,
       proyectoId: proyectoIdEfectivo,
       subcategoriaId: form.subcategoriaId,
       fecha: form.fecha,
@@ -103,9 +110,9 @@ export function ControlEscritorio() {
             <h2 className="text-sm font-extrabold">Imputación directa</h2>
           </div>
           <div className="card-body space-y-1">
-            <p className="text-xs text-ink-tertiary">Registra horas de cualquier empleado en una fecha concreta. Entra como aprobada.</p>
+            <p className="text-xs text-ink-tertiary">{info.rol === 'admin_grupo' ? 'Registra horas de cualquier empleado en una fecha concreta. Entra como aprobada.' : 'Registra horas de empleados de tu empresa en proyectos de tu empresa. Entra como aprobada; el resto de casos van por el flujo normal (el empleado computa y aprueba la empresa destino).'}</p>
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Empleado</label>
-            <select className="input" value={form.empleadoId} onChange={(e) => setForm((f) => ({ ...f, empleadoId: e.target.value }))}>
+            <select className="input" value={empleadoIdEfectivo} onChange={(e) => setForm((f) => ({ ...f, empleadoId: e.target.value }))}>
               <option value="">Selecciona empleado</option>
               {usuarios.map((u) => (
                 <option key={u.id} value={u.id}>
@@ -114,7 +121,7 @@ export function ControlEscritorio() {
               ))}
             </select>
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Proyecto</label>
-            {form.empleadoId && proyectosDisponibles.length === 0 ? (
+            {empleadoIdEfectivo && proyectosDisponibles.length === 0 ? (
               <p className="text-xs text-ink-tertiary">Este empleado no tiene proyectos asignados para esta fecha.</p>
             ) : (
               <select className="input" value={proyectoIdEfectivo} onChange={(e) => setForm((f) => ({ ...f, proyectoId: e.target.value }))}>
@@ -213,7 +220,13 @@ export function ControlEscritorio() {
         <h2 className="text-sm font-extrabold">Aprobación de imputaciones</h2>
       </div>
       <div className="px-1.5 pb-2">
-        <TablaPendientesImputacion pendientes={pendientes} loading={loadingPendientes} onAprobar={aprobar} onRechazar={rechazar} />
+        <TablaPendientesImputacion
+          pendientes={pendientes}
+          loading={loadingPendientes}
+          onAprobar={aprobar}
+          onRechazar={rechazar}
+          puedeResolver={(p) => info.rol === 'admin_grupo' || p.empresaDestinoId === info.empresaId}
+        />
         <p className="foot px-3 pb-2.5 pt-3 text-xs text-ink-tertiary">Aprueba la empresa destino del proyecto (o admin de grupo) — quien recibe el trabajo.</p>
       </div>
     </div>

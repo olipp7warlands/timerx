@@ -13,6 +13,8 @@ interface Props {
   /** false en la ficha de usuario: ya se sabe de quién son, sobra la columna. */
   mostrarEmpleado?: boolean;
   mensajeVacio?: string;
+  /** Quién puede resolver cada línea (por defecto todas): un admin_empresa solo las de proyectos de SU empresa; el resto se muestran sin acciones. */
+  puedeResolver?: (p: ImputacionPendiente) => boolean;
 }
 
 /**
@@ -21,7 +23,7 @@ interface Props {
  * cual, sin duplicar el flujo (el mock no tenía un patrón real de motivo que
  * copiar: su versión es un flip de estado sin justificación).
  */
-export function TablaPendientesImputacion({ pendientes, loading, onAprobar, onRechazar, mostrarEmpleado = true, mensajeVacio = 'Nadie tiene imputaciones enviadas pendientes de aprobar.' }: Props) {
+export function TablaPendientesImputacion({ pendientes, loading, onAprobar, onRechazar, mostrarEmpleado = true, mensajeVacio = 'Nadie tiene imputaciones enviadas pendientes de aprobar.', puedeResolver = () => true }: Props) {
   const toast = useToast();
   const [rechazandoId, setRechazandoId] = useState<string | null>(null);
   const [motivoRechazo, setMotivoRechazo] = useState('');
@@ -66,7 +68,9 @@ export function TablaPendientesImputacion({ pendientes, loading, onAprobar, onRe
             <td className="mono border-b border-border px-2.5 py-2.5">{p.fecha}</td>
             <td className="mono border-b border-border px-2.5 py-2.5 text-right">{fmt(p.horas)}</td>
             <td className="border-b border-border px-2.5 py-2.5 text-right">
-              {rechazandoId === p.id ? (
+              {!puedeResolver(p) ? (
+                <span className="text-xs font-semibold text-ink-tertiary">Aprueba {p.empresaDestino}</span>
+              ) : rechazandoId === p.id ? (
                 <span className="flex items-center justify-end gap-1.5">
                   <input
                     className="input w-[220px]"
