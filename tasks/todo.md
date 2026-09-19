@@ -147,8 +147,15 @@ C imputar_directo: AE solo si empleado Y proyecto son de SU empresa (guarda RPC 
 
 ## Pasos
 - [x] Catálogo vivo de tablas/vistas/secuencias/policies/triggers (migración temporal de solo lectura).
-- [ ] ANTES con datos de prueba (norma de sondas): C (Marina/Cristian), E, H, J, K.
-- [ ] Migración 024 (SQL) → `db push` → commit+push inmediato.
-- [ ] App: C (selectores + `puedeImputarDirecto`), D (0 filas = error + barrido), E (ocultar «Crear departamento» al AE), I (Cuenta desactivada + Reactivar + server actions/rutas), H (flujos del empleado intactos).
-- [ ] DESPUÉS + sin sobre-bloqueo; UI real (Marina/Cristian/Andrés); build/lint; producción.
-- [ ] PLAN.md (sección 024, matriz, tabla C–L, norma L, congelación) + runbook + lessons; backlog documentado.
+- [x] ANTES con datos de prueba (norma de sondas): C (Marina/Cristian), E, H, J, K.
+- [x] Migración 024 (SQL) → `db push` → commit+push inmediato.
+- [x] App: C (selectores + `puedeImputarDirecto`), D (0 filas = error + barrido), E (ocultar «Crear departamento» al AE), I (Cuenta desactivada + Reactivar + server actions/rutas), H (flujos del empleado intactos).
+- [x] DESPUÉS + sin sobre-bloqueo; UI real (Marina/Cristian/Andrés); build/lint; producción.
+- [x] PLAN.md (sección 024, matriz, tabla C–L, norma L, congelación) + runbook + lessons; backlog documentado.
+
+## Revisión (024)
+- **C–L resueltos**: C, D, E, H, I, J-insert, K arreglados; F, G, J-categoría aceptado-documentado (`docs/seguridad-backlog.md`); L norma de proyecto + verificación periódica del runbook. Tabla con veredicto y cita en PLAN.md («Migración 024 + app»).
+- Local + PRODUCCIÓN con Marina, Cristian y Andrés (incluido el compositor real del empleado con las nuevas columnas concedidas); anon con la anon key del bundle; huellas `6c50f784`/`fab8021d`; conteos idénticos; build/lint sin nuevos.
+- **CONGELACIÓN DE SEGURIDAD en vigor**: nuevos hallazgos menores → `docs/seguridad-backlog.md`; solo críticos demostrables abren migración.
+- Backlog abierto documentado: I-residual (ban en Auth al desactivar), L (mitigado por proceso).
+

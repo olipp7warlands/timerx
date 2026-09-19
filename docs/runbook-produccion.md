@@ -59,6 +59,10 @@ El resto de este runbook asume proyecto nuevo — los pasos 1-2 son creación de
 - [ ] **`anon` sin EXECUTE en ninguna función de `public`** (SQL Editor, tras aplicar TODAS las migraciones incluida la 023): `select p.oid::regprocedure from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute');` → **0 filas**. Repetir tras crear cualquier función desde el panel (el ACL por defecto de `supabase_admin` no está cerrado).
 - [ ] **Sondas `anon` con la anon key del bundle desplegado** (norma C: parámetros inválidos, nunca datos reales): `cerrar_periodo`, `imputar_directo`, `aprobar_imputaciones`… → `42501 permission denied`. Conteos de `imputacion`/`ausencia`/`periodo`/`perfil`/`ticket` sin cambios.
 - [ ] **Trigger de alta**: una cuenta creada por Admin API con `{"rol":"admin_grupo"}` en los metadatos nace con `perfil.rol = 'empleado'`; el rol lo asigna después `altaUsuario` (o `scripts/seed-usuarios.mjs`).
+- [ ] **Verificación periódica de seguridad** (norma de proyecto L: nada se crea desde el panel — todo entra por migración; cada release y al menos mensual). En el SQL Editor, **ambas consultas deben devolver 0 filas**:
+  - Funciones: `select p.oid::regprocedure from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute');`
+  - Tablas, vistas y secuencias: `select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and ((c.relkind in ('r','v','m','p','f') and has_table_privilege('anon', c.oid, 'select, insert, update, delete, truncate, references, trigger')) or (c.relkind = 'S' and has_sequence_privilege('anon', c.oid, 'usage, select, update')));`
+  Si alguna devuelve filas, se corrige con una migración (`revoke … from anon`), no a mano. Comprobación externa equivalente con la anon key del bundle: un `GET /rest/v1/<tabla>` responde `42501 permission denied` (no `[]`).
 
 ## Todo lo que hoy es "demo" y no debe llegar a producción tal cual
 
