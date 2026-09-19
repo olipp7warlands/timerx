@@ -13,5 +13,21 @@ project_id = "TimerX"
 
 [auth]
 enabled = true
+# REGISTRO PUBLICO CERRADO (migracion 023, hallazgo B). Las cuentas nacen SOLO por el Admin API (alta/invitacion/importador,
+# service_role), que no depende de este ajuste. La config NO viaja con las migraciones: verificar en cada proyecto (runbook, seccion 5).
+enable_signup = false
 site_url = "https://timerx-production.up.railway.app"
 additional_redirect_urls = ["http://localhost:3000", "http://localhost:3002", "http://127.0.0.1:3000"]
+
+# Valores REMOTOS actuales fijados a proposito: `supabase config push` rellena con los defaults del CLI lo que el archivo no
+# declara y el diff de la 023 mostro que habria RECORTADO la seguridad (MFA off, confirmacion de email off, otp 6). Declararlos
+# aqui hace que el push solo cambie lo que este archivo dice. Revisar SIEMPRE el diff (`echo n | supabase config push`) antes de aplicar.
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.email]
+enable_confirmations = true
+max_frequency = "1m0s"
+otp_length = 8
+
