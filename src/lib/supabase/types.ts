@@ -243,6 +243,7 @@ export type Database = {
       empresa: {
         Row: {
           activa: boolean
+          area_id: string | null
           cif: string | null
           created_at: string
           id: string
@@ -250,6 +251,7 @@ export type Database = {
         }
         Insert: {
           activa?: boolean
+          area_id?: string | null
           cif?: string | null
           created_at?: string
           id?: string
@@ -257,12 +259,21 @@ export type Database = {
         }
         Update: {
           activa?: boolean
+          area_id?: string | null
           cif?: string | null
           created_at?: string
           id?: string
           nombre?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "empresa_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_area"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       empresa_jornada: {
         Row: {
@@ -614,6 +625,7 @@ export type Database = {
       proyecto: {
         Row: {
           activo: boolean
+          area_id: string | null
           codigo: string
           created_at: string
           empresa_id: string
@@ -624,6 +636,7 @@ export type Database = {
         }
         Insert: {
           activo?: boolean
+          area_id?: string | null
           codigo: string
           created_at?: string
           empresa_id: string
@@ -634,6 +647,7 @@ export type Database = {
         }
         Update: {
           activo?: boolean
+          area_id?: string | null
           codigo?: string
           created_at?: string
           empresa_id?: string
@@ -643,6 +657,13 @@ export type Database = {
           nombre?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "proyecto_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_area"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "proyecto_empresa_id_fkey"
             columns: ["empresa_id"]

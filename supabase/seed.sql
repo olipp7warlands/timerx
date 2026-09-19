@@ -105,3 +105,10 @@ insert into mapa_item (id, area_id, nombre, etiqueta, descripcion, empresa_id, o
   ('00000000-0000-0000-0006-000000000014', '00000000-0000-0000-0005-000000000006', 'doubleW', null, 'Juegos y experiencias.',        '00000000-0000-0000-0000-000000000001', 1),
   ('00000000-0000-0000-0006-000000000015', '00000000-0000-0000-0005-000000000006', 'IMM',     null, 'Medios interactivos.',          '00000000-0000-0000-0000-000000000001', 2),
   ('00000000-0000-0000-0006-000000000016', '00000000-0000-0000-0005-000000000006', 'AIdols',  null, 'Entretenimiento con IA.',        '00000000-0000-0000-0000-000000000001', 3);
+
+-- 7. Tipologías (migración 020): la tipología de empresa/proyecto es un área del mapa. Wowinx -> Tecnología,
+--    Málaga -> Deportes, Legal Norte -> NULL (a propósito: demuestra el fallback a grises). Los proyectos
+--    heredan de su empresa salvo Interno y Asesoría intragrupo (NULL). Va después de §6 (FK a mapa_area).
+update empresa set area_id = '00000000-0000-0000-0005-000000000002' where id = '00000000-0000-0000-0000-000000000001'; -- Wowinx SL
+update empresa set area_id = '00000000-0000-0000-0005-000000000003' where id = '00000000-0000-0000-0000-000000000002'; -- Málaga CF SAD
+update proyecto p set area_id = e.area_id from empresa e where e.id = p.empresa_id and p.codigo not in ('INTERNO', 'ASESINT');
