@@ -29,7 +29,9 @@ export function modoAltaDesdeEntorno(): ModoAlta {
 
 /**
  * Única mutación de alta de usuario (auth + perfil): la usan `invitarUsuario` y el importador.
- * `handle_new_user()` (001) crea el perfil desde `user_metadata`; departamento y categoría se completan después.
+ * `handle_new_user()` (023) crea el perfil desde `user_metadata` (empresa y nombre) y SIEMPRE con rol `empleado`: el rol NO viaja en los
+ * metadatos (quien crea la cuenta o un registro mal configurado podría escribir cualquiera). Rol, departamento y categoría se asignan
+ * DESPUÉS con service_role, tras las validaciones del llamador (`errorAlta` / admin_grupo del importador).
  * Si la cuenta de auth llegó a crearse pero falla el resto, devuelve `userId` junto al error: el llamador
  * decide (el importador la revierte).
  */
@@ -38,7 +40,7 @@ export async function altaUsuario(
   input: AltaUsuarioInput,
   modo: ModoAlta
 ): Promise<{ userId: string | null; error: string | null }> {
-  const metadata = { empresa_id: input.empresaId, nombre: input.nombre, rol: input.rol };
+  const metadata = { empresa_id: input.empresaId, nombre: input.nombre };
 
   const { data, error } =
     modo === 'invitar'
@@ -51,12 +53,19 @@ export async function altaUsuario(
         });
   if (error || !data.user) return { userId: null, error: error?.message ?? 'No se pudo crear la cuenta' };
 
-  if (input.departamentoId || input.categoriaId) {
-    const { error: errPerfil } = await admin
-      .from('perfil')
-      .update({ departamento_id: input.departamentoId ?? null, categoria_id: input.categoriaId ?? null })
-      .eq('id', data.user.id);
-    if (errPerfil) return { userId: data.user.id, error: `Cuenta creada pero falló completar el perfil: ${errPerfil.message}` };
+  const cambios = {
+    ...(input.rol !== 'empleado' && { rol: input.rol }),
+    ...(input.departamentoId && { departamento_id: input.departamentoId }),
+    ...(input.categoriaId && { categoria_id: input.categoriaId }),
+  };
+  if (Object.keys(cambios).length > 0) {
+    const { data: filas, error: errPerfil } = await admin.from('perfil').update(cambios).eq('id', data.user.id).select('id');
+    if (errPerfil || filas?.length !== 1) {
+      return {
+        userId: data.user.id,
+        error: `Cuenta creada como empleado pero falló completar el perfil (rol/departamento/categoría): ${errPerfil?.message ?? 'perfil no encontrado'}`,
+      };
+    }
   }
 
   return { userId: data.user.id, error: null };

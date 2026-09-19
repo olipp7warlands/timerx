@@ -1,6 +1,6 @@
 // Crea los usuarios de auth.users del seed de desarrollo vía Admin API.
 // El trigger on_auth_user_created (handle_new_user) crea automáticamente la fila
-// en `perfil` leyendo empresa_id/nombre/rol de user_metadata.
+// en `perfil` leyendo empresa_id/nombre de user_metadata (rol: se asigna despues, migracion 023).
 //
 // Requiere en el entorno: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
 // Uso: node scripts/seed-usuarios.mjs
@@ -78,11 +78,14 @@ for (const u of USUARIOS) {
     id: u.id,
     email: u.email,
     email_confirm: true,
-    user_metadata: { empresa_id: u.empresa_id, nombre: u.nombre, rol: u.rol },
+    user_metadata: { empresa_id: u.empresa_id, nombre: u.nombre },
   });
 
-  if (error) {
-    console.error(`✗ ${u.email}: ${error.message}`);
+  // Migracion 023: handle_new_user() crea SIEMPRE 'empleado' (el rol ya no viaja en los metadatos): se asigna despues.
+  const { error: errRol } = error || u.rol === 'empleado' ? { error: null } : await supabaseAdmin.from('perfil').update({ rol: u.rol }).eq('id', u.id);
+
+  if (error || errRol) {
+    console.error(`✗ ${u.email}: ${(error ?? errRol).message}`);
   } else {
     console.log(`✓ ${u.nombre} <${u.email}> (${u.rol})`);
   }

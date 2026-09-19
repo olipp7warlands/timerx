@@ -19,7 +19,7 @@ export type InvitarUsuarioInput = AltaUsuarioInput;
  * importador (`altaUsuario`). Con `password` (decisión "sin email"): la cuenta nace confirmada y con esa contraseña
  * inicial, que el admin entrega en mano. Sin `password`: comportamiento por `MODO_EMAIL` (dormido salvo `real`).
  * Devuelve `modo` para que la UI diga la verdad sobre lo que ha pasado.
- * handle_new_user() (001) lee empresa_id/nombre/rol de user_metadata y crea el perfil.
+ * handle_new_user() (023) crea el perfil con empresa/nombre de user_metadata y rol 'empleado'; `altaUsuario` asigna el rol después.
  * Permisos replicados aquí (service_role salta RLS y la guarda de la 021): ver `errorAlta` en `lib/usuarios/permisos.ts`
  * -- un admin_empresa solo da de alta empleados/responsables de SU empresa; los roles admin_* exigen admin_grupo.
  */
