@@ -93,3 +93,25 @@
 - Corregidas 2 puertas: `invitarUsuario` (lista blanca de roles no-admin para admin_empresa) y `restablecerPasswordEmpleado` (admin_empresa no restablece cuentas admin_*; hallazgo de la auditoría). El resto (recordatorios manual/empleado, cron, importadores, plantillas/exports) ya-correctas, con cita en PLAN.md.
 - ANTES/DESPUÉS con sesión real de Marina + sin sobre-bloqueo + Cristian intacto; local y producción. Conteos idénticos, `6c50f784` intacta, build/lint sin nuevos.
 - Observación abierta (no service_role, sin tocar): `perfil_update_admin` deja a un admin_empresa editar columnas no estructurales (`activo`, `nombre`, `max_horas_dia`…) de los perfiles de su empresa, también de un admin_grupo que viva en ella.
+
+---
+
+# MIGRACIÓN 022 — perfil_update_admin (decisión del usuario, 2026-09-19) + MODELO DE PERMISOS COMPLETO
+
+## Principio
+Un admin_empresa administra los perfiles NO-admin de su empresa; las cuentas admin_* solo las administra admin_grupo, en todos los campos. Su propio perfil queda como está (sin rol/empresa por la 021).
+
+## Pasos
+- [x] ANTES con sesión real de Marina: cambia nombre/activo/max_horas_dia/departamento del admin_grupo y del admin_empresa par de su empresa (PERMITIDO).
+- [x] Migración 022 (policy `perfil_update_admin` con lista blanca + propio); `db push` → commit+push inmediato (`bbfe554`).
+- [x] DESPUÉS: 6 intentos BLOQUEADOS (0 filas); sin sobre-bloqueo (Enrique, propio, 021 intacta); Cristian y service_role intactos.
+- [x] UI vía `permisos.ts` (`puedeAdministrarPerfil`): ficha e inline; `AdminInfo.id`; 0 filas = error en `useUsuarios`.
+- [x] Local + PRODUCCIÓN con login explícito (Marina, Cristian; Andrés por matriz). Commit `b961c7d`.
+- [x] Cuentas de prueba borradas; conteos idénticos; canónica `6c50f784`, cruda `fab8021d`; build/lint sin nuevos.
+- [x] MODELO DE PERMISOS COMPLETO en PLAN.md (tabla rol × operación con capa y cita; columna V de verificación).
+
+## Revisión (022)
+- Familia cerrada: rol/empresa (021) + contraseñas y alta (server actions) + resto de columnas de perfil (022).
+- **Hallazgos ABIERTOS que requieren decisión (ver PLAN.md, «Hallazgos de la construcción de la matriz»)**: **A** (crítico, verificado) `cerrar_periodo` e `imputar_directo` no frenan a `anon` (guarda null + EXECUTE por defecto); **B** (crítico si el registro sigue abierto: `disable_signup=false` + `handle_new_user` confía en `rol` del cliente); C–J menores.
+- Descuido propio corregido: una sonda de `cerrar_periodo` como AG escribió un periodo de prueba (borrado; periodo 6, imputaciones 139).
+
