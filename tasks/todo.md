@@ -137,3 +137,18 @@ A) Inventario de TODAS las funciones (51), REVOKE EXECUTE a public/anon (¿algun
 - **A y B CERRADOS.** Quedan C–L con propuesta una-línea en PLAN.md (arreglar-ya / va-al-runbook / aceptar-documentado) para decidirlos en una pasada.
 - Nuevos K (privilegios de tabla de `anon`, solo RLS) y L (ACL por defecto de `supabase_admin`) surgidos de esta auditoría.
 
+
+---
+
+# MIGRACIÓN 024 — decisiones C–L del usuario (2026-09-19) + CONGELACIÓN DE SEGURIDAD
+
+## Veredictos decididos
+C imputar_directo: AE solo si empleado Y proyecto son de SU empresa (guarda RPC + UI filtra) · D 0 filas = error visible (solo UI) + barrido citado · E departamento sin `empresa_id` → escritura solo AG · F aceptar-documentado · G aceptar-documentado · H trigger `cerrada` inmutable (UPDATE/DELETE) + column grants de `imputacion` · I `activo` bloquea el acceso en la app («Cuenta desactivada», sin migración) + «Reactivar» · J categoría aceptar-documentado; `perfil_insert_admin` con lista blanca de roles · K REVOKE ALL a anon/public en TODAS las tablas/vistas/secuencias + GRANT explícito según el modelo · L norma de proyecto «ninguna función desde el panel» + verificación periódica en el runbook.
+
+## Pasos
+- [x] Catálogo vivo de tablas/vistas/secuencias/policies/triggers (migración temporal de solo lectura).
+- [ ] ANTES con datos de prueba (norma de sondas): C (Marina/Cristian), E, H, J, K.
+- [ ] Migración 024 (SQL) → `db push` → commit+push inmediato.
+- [ ] App: C (selectores + `puedeImputarDirecto`), D (0 filas = error + barrido), E (ocultar «Crear departamento» al AE), I (Cuenta desactivada + Reactivar + server actions/rutas), H (flujos del empleado intactos).
+- [ ] DESPUÉS + sin sobre-bloqueo; UI real (Marina/Cristian/Andrés); build/lint; producción.
+- [ ] PLAN.md (sección 024, matriz, tabla C–L, norma L, congelación) + runbook + lessons; backlog documentado.
