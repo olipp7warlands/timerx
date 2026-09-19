@@ -39,7 +39,7 @@
 ### L · Objetos creados desde el panel de Supabase nacen abiertos a `anon`
 - **Qué**: el ACL por defecto de `supabase_admin` (panel, extensiones) concede privilegios a `anon`, `authenticated` y `service_role`; el rol de
   migración no puede alterarlo (la 024 lo intentó). El de `postgres` (migraciones) sí está cerrado.
-- **Mitigación**: **norma de proyecto** (todo entra por migración) + verificación periódica del runbook (§5): las dos consultas de catálogo
+- **Mitigación**: **norma de proyecto** (todo entra por migración) + verificación periódica del runbook (§9): las dos consultas de catálogo
   devuelven 0 filas para `anon`.
 - **Estado**: mitigado por proceso.
 
