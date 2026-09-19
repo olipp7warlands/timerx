@@ -44,3 +44,24 @@
 
 ## Revisión
 - Lote 4 completo en local; pendiente: commit/push, redeploy y retest en producción con login explícito (ver PLAN.md).
+
+---
+
+# MIGRACIÓN 021 — guarda de rol/empresa en `perfil` + desempate de `resumen_dia/mes` (decisión del usuario, 2026-09-19)
+
+## Decisiones de diseño
+- Guarda = trigger `BEFORE UPDATE OF rol, empresa_id ON perfil` (RLS no compara OLD/NEW). Compara con `IS DISTINCT FROM`: un UPDATE que reenvía los mismos valores (la ficha lo hacía) NO se bloquea.
+- Ambas transiciones (rol y empresa) reservadas a `admin_grupo`. admin_empresa sigue editando departamento y categoría.
+- service_role / conexiones directas (migraciones, scripts, importadores) EXENTOS por identidad de rol de BD (`current_user in ('authenticated','anon')` es lo único que se guarda): `auth.uid()` es null en service_role, así que `es_admin_grupo()` daría null y los bloquearía. Se comprueba con caso explícito.
+- Ride-along comentado aparte en la misma 021: `resumen_dia`/`resumen_mes` con clave única al final del ORDER BY (nombre, id).
+- UI: la ficha deja de renderizar los selects de empresa y rol a no-admin_grupo (texto plano) y no envía esos campos; inline ya no ofrecía rol/empresa a admin_empresa (verificar).
+
+## Pasos
+- [x] Foto base: conteos + huella ampliada (cruda `d8d7dbcc`, canónica `6c50f784`), `escalada_ANTES` (A/B/C de Marina funcionan; D ya lo frena RLS).
+- [ ] Escribir 021 y aplicarla (`db push`) → commit+push INMEDIATO.
+- [ ] `escalada_DESPUES`: A/B/C rechazadas con el RAISE; E/F/F2 (Marina) y I/J/K (Cristian) y L (service_role) intactos.
+- [ ] Importador de usuarios (ruta real con cookie de Cristian) y alta manual intactos; ficha como admin_grupo cambia empresa.
+- [ ] UI (ficha + comentarios/textos) + build + lint sin regresión.
+- [ ] Huella canónica `6c50f784` idéntica tras la 021; nueva cruda anotada como vigente; conteos idénticos.
+- [ ] Navegador, login explícito de Cristian / Marina / Andrés: local y PRODUCCIÓN (commit+push+redeploy).
+- [ ] PLAN.md + tasks/lessons.md; cerrar los dos hallazgos abiertos de arriba.
