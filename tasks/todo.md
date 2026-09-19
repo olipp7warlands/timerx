@@ -17,10 +17,10 @@
 
 ## C. Jornada semanal + resúmenes de día (migración 019 — núcleo delicado)
 - [x] C0. Foto base ANTES de la 019 (fte_mes, balance_mes_empleado, estado_dias_mes + resumen_dia/mes, faltantes) y citar qué funciones de la familia tocan jornada/laborables.
-- [x] C1. `empresa_jornada` (7 filas por empresa; seed 7h L-V / 0 S-D).
+- [x] C1. `empresa_jornada` (7 filas por empresa; seed = jornada viva 8h L-V (`ajuste.jornada_horas`=8) / 0 S-D).
 - [x] C2. `jornada_del_dia()` helper único; `es_laborable`, `horas_requeridas` generalizados; parchear SOLO las funciones demostradas.
 - [x] C3. Regresión byte-idéntica con el seed plano.
-- [x] C4. Caso Wowinx 8/8/8/8/5,5 → sep 2026 = 176,0 h (y requeridas efectivas de Andrés con su baja); revertir a 7 plano; repetir regresión.
+- [x] C4. Caso Wowinx 8/8/8/8/5,5 → sep 2026 = **166,0 h** (la spec decía 176,0: error de suma, 18×8+4×5,5 = 166); efectivas de Andrés = 150; revertido y regresión repetida. Seed = jornada VIVA (8), no 7.
 - [x] C5. UI jornada semanal en Calendario (admin_grupo).
 - [x] C6. Resumen del día (`/admin/calendario?dia=YYYY-MM-DD`), ámbito como resumen_dia.
 - [x] C7. Mini-calendario en la ficha de usuario (sin SQL nueva sin reporte).
@@ -28,7 +28,7 @@
 ## Verificación (local + producción) y cierre
 - [x] Ciclo Soporte con sesiones reales, ámbitos, RLS con intentos reales, ref sin colisiones, revertido.
 - [x] Alta manual con contraseña: crear, login con ella, revertir.
-- [x] Jornada: regresión + caso 176,0 + resumen 11-sep vs faltantes de Control + mini-calendario de Andrés + `?dia=` F5/atrás + 3 identidades.
+- [x] Jornada: regresión + caso 166,0 + resumen 11-sep vs faltantes de Control + mini-calendario de Andrés + `?dia=` F5/atrás + 3 identidades.
 - [x] Capturas contra el mock; build; commit+push (con el mock); redeploy; regresión REPETIDA en producción; conteos idénticos salvo los 4 tickets (commits eeb3a20 + el del panel 'soloMios').
 
 ## Lote 4 (migración 020) — YA PUEDE ARRANCAR: combinado 5+2 cerrado y desplegado (018, 019). Pendiente de que el usuario lo confirme.
