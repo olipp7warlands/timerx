@@ -137,17 +137,17 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
   }
 
   async function onGuardarEdicion() {
-    const cambiaEmpresa = draft.empresaId !== usuario.empresaId;
-    const cambiaRol = draft.rol !== usuario.rol;
+    // Empresa y rol solo los cambia admin_grupo (la BD lo impone desde la 021): al resto ni se le ofrecen ni se envían.
+    const cambiaEmpresa = esAdminGrupo && draft.empresaId !== usuario.empresaId;
+    const cambiaRol = esAdminGrupo && draft.rol !== usuario.rol;
     if (cambiaEmpresa || cambiaRol) {
       const partes = [cambiaEmpresa && 'la empresa (afecta a sus horas requeridas por calendario y al ámbito intragrupo)', cambiaRol && 'el rol'].filter(Boolean);
       if (!confirmar(`Vas a cambiar ${partes.join(' y ')} de ${usuario.nombre}. ¿Confirmas?`)) return;
     }
     const { error } = await onActualizar(usuario.id, {
-      empresaId: draft.empresaId,
+      ...(esAdminGrupo && { empresaId: draft.empresaId, rol: draft.rol }),
       departamentoId: draft.departamentoId || null,
       categoriaId: draft.categoriaId || null,
-      rol: draft.rol,
     });
     if (error) toast(error, 'error');
     else {
@@ -271,18 +271,20 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
           {editando && puedeEditar && (
             <div className="mt-3.5 space-y-2">
               <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5">
-                <div>
-                  <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Empresa empleadora</label>
-                  <select className="input" disabled={!esAdminGrupo} value={draft.empresaId} onChange={(e) => setDraft((d) => ({ ...d, empresaId: e.target.value }))}>
-                    {empresas
-                .filter((e) => e.activa || e.id === draft.empresaId)
-                .map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {esAdminGrupo && (
+                  <div>
+                    <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Empresa empleadora</label>
+                    <select className="input" value={draft.empresaId} onChange={(e) => setDraft((d) => ({ ...d, empresaId: e.target.value }))}>
+                      {empresas
+                        .filter((e) => e.activa || e.id === draft.empresaId)
+                        .map((e) => (
+                          <option key={e.id} value={e.id}>
+                            {e.nombre}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Departamento</label>
                   <select className="input" value={draft.departamentoId} onChange={(e) => setDraft((d) => ({ ...d, departamentoId: e.target.value }))}>
@@ -305,16 +307,19 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Rol</label>
-                  <select className="input" disabled={!esAdminGrupo} value={draft.rol} onChange={(e) => setDraft((d) => ({ ...d, rol: e.target.value as RolUsuario }))}>
-                    <option value="empleado">Empleado</option>
-                    <option value="responsable_proyecto">Responsable de proyecto</option>
-                    {esAdminGrupo && <option value="admin_empresa">Admin de empresa</option>}
-                    {esAdminGrupo && <option value="admin_grupo">Admin del grupo</option>}
-                  </select>
-                </div>
+                {esAdminGrupo && (
+                  <div>
+                    <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Rol</label>
+                    <select className="input" value={draft.rol} onChange={(e) => setDraft((d) => ({ ...d, rol: e.target.value as RolUsuario }))}>
+                      <option value="empleado">Empleado</option>
+                      <option value="responsable_proyecto">Responsable de proyecto</option>
+                      <option value="admin_empresa">Admin de empresa</option>
+                      <option value="admin_grupo">Admin del grupo</option>
+                    </select>
+                  </div>
+                )}
               </div>
+              {!esAdminGrupo && <p className="text-xs text-ink-tertiary">La empresa y el rol de una persona solo los cambia un admin del grupo.</p>}
               <button type="button" className="btn btn-primary btn-sm" onClick={onGuardarEdicion}>
                 Guardar cambios
               </button>
@@ -322,7 +327,7 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
           )}
 
           {!puedeEditar && (
-            <p className="mt-3 text-xs text-ink-tertiary">Cambiar empresa/rol/departamento, restablecer contraseña y desactivar solo lo puede hacer un admin de su propia empresa (o admin del grupo).</p>
+            <p className="mt-3 text-xs text-ink-tertiary">Editar sus datos, restablecer la contraseña y desactivar solo lo puede hacer un admin de su propia empresa (o del grupo); empresa y rol, solo el admin del grupo.</p>
           )}
         </div>
       </div>

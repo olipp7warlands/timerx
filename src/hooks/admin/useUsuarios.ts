@@ -68,7 +68,10 @@ export function useUsuarios() {
     recargar();
   }, [recargar]);
 
-  /** Update de perfil (empresa/departamento/categoría/rol) -- perfil_update_admin ya acota admin_empresa a su propia empresa, sin excepción intragrupo. */
+  /**
+   * Update de perfil (empresa/departamento/categoría/rol). RLS (perfil_update_admin) acota admin_empresa a su propia empresa,
+   * y el trigger de la 021 reserva a admin_grupo el cambio EFECTIVO de rol y de empresa: quien no lo sea no debe enviarlos.
+   */
   const actualizar = useCallback(
     async (id: string, input: ActualizarUsuarioInput) => {
       const supabase = createClient();
