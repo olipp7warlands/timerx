@@ -45,6 +45,8 @@ El resto de este runbook asume proyecto nuevo — los pasos 1-2 son creación de
 - [ ] `site_url` = dominio real de producción (no el de Railway demo ni `localhost`).
 - [ ] `additional_redirect_urls`: revisar si conviene mantener las de desarrollo local para poder seguir depurando contra este proyecto, o dejarlo estricto solo al dominio real.
 - [ ] Aplicar vía `supabase/config.toml` + `supabase config push`, replicando el patrón ya usado en F3.5 (archivo deliberadamente mínimo, solo las 2 claves de `[auth]`, `config diff` antes de pushear para no tocar nada más).
+- [ ] **Registro público CERRADO (obligatorio; migración 023, hallazgo B)**: `[auth] enable_signup = false` en `supabase/config.toml` (panel: Authentication → Sign In / Providers → «Allow new users to sign up» = OFF). **La config de Auth NO viaja con las migraciones**: hay que aplicarla en el proyecto nuevo. Las cuentas nacen solo por el Admin API (alta manual, invitación, importador), que no depende de este ajuste.
+- [ ] **Previsualizar SIEMPRE el diff antes de `supabase config push`**: `echo n | supabase config push` (responde «n»). El CLI rellena con SUS valores por defecto todo lo que el archivo no declara: en la 023 un push «mínimo» habría desactivado MFA y la confirmación de email y bajado `otp_length` a 6. El archivo debe declarar los valores deseados de `[auth.mfa.totp]` y `[auth.email]` (ver `supabase/config.toml`) y el diff debe ser SOLO lo que se pretende cambiar. Aplicar después con `supabase config push --yes`.
 
 ## 5. Verificaciones post-deploy (mismo estándar que F3.5)
 
@@ -53,6 +55,10 @@ El resto de este runbook asume proyecto nuevo — los pasos 1-2 son creación de
 - [ ] `/admin` gated correctamente por rol.
 - [ ] Cabeceras revisadas (sin `X-Powered-By`, nada inesperado).
 - [ ] `grep` del valor de `SUPABASE_SERVICE_ROLE_KEY` sobre un build local con las mismas variables → cero coincidencias en `.next` (mismo control que F3.5).
+- [ ] **Registro cerrado (verificación obligatoria)**: `curl "$SUPABASE_URL/auth/v1/settings" -H "apikey: $ANON"` → `"disable_signup": true`, y `POST /auth/v1/signup` → `422 signup_disabled`.
+- [ ] **`anon` sin EXECUTE en ninguna función de `public`** (SQL Editor, tras aplicar TODAS las migraciones incluida la 023): `select p.oid::regprocedure from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute');` → **0 filas**. Repetir tras crear cualquier función desde el panel (el ACL por defecto de `supabase_admin` no está cerrado).
+- [ ] **Sondas `anon` con la anon key del bundle desplegado** (norma C: parámetros inválidos, nunca datos reales): `cerrar_periodo`, `imputar_directo`, `aprobar_imputaciones`… → `42501 permission denied`. Conteos de `imputacion`/`ausencia`/`periodo`/`perfil`/`ticket` sin cambios.
+- [ ] **Trigger de alta**: una cuenta creada por Admin API con `{"rol":"admin_grupo"}` en los metadatos nace con `perfil.rol = 'empleado'`; el rol lo asigna después `altaUsuario` (o `scripts/seed-usuarios.mjs`).
 
 ## Todo lo que hoy es "demo" y no debe llegar a producción tal cual
 

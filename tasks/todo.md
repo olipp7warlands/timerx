@@ -115,3 +115,25 @@ Un admin_empresa administra los perfiles NO-admin de su empresa; las cuentas adm
 - **Hallazgos ABIERTOS que requieren decisión (ver PLAN.md, «Hallazgos de la construcción de la matriz»)**: **A** (crítico, verificado) `cerrar_periodo` e `imputar_directo` no frenan a `anon` (guarda null + EXECUTE por defecto); **B** (crítico si el registro sigue abierto: `disable_signup=false` + `handle_new_user` confía en `rol` del cliente); C–J menores.
 - Descuido propio corregido: una sonda de `cerrar_periodo` como AG escribió un periodo de prueba (borrado; periodo 6, imputaciones 139).
 
+---
+
+# MIGRACIÓN 023 — superficie de funciones + registro público + handle_new_user (decisión del usuario, urgente)
+
+## Alcance
+A) Inventario de TODAS las funciones (51), REVOKE EXECUTE a public/anon (¿alguna necesita anon? ninguna), GRANT explícito, guardas `auth.uid() is null` en toda función con efectos, tabla en la migración. B) Signup desactivado en la config de Auth (+ runbook), `handle_new_user` con rol siempre `empleado` y auditoría de los demás campos. C) Norma de sondas (lessons + PLAN).
+
+## Pasos
+- [x] Catálogo vivo (migración temporal de solo lectura) + definiciones vivas de las funciones con efectos.
+- [x] ANTES: sondas anon (14/18 pasan EXECUTE); INSERT con metadatos maliciosos → perfil `admin_grupo`.
+- [x] B(1) Signup: `enable_signup=false`; diff de `config push` previsualizado (habría recortado MFA/confirmación) → valores remotos fijados; `disable_signup:true`, signUp → 422.
+- [x] Migración 023 (grants + guardas + handle_new_user + autocomprobación) aplicada → commit+push inmediato (`a764fd8`).
+- [x] `altaUsuario` y `seed-usuarios.mjs` asignan el rol después.
+- [x] DESPUÉS: anon 18/18 EXECUTE DENEGADO; guardas con `authenticated` sin uid (sonda SQL); trigger → `empleado`.
+- [x] Flujos legítimos (26 comprobaciones, norma C) + 7 triggers + UI (invitar 4 roles, importador) + exports + páginas.
+- [x] Producción con la anon key del bundle; Cristian/Marina/Andrés; cuentas de prueba borradas; conteos idénticos; `6c50f784`/`fab8021d`; build/lint.
+- [x] PLAN.md (sección 023, matriz, norma C, propuestas C–L), runbook (§4 y §5), lessons 11–13.
+
+## Revisión (023)
+- **A y B CERRADOS.** Quedan C–L con propuesta una-línea en PLAN.md (arreglar-ya / va-al-runbook / aceptar-documentado) para decidirlos en una pasada.
+- Nuevos K (privilegios de tabla de `anon`, solo RLS) y L (ACL por defecto de `supabase_admin`) surgidos de esta auditoría.
+
