@@ -1,5 +1,6 @@
 'use client';
 
+import { hoyMadrid } from '@/lib/fechas';
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -15,7 +16,7 @@ import { createClient } from '@/lib/supabase/client';
 export function useAsignaciones() {
   const asignar = useCallback(async (empleadoId: string, proyectoId: string) => {
     const supabase = createClient();
-    const hoy = new Date().toISOString().slice(0, 10);
+    const hoy = hoyMadrid();
     const { error } = await supabase
       .from('empleado_proyecto')
       .upsert({ empleado_id: empleadoId, proyecto_id: proyectoId, desde: hoy, hasta: null }, { onConflict: 'empleado_id,proyecto_id' });
@@ -24,7 +25,7 @@ export function useAsignaciones() {
 
   const finalizar = useCallback(async (empleadoId: string, proyectoId: string) => {
     const supabase = createClient();
-    const hoy = new Date().toISOString().slice(0, 10);
+    const hoy = hoyMadrid();
     const { error } = await supabase.from('empleado_proyecto').update({ hasta: hoy }).eq('empleado_id', empleadoId).eq('proyecto_id', proyectoId);
     return { error: error?.message ?? null };
   }, []);

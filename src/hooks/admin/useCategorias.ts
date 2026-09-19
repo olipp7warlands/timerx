@@ -48,9 +48,9 @@ export function useCategorias() {
   const crearCategoria = useCallback(
     async (nombre: string, departamentoId: string | null = null) => {
       const supabase = createClient();
-      const { error } = await supabase.from('categoria').insert({ nombre, departamento_id: departamentoId });
+      const { data, error } = await supabase.from('categoria').insert({ nombre, departamento_id: departamentoId }).select('id').single();
       if (!error) await recargar();
-      return { error: error?.message ?? null };
+      return { error: error?.message ?? null, id: data?.id ?? null };
     },
     [recargar]
   );

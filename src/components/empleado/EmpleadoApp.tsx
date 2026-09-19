@@ -1,5 +1,6 @@
 'use client';
 
+import { hoyMadrid } from '@/lib/fechas';
 import { useCallback, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
@@ -39,7 +40,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, email, rol, depa
   const hoy = useMemo(() => new Date(), []);
   const anio = hoy.getFullYear();
   const mes = hoy.getMonth() + 1;
-  const fechaHoy = hoy.toISOString().slice(0, 10);
+  const fechaHoy = hoyMadrid();
 
   // La pestaña se DERIVA de la URL (/inicio, /imputar, /calendario): única fuente de verdad, cambiar de pestaña = navegar.
   // Solo /debug/movil (verificación visual, 404 en producción) no vive bajo esas rutas y usa estado local.

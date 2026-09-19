@@ -1,3 +1,4 @@
+import { fechaMadrid } from '@/lib/fechas';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 
 export interface FilaFaltante {
@@ -16,7 +17,7 @@ export interface ResultadoRecordatorios {
 const APP_URL = process.env.APP_URL ?? 'https://timerx-production.up.railway.app';
 
 function esMismoDiaNatural(a: string, b: Date): boolean {
-  return new Date(a).toDateString() === b.toDateString();
+  return fechaMadrid(new Date(a)) === fechaMadrid(b);
 }
 
 function cuerpoEmail(nombre: string, dias: FilaFaltante[]): string {

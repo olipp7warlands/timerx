@@ -18,6 +18,8 @@ export function InicioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
   const totalHoy = sumaHoras(ctx.porDia[ctx.fechaHoy] ?? []);
   const reqHoy = diaHoy?.laborable ? diaHoy.jornada : 0;
   const balanceMes = ctx.balance ? ctx.balance.horasImputadas - ctx.balance.requeridasEfectivas : null;
+  // Solo presentación (cero cálculo): sin ninguna hora imputada, el balance es simplemente "todo lo requerido" en negativo; se atenúa y se explica.
+  const sinImputaciones = ctx.balance != null && ctx.balance.horasImputadas === 0;
   const restanteHoy = reqHoy - totalHoy;
 
   const conLineas = ctx.dias
@@ -69,12 +71,13 @@ export function InicioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
               <p className="micro">Req.</p>
             </div>
             <div>
-              <p className="mono text-base font-extrabold">
+              <p className={`mono text-base font-extrabold ${sinImputaciones ? 'text-ink-tertiary' : ''}`}>
                 {balanceMes != null ? `${balanceMes > 0 ? '+' : ''}${fmt(balanceMes)}` : '…'}
               </p>
               <p className="micro">Balance</p>
             </div>
           </div>
+          {sinImputaciones && <p className="micro mt-2 text-right text-ink-tertiary">Aún sin imputaciones este mes</p>}
         </div>
 
         <div>

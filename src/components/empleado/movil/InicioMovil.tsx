@@ -19,6 +19,8 @@ export function InicioMovil({ ctx }: Props) {
   const totalHoy = sumaHoras(ctx.porDia[ctx.fechaHoy] ?? []);
   const reqHoy = diaHoy?.laborable ? diaHoy.jornada : 0;
   const balanceMes = ctx.balance ? ctx.balance.horasImputadas - ctx.balance.requeridasEfectivas : null;
+  // Solo presentación (cero cálculo): sin ninguna hora imputada, el balance es simplemente "todo lo requerido" en negativo; se atenúa y se explica.
+  const sinImputaciones = ctx.balance != null && ctx.balance.horasImputadas === 0;
   const restanteHoy = reqHoy - totalHoy;
 
   const conLineas = ctx.dias
@@ -68,12 +70,13 @@ export function InicioMovil({ ctx }: Props) {
           <p className="micro">Requeridas</p>
         </div>
         <div>
-          <p className="mono text-lg font-extrabold">
+          <p className={`mono text-lg font-extrabold ${sinImputaciones ? 'text-ink-tertiary' : ''}`}>
             {balanceMes != null ? `${balanceMes > 0 ? '+' : ''}${fmt(balanceMes)}` : '…'}
           </p>
           <p className="micro">Balance</p>
         </div>
       </div>
+      {sinImputaciones && <p className="micro mt-2 text-center text-ink-tertiary">Aún sin imputaciones este mes</p>}
 
       <div>
         <div className="mb-2 flex items-center justify-between">

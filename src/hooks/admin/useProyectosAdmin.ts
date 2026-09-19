@@ -10,6 +10,8 @@ export interface ProyectoAdmin {
   empresaId: string;
   empresaNombre: string;
   activo: boolean;
+  /** Tipología propia del proyecto (área del mapa, 020); null = sin tipología. Copia hecha al crear, no referencia viva a la empresa. */
+  areaId: string | null;
 }
 
 /**
@@ -21,6 +23,8 @@ export interface NuevoProyecto {
   empresaId: string;
   codigo: string;
   nombre: string;
+  /** Ya resuelto por la UI: si eligió "Heredar de la empresa", aquí va el área de la empresa en ese momento (copia). */
+  areaId: string | null;
 }
 
 /** proyecto_select es abierto; proyecto_admin (escritura) acota admin_empresa a su propia empresa. */
@@ -31,7 +35,7 @@ export function useProyectosAdmin() {
   const recargar = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
-    const { data } = await supabase.from('proyecto').select('id, codigo, nombre, empresa_id, activo, empresa:empresa_id(nombre)').order('nombre');
+    const { data } = await supabase.from('proyecto').select('id, codigo, nombre, empresa_id, activo, area_id, empresa:empresa_id(nombre)').order('nombre');
     setProyectos(
       (data ?? []).map((f: any) => ({
         id: f.id,
@@ -40,6 +44,7 @@ export function useProyectosAdmin() {
         empresaId: f.empresa_id,
         empresaNombre: f.empresa?.nombre ?? '',
         activo: f.activo,
+        areaId: f.area_id ?? null,
       }))
     );
     setLoading(false);
@@ -52,12 +57,23 @@ export function useProyectosAdmin() {
   const crear = useCallback(
     async (nuevo: NuevoProyecto) => {
       const supabase = createClient();
-      const { error } = await supabase.from('proyecto').insert({ empresa_id: nuevo.empresaId, codigo: nuevo.codigo, nombre: nuevo.nombre });
+      const { error } = await supabase.from('proyecto').insert({ empresa_id: nuevo.empresaId, codigo: nuevo.codigo, nombre: nuevo.nombre, area_id: nuevo.areaId });
       if (!error) await recargar();
       return { error: error?.message ?? null };
     },
     [recargar]
   );
 
-  return { proyectos, loading, recargar, crear };
+  /** Cambia la tipología de un proyecto ya creado (la RLS de `proyecto_admin` acota a admin_grupo / admin_empresa de su empresa). */
+  const cambiarTipologia = useCallback(
+    async (id: string, areaId: string | null) => {
+      const supabase = createClient();
+      const { error } = await supabase.from('proyecto').update({ area_id: areaId }).eq('id', id);
+      if (!error) await recargar();
+      return { error: error?.message ?? null };
+    },
+    [recargar]
+  );
+
+  return { proyectos, loading, recargar, crear, cambiarTipologia };
 }

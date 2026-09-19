@@ -10,14 +10,6 @@ export interface DiaMes {
 
 const DOW_NOMBRES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-function pad(n: number) {
-  return String(n).padStart(2, '0');
-}
-
-function toISO(anio: number, mes: number, dia: number) {
-  return `${anio}-${pad(mes)}-${pad(dia)}`;
-}
-
 export function diaAdyacenteLaborable(dias: DiaMes[], fecha: string, dir: 1 | -1): string | null {
   let i = dias.findIndex((d) => d.fecha === fecha) + dir;
   while (i >= 0 && i < dias.length && !dias[i].laborable) i += dir;

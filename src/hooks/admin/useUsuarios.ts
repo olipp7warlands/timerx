@@ -18,11 +18,16 @@ export interface UsuarioAdmin {
   activo: boolean;
 }
 
+/**
+ * Solo se escriben los campos PRESENTES. La ficha los manda todos (formulario completo); la edición inline de la tabla manda
+ * únicamente el que se ha cambiado: así una fila con datos cacheados no reescribe (ni pisa) campos que otro admin haya
+ * cambiado entretanto. `null` en departamento/categoría significa "quitar"; `undefined`, "no tocar".
+ */
 export interface ActualizarUsuarioInput {
-  empresaId: string;
-  departamentoId: string | null;
-  categoriaId: string | null;
-  rol: RolUsuario;
+  empresaId?: string;
+  departamentoId?: string | null;
+  categoriaId?: string | null;
+  rol?: RolUsuario;
 }
 
 const SELECT = `
@@ -67,10 +72,13 @@ export function useUsuarios() {
   const actualizar = useCallback(
     async (id: string, input: ActualizarUsuarioInput) => {
       const supabase = createClient();
-      const { error } = await supabase
-        .from('perfil')
-        .update({ empresa_id: input.empresaId, departamento_id: input.departamentoId, categoria_id: input.categoriaId, rol: input.rol })
-        .eq('id', id);
+      const cambios = {
+        ...(input.empresaId !== undefined && { empresa_id: input.empresaId }),
+        ...(input.departamentoId !== undefined && { departamento_id: input.departamentoId }),
+        ...(input.categoriaId !== undefined && { categoria_id: input.categoriaId }),
+        ...(input.rol !== undefined && { rol: input.rol }),
+      };
+      const { error } = await supabase.from('perfil').update(cambios).eq('id', id);
       if (!error) await recargar();
       return { error: error?.message ?? null };
     },

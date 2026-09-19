@@ -1,17 +1,18 @@
 'use client';
 
+import { useAreasTipologia } from '@/hooks/admin/useAreasTipologia';
+import { coloresRosco } from '@/lib/mapa/colores';
 import { useEffect, useState } from 'react';
 import { useProyectosAdmin } from '@/hooks/admin/useProyectosAdmin';
 import { useEmpresas } from '@/hooks/admin/useEmpresas';
 import { useHorasPorEmpresaYProyecto } from '@/hooks/admin/useHorasPorEmpresaYProyecto';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { Donut } from '../compartido/Donut';
+import { SelectorTipologia, HEREDAR, areaDeSelector } from '../compartido/SelectorTipologia';
 import { FichaProyectoEscritorio } from './FichaProyectoEscritorio';
 import { useNavAdmin } from '../NavAdmin';
 import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
-
-const GRISES = ['var(--ink-primary)', 'var(--ink-secondary)', 'var(--ink-tertiary)', 'var(--ink-disabled)', 'var(--border-strong)'];
 
 export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
   const nav = useNavAdmin();
@@ -19,13 +20,17 @@ export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
   const anio = hoy.getFullYear();
   const mes = hoy.getMonth() + 1;
 
-  const { proyectos, loading, crear } = useProyectosAdmin();
+  const { proyectos, loading, crear, cambiarTipologia } = useProyectosAdmin();
   const { empresas } = useEmpresas();
   const { porProyecto } = useHorasPorEmpresaYProyecto(anio, mes);
+  const { areas, colorDe } = useAreasTipologia();
   const toast = useToast();
 
   const esAdminGrupo = info.rol === 'admin_grupo';
-  const [form, setForm] = useState({ empresaId: info.empresaId, codigo: '', nombre: '' });
+  const [form, setForm] = useState({ empresaId: info.empresaId, codigo: '', nombre: '', tipologia: HEREDAR });
+  // Empresas seleccionables: solo las activas (`empresa.activa` deja de ser decorativa, Lote 4), salvo la ya elegida en el formulario.
+  const empresasSeleccionables = empresas.filter((e) => e.activa || e.id === form.empresaId);
+  const areaDeLaEmpresa = empresas.find((e) => e.id === form.empresaId)?.areaId ?? null;
 
   // Ficha derivada de la URL. Con `proyectos` aún cargando se ESPERA (nunca se redirige al listado);
   // solo si tras cargar el id no existe (o la RLS no lo muestra) se vuelve al listado con aviso.
@@ -42,20 +47,33 @@ export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
       toast('Código y nombre son obligatorios', 'error');
       return;
     }
-    const { error } = await crear(form);
+    const { error } = await crear({ empresaId: form.empresaId, codigo: form.codigo, nombre: form.nombre, areaId: areaDeSelector(form.tipologia, areaDeLaEmpresa) });
     if (error) toast(error, 'error');
     else {
       toast(`Proyecto "${form.nombre}" creado`);
-      setForm({ empresaId: info.empresaId, codigo: '', nombre: '' });
+      setForm({ empresaId: info.empresaId, codigo: '', nombre: '', tipologia: HEREDAR });
     }
   }
 
   if (nav.fichaId) {
     if (!seleccionado) return <p className="p-4 text-sm text-ink-tertiary">Cargando…</p>;
-    return <FichaProyectoEscritorio proyecto={seleccionado} anio={anio} mes={mes} onVolver={() => nav.ir('proyectos')} />;
+    const puedeCambiarTipologia = esAdminGrupo || seleccionado.empresaId === info.empresaId;
+    return (
+      <FichaProyectoEscritorio
+        proyecto={seleccionado}
+        anio={anio}
+        mes={mes}
+        areas={areas}
+        puedeCambiarTipologia={puedeCambiarTipologia}
+        onCambiarTipologia={(areaId) => cambiarTipologia(seleccionado.id, areaId)}
+        onVolver={() => nav.ir('proyectos')}
+      />
+    );
   }
 
   const totalHoras = porProyecto.reduce((s, p) => s + p.horas, 0);
+  const proyectosRosco = porProyecto.slice(0, 6);
+  const coloresProyectos = coloresRosco(proyectosRosco.map((p) => p.areaId), colorDe);
 
   return (
     <div className="split grid grid-cols-[300px_minmax(0,1fr)] items-start gap-4.5 max-[920px]:grid-cols-1">
@@ -67,12 +85,14 @@ export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
           <div className="card-body">
             <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Empresa</label>
             <select className="input" value={form.empresaId} disabled={!esAdminGrupo} onChange={(e) => setForm((f) => ({ ...f, empresaId: e.target.value }))}>
-              {empresas.map((e) => (
+              {empresasSeleccionables.map((e) => (
                 <option key={e.id} value={e.id}>
                   {e.nombre}
                 </option>
               ))}
             </select>
+            <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Tipología</label>
+            <SelectorTipologia value={form.tipologia} onChange={(v) => setForm((f) => ({ ...f, tipologia: v }))} areas={areas} heredarDe={{ areaId: areaDeLaEmpresa }} />
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Código</label>
             <input className="input mono" value={form.codigo} onChange={(e) => setForm((f) => ({ ...f, codigo: e.target.value }))} placeholder="XIM" />
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Nombre del proyecto</label>
@@ -88,7 +108,7 @@ export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
             <span className="micro">{formatoMes(mes)}</span>
           </div>
           <div className="card-body">
-            <Donut total={totalHoras} segmentos={porProyecto.slice(0, 6).map((p, i) => ({ etiqueta: p.proyectoNombre, valor: p.horas, color: GRISES[i % GRISES.length] }))} />
+            <Donut total={totalHoras} segmentos={proyectosRosco.map((p, i) => ({ etiqueta: p.proyectoNombre, valor: p.horas, color: coloresProyectos[i] }))} />
           </div>
         </div>
       </div>

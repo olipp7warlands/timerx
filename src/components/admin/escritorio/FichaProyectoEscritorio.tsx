@@ -1,5 +1,6 @@
 'use client';
 
+import { hoyMadrid } from '@/lib/fechas';
 import { useMemo, useState } from 'react';
 import { useFichaProyecto, type PersonaHoras } from '@/hooks/admin/useFichaProyecto';
 import { useAsignacionesProyecto, useAsignaciones } from '@/hooks/admin/useAsignaciones';
@@ -7,6 +8,8 @@ import { useUsuarios } from '@/hooks/admin/useUsuarios';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { Donut } from '../compartido/Donut';
 import { Hbar } from '../compartido/Hbar';
+import { SelectorTipologia } from '../compartido/SelectorTipologia';
+import type { AreaTipologia } from '@/hooks/admin/useAreasTipologia';
 import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { ProyectoAdmin } from '@/hooks/admin/useProyectosAdmin';
 
@@ -17,7 +20,18 @@ const CAT_COLOR: Record<string, string> = {
   Gestión: 'var(--cat-gestion)',
 };
 
-export function FichaProyectoEscritorio({ proyecto, anio, mes, onVolver }: { proyecto: ProyectoAdmin; anio: number; mes: number; onVolver: () => void }) {
+interface Props {
+  proyecto: ProyectoAdmin;
+  anio: number;
+  mes: number;
+  areas: AreaTipologia[];
+  /** admin_grupo, o admin_empresa de la empresa del proyecto (misma regla que `proyecto_admin`). */
+  puedeCambiarTipologia: boolean;
+  onCambiarTipologia: (areaId: string | null) => Promise<{ error: string | null }>;
+  onVolver: () => void;
+}
+
+export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambiarTipologia, onCambiarTipologia, onVolver }: Props) {
   const { ficha, loading } = useFichaProyecto(proyecto.id, anio, mes);
   const { asignaciones, recargar: recargarAsig } = useAsignacionesProyecto(proyecto.id);
   const { asignar, finalizar } = useAsignaciones();
@@ -26,15 +40,26 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, onVolver }: { pro
   const nombreMes = useMemo(() => formatoMes(mes), [mes]);
 
   const [personaNueva, setPersonaNueva] = useState('');
+  const [tipologiaGuardada, setTipologiaGuardada] = useState(false);
   const [recienAsignados, setRecienAsignados] = useState<(PersonaHoras & { recienAsignada: true })[]>([]);
   const [finalizados, setFinalizados] = useState<Set<string>>(new Set());
 
-  const hoyStr = new Date().toISOString().slice(0, 10);
+  const hoyStr = hoyMadrid();
   const idsVigentes = new Set(asignaciones.filter((a) => !a.hasta || a.hasta >= hoyStr).map((a) => a.empleadoId));
   const disponibles = usuarios.filter((u) => !idsVigentes.has(u.id));
 
   const personasActivas = ficha?.porPersona ?? [];
   const filasPersonas = [...personasActivas, ...recienAsignados.filter((r) => !personasActivas.some((p) => p.perfilId === r.perfilId))];
+
+  async function onCambiarArea(valor: string) {
+    const { error } = await onCambiarTipologia(valor === '' ? null : valor);
+    if (error) {
+      toast(error, 'error');
+      return;
+    }
+    setTipologiaGuardada(true);
+    setTimeout(() => setTipologiaGuardada(false), 1400);
+  }
 
   async function onAnadirPersona() {
     const u = usuarios.find((x) => x.id === personaNueva);
@@ -73,6 +98,18 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, onVolver }: { pro
         <h2 className="text-xl font-extrabold">{proyecto.nombre}</h2>
         <span className="micro">
           {proyecto.empresaNombre} · {nombreMes}
+        </span>
+        <span className="ml-auto flex items-center gap-2">
+          <label className="micro">Tipología</label>
+          <SelectorTipologia
+            className="input"
+            ariaLabel="Tipología del proyecto"
+            value={proyecto.areaId ?? ''}
+            areas={areas}
+            disabled={!puedeCambiarTipologia}
+            onChange={onCambiarArea}
+          />
+          {tipologiaGuardada && <span className="micro whitespace-nowrap">Guardado ✓</span>}
         </span>
       </div>
 

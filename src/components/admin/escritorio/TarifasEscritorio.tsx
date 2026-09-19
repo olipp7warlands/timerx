@@ -1,5 +1,6 @@
 'use client';
 
+import { hoyMadrid } from '@/lib/fechas';
 import { useState } from 'react';
 import { useTarifas } from '@/hooks/admin/useTarifas';
 import { useCategorias } from '@/hooks/admin/useCategorias';
@@ -24,7 +25,7 @@ export function TarifasEscritorio({ info }: { info: AdminInfo }) {
   const esAdminGrupo = info.rol === 'admin_grupo';
 
   const [aplicarA, setAplicarA] = useState<'categoria' | 'empleado'>('categoria');
-  const [form, setForm] = useState({ categoriaId: '', empleadoId: '', empresaOrigenId: '', precio: '', desde: new Date().toISOString().slice(0, 10) });
+  const [form, setForm] = useState({ categoriaId: '', empleadoId: '', empresaOrigenId: '', precio: '', desde: hoyMadrid() });
 
   async function guardar() {
     if (!form.precio || !form.desde || (aplicarA === 'categoria' && !form.categoriaId) || (aplicarA === 'empleado' && !form.empleadoId)) {
@@ -41,7 +42,7 @@ export function TarifasEscritorio({ info }: { info: AdminInfo }) {
     if (error) toast(error, 'error');
     else {
       toast('Tarifa guardada');
-      setForm({ categoriaId: '', empleadoId: '', empresaOrigenId: '', precio: '', desde: new Date().toISOString().slice(0, 10) });
+      setForm({ categoriaId: '', empleadoId: '', empresaOrigenId: '', precio: '', desde: hoyMadrid() });
     }
   }
 
@@ -80,7 +81,9 @@ export function TarifasEscritorio({ info }: { info: AdminInfo }) {
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Empresa origen (opcional)</label>
             <select className="input" value={form.empresaOrigenId} onChange={(e) => setForm((f) => ({ ...f, empresaOrigenId: e.target.value }))}>
               <option value="">Todas</option>
-              {empresas.map((e) => (
+              {empresas
+                .filter((e) => e.activa || e.id === form.empresaOrigenId)
+                .map((e) => (
                 <option key={e.id} value={e.id}>
                   {e.nombre}
                 </option>

@@ -1,5 +1,6 @@
 'use client';
 
+import { hoyMadrid } from '@/lib/fechas';
 import { useEffect, useMemo, useState } from 'react';
 import { useFaltantesAdmin } from '@/hooks/admin/useFaltantesAdmin';
 import { useImputarDirecto } from '@/hooks/admin/useImputarDirecto';
@@ -19,7 +20,7 @@ export function ControlEscritorio() {
   const nav = useNavAdmin();
   const hoy = useMemo(() => new Date(), []);
   const desdeMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
-  const hastaHoy = hoy.toISOString().slice(0, 10);
+  const hastaHoy = hoyMadrid();
 
   const { faltantes, loading, recargar } = useFaltantesAdmin(desdeMes, hastaHoy);
   const { imputar } = useImputarDirecto();

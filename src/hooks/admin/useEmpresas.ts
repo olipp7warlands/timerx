@@ -8,6 +8,8 @@ export interface Empresa {
   nombre: string;
   cif: string | null;
   activa: boolean;
+  /** Tipología (área del mapa, 020); null = sin tipología. */
+  areaId: string | null;
 }
 
 /** empresa_select es abierto; empresa_admin (escritura) es solo admin_grupo -- la UI debe ocultar el alta a admin_empresa. */
@@ -18,8 +20,8 @@ export function useEmpresas() {
   const recargar = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
-    const { data } = await supabase.from('empresa').select('id, nombre, cif, activa').order('nombre');
-    setEmpresas(data ?? []);
+    const { data } = await supabase.from('empresa').select('id, nombre, cif, activa, area_id').order('nombre');
+    setEmpresas((data ?? []).map((f) => ({ id: f.id, nombre: f.nombre, cif: f.cif, activa: f.activa, areaId: f.area_id })));
     setLoading(false);
   }, []);
 
@@ -28,9 +30,9 @@ export function useEmpresas() {
   }, [recargar]);
 
   const crear = useCallback(
-    async (nombre: string, cif: string | null) => {
+    async (nombre: string, cif: string | null, areaId: string | null) => {
       const supabase = createClient();
-      const { error } = await supabase.from('empresa').insert({ nombre, cif });
+      const { error } = await supabase.from('empresa').insert({ nombre, cif, area_id: areaId });
       if (!error) await recargar();
       return { error: error?.message ?? null };
     },
@@ -39,9 +41,9 @@ export function useEmpresas() {
 
   /** empresa_admin (escritura) es admin_grupo-only, sin excepción de "empresa propia" -- la UI oculta estas acciones para admin_empresa siempre. */
   const actualizar = useCallback(
-    async (id: string, input: { nombre: string; cif: string | null }) => {
+    async (id: string, input: { nombre: string; cif: string | null; areaId: string | null }) => {
       const supabase = createClient();
-      const { error } = await supabase.from('empresa').update({ nombre: input.nombre, cif: input.cif }).eq('id', id);
+      const { error } = await supabase.from('empresa').update({ nombre: input.nombre, cif: input.cif, area_id: input.areaId }).eq('id', id);
       if (!error) await recargar();
       return { error: error?.message ?? null };
     },

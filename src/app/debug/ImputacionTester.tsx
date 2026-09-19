@@ -1,5 +1,6 @@
 'use client';
 
+import { hoyMadrid } from '@/lib/fechas';
 import { useMemo, useState } from 'react';
 import { ToastProvider, useToast } from '@/components/empleado/compartido/Toast';
 import { FilaDia } from '@/components/empleado/compartido/FilaDia';
@@ -14,7 +15,7 @@ import { useMaxHorasDia } from '@/hooks/useMaxHorasDia';
 import { fmt, rangoDias } from '@/lib/horas/calendario';
 
 function hoyISO() {
-  return new Date().toISOString().slice(0, 10);
+  return hoyMadrid();
 }
 
 function ImputacionTesterInterno({ empresaId }: { empresaId: string }) {

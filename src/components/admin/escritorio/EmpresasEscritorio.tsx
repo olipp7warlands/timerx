@@ -1,5 +1,7 @@
 'use client';
 
+import { useAreasTipologia } from '@/hooks/admin/useAreasTipologia';
+import { coloresRosco } from '@/lib/mapa/colores';
 import { useEffect, useState } from 'react';
 import { useEmpresas } from '@/hooks/admin/useEmpresas';
 import { useHorasPorEmpresaYProyecto } from '@/hooks/admin/useHorasPorEmpresaYProyecto';
@@ -8,12 +10,11 @@ import { useProyectosAdmin } from '@/hooks/admin/useProyectosAdmin';
 import { useUsuarios } from '@/hooks/admin/useUsuarios';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { Donut } from '../compartido/Donut';
+import { SelectorTipologia, SIN_TIPOLOGIA, areaDeSelector } from '../compartido/SelectorTipologia';
 import { FichaEmpresaEscritorio } from './FichaEmpresaEscritorio';
 import { useNavAdmin } from '../NavAdmin';
 import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
-
-const GRISES = ['var(--ink-primary)', 'var(--ink-secondary)', 'var(--ink-tertiary)', 'var(--ink-disabled)', 'var(--border-strong)'];
 
 export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
   const nav = useNavAdmin();
@@ -23,6 +24,7 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
 
   const { empresas, loading, crear, actualizar, desactivar } = useEmpresas();
   const { porEmpresa, porProyecto } = useHorasPorEmpresaYProyecto(anio, mes);
+  const { areas, colorDe } = useAreasTipologia();
   const { lineas: refact } = useRefacturacion(anio, mes);
   const { proyectos, crear: crearProyecto } = useProyectosAdmin();
   const { usuarios } = useUsuarios();
@@ -31,6 +33,7 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
   const esAdminGrupo = info.rol === 'admin_grupo';
   const [nombre, setNombre] = useState('');
   const [cif, setCif] = useState('');
+  const [tipologia, setTipologia] = useState(SIN_TIPOLOGIA);
 
   // Ficha derivada de la URL. Con `empresas` aún cargando se ESPERA (nunca se redirige al listado);
   // solo si tras cargar el id no existe se vuelve al listado con aviso.
@@ -44,12 +47,13 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
 
   async function crearEmpresa() {
     if (!nombre) return;
-    const { error } = await crear(nombre, cif || null);
+    const { error } = await crear(nombre, cif || null, areaDeSelector(tipologia, null));
     if (error) toast(error, 'error');
     else {
       toast(`Empresa "${nombre}" creada`);
       setNombre('');
       setCif('');
+      setTipologia(SIN_TIPOLOGIA);
     }
   }
 
@@ -60,6 +64,7 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
         info={info}
         empresa={seleccionado}
         proyectos={proyectos}
+        areas={areas}
         usuarios={usuarios}
         refacturacion={refact}
         porProyecto={porProyecto}
@@ -78,6 +83,7 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
   }
 
   const totalHoras = porEmpresa.reduce((s, e) => s + e.horas, 0);
+  const coloresEmpresas = coloresRosco(porEmpresa.map((e) => e.areaId), colorDe);
 
   return (
     <div className="space-y-4">
@@ -93,6 +99,8 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
                 <input className="input" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Wowinx SL" />
                 <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">CIF</label>
                 <input className="input mono" value={cif} onChange={(e) => setCif(e.target.value)} placeholder="B-12345678" />
+                <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Tipología (área del mapa)</label>
+                <SelectorTipologia value={tipologia} onChange={setTipologia} areas={areas} />
                 <button type="button" className="btn btn-primary full" onClick={crearEmpresa}>
                   Crear empresa
                 </button>
@@ -105,7 +113,7 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
               <span className="micro">{formatoMes(mes)}</span>
             </div>
             <div className="card-body">
-              <Donut total={totalHoras} segmentos={porEmpresa.map((e, i) => ({ etiqueta: e.empresaNombre, valor: e.horas, color: GRISES[i % GRISES.length] }))} />
+              <Donut total={totalHoras} segmentos={porEmpresa.map((e, i) => ({ etiqueta: e.empresaNombre, valor: e.horas, color: coloresEmpresas[i] }))} />
             </div>
           </div>
         </div>
@@ -135,12 +143,15 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
                   return (
                     <tr
                       key={e.id}
-                      className="row-link hover:bg-subtle"
+                      className={`row-link hover:bg-subtle ${e.activa ? '' : 'opacity-60'}`}
                       onClick={(ev) => {
                         if (!(ev.target as HTMLElement).closest('button')) nav.ir('empresas', { fichaId: e.id });
                       }}
                     >
-                      <td className="border-b border-border px-2.5 py-2.5 font-extrabold">{e.nombre}</td>
+                      <td className="border-b border-border px-2.5 py-2.5 font-extrabold">
+                        {e.nombre}
+                        {!e.activa && <span className="mapa-tag ml-2 align-middle">Inactiva</span>}
+                      </td>
                       <td className="mono border-b border-border px-2.5 py-2.5">{e.cif ?? '—'}</td>
                       <td className="mono border-b border-border px-2.5 py-2.5 text-right">{proyectosActivos}</td>
                       <td className="mono border-b border-border px-2.5 py-2.5 text-right">{fmt(horasEmpresa)}</td>

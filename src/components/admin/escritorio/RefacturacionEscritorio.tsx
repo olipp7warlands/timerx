@@ -167,7 +167,9 @@ export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
               {info.rol === 'admin_grupo' && (
                 <select className="input" value={empresaExport} onChange={(e) => setEmpresaExport(e.target.value)}>
                   <option value="">Grupo completo</option>
-                  {empresas.map((e) => (
+                  {empresas
+                .filter((e) => e.activa || e.id === empresaExport)
+                .map((e) => (
                     <option key={e.id} value={e.id}>
                       {e.nombre}
                     </option>

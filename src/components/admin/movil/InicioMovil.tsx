@@ -1,5 +1,8 @@
 'use client';
 
+import { useAreasTipologia } from '@/hooks/admin/useAreasTipologia';
+import { coloresRosco } from '@/lib/mapa/colores';
+import { hoyMadrid, sumarDias } from '@/lib/fechas';
 import { useMemo, useState } from 'react';
 import { useResumenDia } from '@/hooks/admin/useResumenDia';
 import { useResumenMes } from '@/hooks/admin/useResumenMes';
@@ -10,16 +13,8 @@ import { Donut } from '../compartido/Donut';
 import { fmt, formatoDiaLargo, formatoMesAnio } from '@/lib/horas/calendario';
 import { IconCalendario } from '@/components/ui/icons';
 
-const GRISES = ['var(--ink-primary)', 'var(--ink-secondary)', 'var(--ink-tertiary)', 'var(--ink-disabled)', 'var(--border-strong)'];
-
-function sumarDias(fecha: string, delta: number) {
-  const d = new Date(fecha + 'T00:00:00');
-  d.setDate(d.getDate() + delta);
-  return d.toISOString().slice(0, 10);
-}
-
 export function InicioMovil() {
-  const hoy = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const hoy = useMemo(() => hoyMadrid(), []);
   const [fechaDia, setFechaDia] = useState(hoy);
   const [anioMes, setAnioMes] = useState(() => {
     const d = new Date();
@@ -29,6 +24,9 @@ export function InicioMovil() {
   const { resumen: dia } = useResumenDia(fechaDia);
   const { resumen: mes } = useResumenMes(anioMes.anio, anioMes.mes);
   const { porEmpresa, porProyecto } = useHorasPorEmpresaYProyecto(anioMes.anio, anioMes.mes);
+  const { colorDe } = useAreasTipologia();
+  const proyectosRosco = porProyecto.slice(0, 5);
+  const coloresProyectos = coloresRosco(proyectosRosco.map((p) => p.areaId), colorDe);
   const { lineas: refact } = useRefacturacion(anioMes.anio, anioMes.mes);
 
   function cambiarMes(delta: number) {
@@ -147,7 +145,7 @@ export function InicioMovil() {
         <div className="p-3.5">
           <Donut
             total={porProyecto.reduce((s, p) => s + p.horas, 0)}
-            segmentos={porProyecto.slice(0, 5).map((p, i) => ({ etiqueta: p.proyectoNombre, valor: p.horas, color: GRISES[i % GRISES.length] }))}
+            segmentos={proyectosRosco.map((p, i) => ({ etiqueta: p.proyectoNombre, valor: p.horas, color: coloresProyectos[i] }))}
           />
         </div>
       </div>

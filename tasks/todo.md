@@ -1,37 +1,46 @@
-# TODO — Combinado 5+2 (migraciones 018-019) → Lote 4 (migración 020)
+# TODO — Correctivo de verificación (Soporte/Leo en producción) → Lote 4 (migración 020)
 
-> Orden fijado por el usuario: el combinado 5+2 se ejecuta ENTERO (018, 019) con verificación completa y desplegado ANTES de arrancar el Lote 4.
-> `mocks/panel_administracion.html` (259 líneas sin commitear) es la versión acumulada correcta y va en el commit del combinado.
-> Cerrados y desplegados: Lote 1.5 (URLs), Lote 3 (importadores) y seguimiento MODO_EMAIL — ver PLAN.md.
+> Combinado 5+2 (018, 019) aceptado por el usuario el 2026-09-19: cerrado y desplegado, detalle en PLAN.md.
+> **Cifras canónicas de regresión desde ahora (jornada viva 8 h)**: requeridas sept 176 · Andrés 172 / 160 / +12 · FTE 1,0750 · Ximeras 1,9925 · foto SHA-256 ampliada (73 claves, `snap2.mjs`) `a97033ad…`. Las de jornada 7 (154 / 172-140-+32 / 1,2286 / 2,2772) quedan como histórico. El "176,0" del caso 8/8/8/8/5,5 era errata de la spec: 166,0 correcto.
+> Prompt original del Lote 4 recuperado de la transcripción de la sesión anterior (ede907e7, línea 1308); esta sesión empezó sin él.
 
-## A. Sin email (decisión definitiva)
-- [x] A1. Alta manual con campo de contraseña inicial + botón Generar (patrón Xxxxx-1234 del reset, visible para copiar). Importador queda igual (sin contraseña, acceso vía Restablecer). Un solo generador compartido. PLAN.md documenta ambos caminos.
-- [x] A2. Runbook: SMTP/Resend/MODO_EMAIL=real dejan de ser prerequisitos → "Futuro opcional: activar email". Recovery de /login inerte también en producción (cambio de contraseña desde el menú del avatar); cron/botón Recordar siguen en modo log (registran sin enviar).
+## Norma de sesión (corregida por el usuario)
+- **Toda verificación arranca con LOGIN EXPLÍCITO de una identidad de la plantilla (script: magic link → cookie, o `comoUsuario`). NUNCA se usa la sesión que traiga el navegador (Haizea u otra), ni siquiera "sin sobrescribirla".** Al terminar, borrar las cookies `sb-*`.
+- `olcasan08@gmail.com` off-limits.
 
-## B. Soporte (migración 018)
-- [x] B1. Esquema: `ticket` (ref secuencial T-001 generada en BD), `ticket_comentario`; enums tipo/estado; RLS (empleado propios; admin_empresa su empresa; admin_grupo todo; estado solo admins; sin delete).
-- [x] B2. Empleado (4 shells): "Soporte" en el menú del avatar entre Cambiar contraseña y Cerrar sesión → modal/hoja: mis tickets + hilo + comentar + Nuevo ticket.
-- [x] B3. Admin escritorio: sección Soporte (Operación, tras Control), `/admin/soporte` y `/admin/soporte/<id>`; filtros, tabla row-link, ficha con hilo, responder (abierto→en_curso), Marcar en curso/resuelto/Reabrir. Admin móvil: pantalla funcional en el drawer.
-- [x] B4. Badge nº de tickets abiertos junto a Soporte en el sidebar admin.
-- [x] B5. Seed demo: T-014..T-017 literales del mock (hilos, autores, estados).
+## 0. Cierre de papeles
+- [x] 0a. PLAN.md: cifras canónicas de jornada 8 como regresión + norma de sesión.
+- [x] 0b. "Haiba": comprobar en `perfil` y `auth.users` (13/13) → respuesta (errata de Haizea si no existe cuenta distinta).
 
-## C. Jornada semanal + resúmenes de día (migración 019 — núcleo delicado)
-- [x] C0. Foto base ANTES de la 019 (fte_mes, balance_mes_empleado, estado_dias_mes + resumen_dia/mes, faltantes) y citar qué funciones de la familia tocan jornada/laborables.
-- [x] C1. `empresa_jornada` (7 filas por empresa; seed = jornada viva 8h L-V (`ajuste.jornada_horas`=8) / 0 S-D).
-- [x] C2. `jornada_del_dia()` helper único; `es_laborable`, `horas_requeridas` generalizados; parchear SOLO las funciones demostradas.
-- [x] C3. Regresión byte-idéntica con el seed plano.
-- [x] C4. Caso Wowinx 8/8/8/8/5,5 → sep 2026 = **166,0 h** (la spec decía 176,0: error de suma, 18×8+4×5,5 = 166); efectivas de Andrés = 150; revertido y regresión repetida. Seed = jornada VIVA (8), no 7.
-- [x] C5. UI jornada semanal en Calendario (admin_grupo).
-- [x] C6. Resumen del día (`/admin/calendario?dia=YYYY-MM-DD`), ámbito como resumen_dia.
-- [x] C7. Mini-calendario en la ficha de usuario (sin SQL nueva sin reporte).
+## 1. CORRECTIVO OBLIGATORIO (antes del Lote 4) — lado empleado del ciclo de Soporte EN PRODUCCIÓN
+- [x] 1a. Foto base: conteos de las 21 tablas + `auth.users`, siguiente ref de ticket.
+- [x] 1b. Login explícito de **Leo** (magic link con `redirectTo` = dominio de Railway → cookie) en `timerx-production.up.railway.app`.
+- [x] 1c. Leo: crea ticket (UI desplegada) → lo ve en su lista → admin (Cristian, script con sesión real) responde → Leo ve respuesta/estado → Leo comenta → Cristian resuelve → Leo lo ve resuelto.
+- [x] 1d. Revertir: borrar ticket+comentarios de prueba, `ticket_ref_resincronizar()`, conteos idénticos a 1a, siguiente ref = T-018, T-014..T-017 intactos. Borrar cookies `sb-*`.
+- [x] 1e. Documentar en PLAN.md.
 
-## Verificación (local + producción) y cierre
-- [x] Ciclo Soporte con sesiones reales, ámbitos, RLS con intentos reales, ref sin colisiones, revertido.
-- [x] Alta manual con contraseña: crear, login con ella, revertir.
-- [x] Jornada: regresión + caso 166,0 + resumen 11-sep vs faltantes de Control + mini-calendario de Andrés + `?dia=` F5/atrás + 3 identidades.
-- [x] Capturas contra el mock; build; commit+push (con el mock); redeploy; regresión REPETIDA en producción; conteos idénticos salvo los 4 tickets (commits eeb3a20 + el del panel 'soloMios').
+## 2. LOTE 4 (migración 020) — se arranca solo al cerrar el punto 1
+- [x] 2.1 Tipologías: `empresa.area_id`, `proyecto.area_id` (uuid null → mapa_area); selector "Heredar de la empresa (X)" (copia) / áreas / sin tipología; select de área en alta y Editar de empresa; seed Wowinx→Tecnología, Málaga→Deportes, Legal Norte→NULL, proyectos heredan salvo Interno y Asesoría intragrupo→NULL.
+- [x] 2.2 Mapa semi-automático (composición en lectura en `useMapa`): proyectos ACTIVOS con área bajo su área, tag AUTO, tras los manuales, dedupe por nombre (manual manda).
+- [x] 2.3 Color por área en roscos: `colorProyecto/colorEmpresa` únicos (`src/lib/mapa/colores.ts`), degradado por índice, fallback grises; aplicar a todos los quesos (único componente `Donut.tsx`); quesos por categoría con colores de categoría; leyendas nombre+%.
+- [x] 2.4 Edición inline en Usuarios (Departamento/Rol/Categoría; mismas mutaciones de `useUsuarios.actualizar`; rol con `confirmar()`; empresa/nombre no; guard de fila; ámbito admin_empresa).
+- [x] 2.5 Alta rápida de categoría en el formulario de invitación (misma mutación `crearCategoria`, global; se autoselecciona; "Creada ✓").
+- [x] 2.6a `empresa.activa` deja de ser decorativa: selectores filtran activa=true (documentar cuáles) + listado atenuado con badge "Inactiva".
+- [x] 2.6b Hero empleado sin imputaciones: balance atenuado + "Aún sin imputaciones este mes" (solo presentación).
+- [x] 2.6c PLAN.md: decisión de alcance cerrada — bandeja de aprobación y fichas NO en admin móvil v1; retirar "candidatas".
+- [x] 2.a Micro-aviso en el resumen del día de admin_empresa ("Las horas de tu gente en proyectos de otras empresas no se incluyen") + semántica documentada en PLAN.md.
+- [x] 2.b Bug `toISOString()`: helper único de fechas, corregir `useFichaUsuario` YA y barrer el repo — citar CADA uso con veredicto.
+- [x] 2.c Lint: los 5 nuevos a cero (79 preexistentes no son de este lote; medir línea base antes).
+- [x] 2.d Seed del ticket con día de semana: ajustar al día real que calcula la app, no al texto del mock.
 
-## Lote 4 (migración 020) — YA PUEDE ARRANCAR: combinado 5+2 cerrado y desplegado (018, 019). Pendiente de que el usuario lo confirme.
+## 3. Verificación y cierre del Lote 4
+- [x] Regresión de cifras: cruda `a97033ad…` idéntica antes/después de la 020; tras las pruebas de UI la cruda es `d8d7dbcc…` con los mismos datos (orden de empates) y la CANÓNICA `6c50f784` no cambia; conteos idénticos; RLS de las columnas nuevas con intentos reales de Marina.
+- [x] Ciclo del enunciado en LOCAL con login explícito por identidad (Cristian, Andrés, Marina, Cosme): heredar→AUTO en Andrés→homónimo lo desplaza→cambiar tipología recoloca y recolorea; roscos claro/oscuro; inline; alta rápida; selectores sin inactivas (con control positivo); hero sin horas (escritorio y móvil).
+- [ ] Capturas contra el mock; build; commit + push; redeploy; retest en producción (login explícito por identidad).
+
+## Hallazgos abiertos (tareas separadas, NO tocadas)
+- [ ] **SEGURIDAD**: `perfil_update_admin` permite a un admin_empresa cambiar `rol` (incluido el suyo a `admin_grupo`) por API directa. Reproducido y revertido. Requiere guarda + retest de 3 identidades. Pendiente de confirmación del usuario.
+- [ ] `resumen_dia`/`resumen_mes`: `order by` sin desempate (huella cruda frágil). Regresión con huella canónica `6c50f784`.
 
 ## Revisión
-- Línea base previa (Lote 3): conteos y hash `756660c9…` de fte/balance/estado sep+oct (scratchpad). Para la 019 se toma una foto ampliada (resumen_dia/mes, faltantes) antes de migrar.
+- Lote 4 completo en local; pendiente: commit/push, redeploy y retest en producción con login explícito (ver PLAN.md).

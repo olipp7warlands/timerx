@@ -1,3 +1,4 @@
+import { hoyMadrid, sumarDias } from '@/lib/fechas';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { procesarRecordatorios } from '@/lib/recordatorios/enviar';
@@ -10,11 +11,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  const hoy = new Date();
-  const desde = new Date(hoy);
-  desde.setDate(desde.getDate() - VENTANA_DIAS);
-  const fechaDesde = desde.toISOString().slice(0, 10);
-  const fechaHasta = hoy.toISOString().slice(0, 10);
+  const fechaHasta = hoyMadrid();
+  const fechaDesde = sumarDias(fechaHasta, -VENTANA_DIAS);
 
   const supabaseAdmin = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { autoRefreshToken: false, persistSession: false },

@@ -1,11 +1,14 @@
 'use client';
 
+import { ultimoDiaMes } from '@/lib/fechas';
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 export interface HorasEmpresa {
   empresaId: string;
   empresaNombre: string;
+  /** Tipología de la empresa (área del mapa), null = sin tipología. */
+  areaId: string | null;
   horas: number;
 }
 
@@ -14,12 +17,14 @@ export interface HorasProyecto {
   proyectoNombre: string;
   empresaId: string;
   empresaNombre: string;
+  /** Tipología del proyecto (área del mapa), null = sin tipología. */
+  areaId: string | null;
   horas: number;
 }
 
 const SELECT = `
   horas, proyecto_id,
-  proyecto:proyecto_id(nombre, empresa_id, empresa:empresa_id(nombre))
+  proyecto:proyecto_id(nombre, empresa_id, area_id, empresa:empresa_id(nombre, area_id))
 `;
 
 /**
@@ -36,7 +41,7 @@ export function useHorasPorEmpresaYProyecto(anio: number, mes: number) {
     setLoading(true);
     const supabase = createClient();
     const desde = `${anio}-${String(mes).padStart(2, '0')}-01`;
-    const hasta = new Date(anio, mes, 0).toISOString().slice(0, 10);
+    const hasta = ultimoDiaMes(anio, mes);
 
     const { data } = await supabase
       .from('imputacion')
@@ -56,6 +61,7 @@ export function useHorasPorEmpresaYProyecto(anio: number, mes: number) {
       const empresaActual = empresas.get(proyecto.empresa_id) ?? {
         empresaId: proyecto.empresa_id,
         empresaNombre: proyecto.empresa?.nombre ?? '',
+        areaId: proyecto.empresa?.area_id ?? null,
         horas: 0,
       };
       empresaActual.horas += horas;
@@ -66,6 +72,7 @@ export function useHorasPorEmpresaYProyecto(anio: number, mes: number) {
         proyectoNombre: proyecto.nombre,
         empresaId: proyecto.empresa_id,
         empresaNombre: proyecto.empresa?.nombre ?? '',
+        areaId: proyecto.area_id ?? null,
         horas: 0,
       };
       proyectoActual.horas += horas;

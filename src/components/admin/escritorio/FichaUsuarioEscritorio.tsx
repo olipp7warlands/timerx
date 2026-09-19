@@ -1,5 +1,6 @@
 'use client';
 
+import { hoyMadrid } from '@/lib/fechas';
 import { useMemo, useState } from 'react';
 import type { UsuarioAdmin, ActualizarUsuarioInput } from '@/hooks/admin/useUsuarios';
 import { useEmpresas } from '@/hooks/admin/useEmpresas';
@@ -73,7 +74,7 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
   const [restableciendo, setRestableciendo] = useState(false);
   const [passwordGenerada, setPasswordGenerada] = useState<string | null>(null);
 
-  const hoyStr = hoy.toISOString().slice(0, 10);
+  const hoyStr = hoyMadrid();
   const asignacionesVigentes = asignaciones.filter((a) => !a.hasta || a.hasta >= hoyStr);
   const idsAsignados = new Set(asignacionesVigentes.map((a) => a.proyectoId));
   const proyectosDisponibles = proyectos.filter((p) => !idsAsignados.has(p.id));
@@ -273,7 +274,9 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
                 <div>
                   <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Empresa empleadora</label>
                   <select className="input" disabled={!esAdminGrupo} value={draft.empresaId} onChange={(e) => setDraft((d) => ({ ...d, empresaId: e.target.value }))}>
-                    {empresas.map((e) => (
+                    {empresas
+                .filter((e) => e.activa || e.id === draft.empresaId)
+                .map((e) => (
                       <option key={e.id} value={e.id}>
                         {e.nombre}
                       </option>

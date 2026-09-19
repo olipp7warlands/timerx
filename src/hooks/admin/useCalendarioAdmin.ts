@@ -1,5 +1,6 @@
 'use client';
 
+import { ultimoDiaMes } from '@/lib/fechas';
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -50,7 +51,7 @@ export function useCalendarioAdmin(anio: number, empresaId: string | null) {
             supabase.rpc('jornada_dias_mes', { p_anio: anio, p_mes: mes, p_empresa: empresaId }),
           ]);
           const desde = `${anio}-${String(mes).padStart(2, '0')}-01`;
-          const hasta = new Date(anio, mes, 0).toISOString().slice(0, 10);
+          const hasta = ultimoDiaMes(anio, mes);
           const festivosDelMes = (festivosData ?? []).filter(
             (f: any) => f.fecha >= desde && f.fecha <= hasta && (f.empresa_id === null || f.empresa_id === empresaId)
           ).length;

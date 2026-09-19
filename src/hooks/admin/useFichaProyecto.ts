@@ -1,5 +1,6 @@
 'use client';
 
+import { ultimoDiaMes } from '@/lib/fechas';
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -56,7 +57,7 @@ export function useFichaProyecto(proyectoId: string | null, anio: number, mes: n
     setLoading(true);
     const supabase = createClient();
     const desde = `${anio}-${String(mes).padStart(2, '0')}-01`;
-    const hasta = new Date(anio, mes, 0).toISOString().slice(0, 10);
+    const hasta = ultimoDiaMes(anio, mes);
     const desdeAnio = `${anio}-01-01`;
 
     const [{ data: filasMes }, { data: filasAnio }, { data: filasRefact }] = await Promise.all([

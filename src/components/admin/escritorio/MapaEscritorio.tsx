@@ -223,7 +223,9 @@ export function MapaEscritorio({ info }: { info: AdminInfo }) {
                 <label className="mb-1 mt-2 block text-xs font-extrabold text-ink-tertiary">Empresa (opcional)</label>
                 <select className="input" value={itemForm.empresaId} onChange={(e) => setItemForm((f) => ({ ...f, empresaId: e.target.value }))}>
                   <option value="">Sin empresa</option>
-                  {empresas.map((e) => (
+                  {empresas
+                .filter((e) => e.activa || e.id === itemForm.empresaId)
+                .map((e) => (
                     <option key={e.id} value={e.id}>
                       {e.nombre}
                     </option>

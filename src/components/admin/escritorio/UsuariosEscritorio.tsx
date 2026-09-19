@@ -1,16 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useUsuarios } from '@/hooks/admin/useUsuarios';
+import { useUsuarios, type ActualizarUsuarioInput, type UsuarioAdmin } from '@/hooks/admin/useUsuarios';
 import { useDepartamentos } from '@/hooks/admin/useDepartamentos';
 import { useEmpresas } from '@/hooks/admin/useEmpresas';
 import { useCategorias } from '@/hooks/admin/useCategorias';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { invitarUsuario } from '@/app/admin/actions';
-import { ETIQUETA_ROL } from '@/lib/auth/roles';
+import { confirmar } from '@/components/ui/confirmar';
+import { ETIQUETA_ROL, type RolUsuario } from '@/lib/auth/roles';
 import { generarPasswordTemporal } from '@/lib/usuarios/password';
 import { FichaUsuarioEscritorio } from './FichaUsuarioEscritorio';
 import { ImportadorBloque } from '../compartido/ImportadorBloque';
+import { CeldaEditable } from '../compartido/CeldaEditable';
 import { useNavAdmin } from '../NavAdmin';
 import type { AdminInfo } from '../types';
 
@@ -19,7 +21,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
   const { usuarios, loading, recargar, actualizar, desactivar } = useUsuarios();
   const { departamentos, crear: crearDepartamento } = useDepartamentos();
   const { empresas } = useEmpresas();
-  const { categorias } = useCategorias();
+  const { categorias, crearCategoria } = useCategorias();
   const toast = useToast();
 
   const esAdminGrupo = info.rol === 'admin_grupo';
@@ -37,6 +39,14 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
 
   const [enviando, setEnviando] = useState(false);
   const [depNombre, setDepNombre] = useState('');
+
+  // Alta rápida de categoría (Lote 4): nace GLOBAL (departamento NULL); para acotarla, sección Categorías.
+  const [catRapida, setCatRapida] = useState<{ abierta: boolean; nombre: string; creada: boolean }>({ abierta: false, nombre: '', creada: false });
+
+  // Edición inline (Lote 4): una sola celda abierta a la vez + ✓ efímero de la última guardada.
+  type CampoInline = 'departamento' | 'rol' | 'categoria';
+  const [celda, setCelda] = useState<{ id: string; campo: CampoInline } | null>(null);
+  const [celdaGuardada, setCeldaGuardada] = useState<{ id: string; campo: CampoInline } | null>(null);
 
   // Ficha derivada de la URL. Con datos aún cargando se ESPERA (nunca se redirige al listado);
   // solo si tras cargar el id no existe (o la RLS no lo muestra) se vuelve al listado con aviso.
@@ -87,6 +97,48 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
     recargar();
   }
 
+  async function crearCatRapida() {
+    const nombre = catRapida.nombre.trim();
+    if (!nombre) return;
+    const { error, id } = await crearCategoria(nombre);
+    if (error || !id) {
+      toast(error ?? 'No se pudo crear la categoría', 'error');
+      return;
+    }
+    setForm((f) => ({ ...f, categoriaId: id }));
+    setCatRapida({ abierta: false, nombre: '', creada: true });
+    setTimeout(() => setCatRapida((c) => ({ ...c, creada: false })), 1400);
+  }
+
+  /**
+   * Guarda una celda editada in situ con la MISMA mutación que la ficha (`useUsuarios.actualizar`, no una segunda vía).
+   * Rol pide la misma confirmación que la ficha; departamento y categoría guardan directo. Empresa y nombre no son
+   * editables aquí (la empresa tiene puerta única: la ficha).
+   */
+  async function guardarCelda(u: UsuarioAdmin, campo: CampoInline, valor: string) {
+    setCelda(null);
+    // Solo el campo cambiado: nunca reescribir el resto de la fila con datos cacheados (ver ActualizarUsuarioInput).
+    const input: ActualizarUsuarioInput = {};
+    if (campo === 'departamento') {
+      if ((valor || null) === u.departamentoId) return;
+      input.departamentoId = valor || null;
+    } else if (campo === 'categoria') {
+      if ((valor || null) === u.categoriaId) return;
+      input.categoriaId = valor || null;
+    } else {
+      if (valor === u.rol) return;
+      if (!confirmar(`Vas a cambiar el rol de ${u.nombre} de «${ETIQUETA_ROL[u.rol]}» a «${ETIQUETA_ROL[valor as RolUsuario]}»: cambia lo que puede ver y aprobar. ¿Confirmas?`)) return;
+      input.rol = valor as RolUsuario;
+    }
+    const { error } = await actualizar(u.id, input);
+    if (error) {
+      toast(error, 'error');
+      return;
+    }
+    setCeldaGuardada({ id: u.id, campo });
+    setTimeout(() => setCeldaGuardada(null), 1200);
+  }
+
   async function crearDep() {
     if (!depNombre) return;
     const { error } = await crearDepartamento(depNombre, null);
@@ -130,11 +182,13 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
               disabled={!esAdminGrupo}
               onChange={(e) => setForm((f) => ({ ...f, empresaId: e.target.value }))}
             >
-              {empresas.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.nombre}
-                </option>
-              ))}
+              {empresas
+                .filter((e) => e.activa || e.id === form.empresaId)
+                .map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.nombre}
+                  </option>
+                ))}
             </select>
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Departamento</label>
             <select className="input" value={form.departamentoId} onChange={(e) => setForm((f) => ({ ...f, departamentoId: e.target.value }))}>
@@ -161,6 +215,30 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                 </option>
               ))}
             </select>
+            {esAdminGrupo && (
+              <div className="mt-2 flex items-center gap-2">
+                <button type="button" className="btn btn-sm" onClick={() => setCatRapida((c) => ({ ...c, abierta: true }))}>
+                  {catRapida.creada ? 'Creada ✓' : '＋ Nueva categoría'}
+                </button>
+                {catRapida.abierta && (
+                  <>
+                    <input
+                      className="input flex-1"
+                      autoFocus
+                      placeholder="Nombre de la categoría"
+                      value={catRapida.nombre}
+                      onChange={(e) => setCatRapida((c) => ({ ...c, nombre: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') crearCatRapida();
+                      }}
+                    />
+                    <button type="button" className="btn btn-primary btn-sm" onClick={crearCatRapida}>
+                      Crear
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Contraseña inicial</label>
             <div className="flex gap-2">
               <input
@@ -242,7 +320,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
           <input className="input w-[190px]" placeholder="Buscar" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
         </div>
         <div className="px-1.5 pb-2">
-          {loading ? (
+          {loading && usuarios.length === 0 ? (
             <p className="p-4 text-sm text-ink-tertiary">Cargando…</p>
           ) : (
             <table className="w-full border-collapse text-sm">
@@ -257,30 +335,68 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                 </tr>
               </thead>
               <tbody>
-                {filtrados.map((u) => (
+                {filtrados.map((u) => {
+                  // Mismas reglas que la ficha: admin_grupo edita a todos; admin_empresa solo a los de su empresa (fuera de ámbito, celda normal).
+                  const puedeEditar = esAdminGrupo || u.empresaId === info.empresaId;
+                  const abierta = (campo: CampoInline) => celda?.id === u.id && celda.campo === campo;
+                  const guardada = (campo: CampoInline) => celdaGuardada?.id === u.id && celdaGuardada.campo === campo;
+                  return (
                   <tr
                     key={u.id}
                     className="row-link hover:bg-subtle"
                     onClick={(e) => {
-                      if (!(e.target as HTMLElement).closest('button')) nav.ir('usuarios', { fichaId: u.id });
+                      const destino = e.target as HTMLElement;
+                      if (!destino.closest('button') && !destino.closest('.cell-edit')) nav.ir('usuarios', { fichaId: u.id });
                     }}
                   >
                     <td className="border-b border-border px-2.5 py-2.5 font-extrabold">{u.nombre}</td>
                     <td className="border-b border-border px-2.5 py-2.5">{u.empresaNombre}</td>
-                    <td className="border-b border-border px-2.5 py-2.5">{u.departamento ?? '—'}</td>
-                    <td className="border-b border-border px-2.5 py-2.5">
+                    <CeldaEditable
+                      editable={puedeEditar}
+                      valor={u.departamentoId ?? ''}
+                      opciones={[{ valor: '', etiqueta: 'Sin departamento' }, ...departamentos.map((d) => ({ valor: d.id, etiqueta: d.nombre }))]}
+                      abierta={abierta('departamento')}
+                      guardada={guardada('departamento')}
+                      onAbrir={() => setCelda({ id: u.id, campo: 'departamento' })}
+                      onCancelar={() => setCelda(null)}
+                      onElegir={(v) => guardarCelda(u, 'departamento', v)}
+                    >
+                      {u.departamento ?? '—'}
+                    </CeldaEditable>
+                    <CeldaEditable
+                      editable={esAdminGrupo}
+                      valor={u.rol}
+                      opciones={(['empleado', 'responsable_proyecto', 'admin_empresa', 'admin_grupo'] as RolUsuario[]).map((r) => ({ valor: r, etiqueta: ETIQUETA_ROL[r] }))}
+                      abierta={abierta('rol')}
+                      guardada={guardada('rol')}
+                      onAbrir={() => setCelda({ id: u.id, campo: 'rol' })}
+                      onCancelar={() => setCelda(null)}
+                      onElegir={(v) => guardarCelda(u, 'rol', v)}
+                    >
                       <span className={`role inline-block rounded-full px-2.5 py-1 text-[11px] font-extrabold ${u.rol === 'admin_grupo' ? 'bg-accent text-on-accent' : 'bg-subtle text-ink-secondary'}`}>
                         {ETIQUETA_ROL[u.rol] ?? u.rol}
                       </span>
-                    </td>
-                    <td className="border-b border-border px-2.5 py-2.5">{u.categoriaNombre ?? '—'}</td>
+                    </CeldaEditable>
+                    <CeldaEditable
+                      editable={puedeEditar}
+                      valor={u.categoriaId ?? ''}
+                      opciones={[{ valor: '', etiqueta: 'Sin categoría' }, ...categorias.map((c) => ({ valor: c.id, etiqueta: c.nombre }))]}
+                      abierta={abierta('categoria')}
+                      guardada={guardada('categoria')}
+                      onAbrir={() => setCelda({ id: u.id, campo: 'categoria' })}
+                      onCancelar={() => setCelda(null)}
+                      onElegir={(v) => guardarCelda(u, 'categoria', v)}
+                    >
+                      {u.categoriaNombre ?? '—'}
+                    </CeldaEditable>
                     <td className="border-b border-border px-2.5 py-2.5 text-right">
                       <button type="button" className="btn btn-sm" onClick={() => nav.ir('usuarios', { fichaId: u.id })}>
                         Ver
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           )}

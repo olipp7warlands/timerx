@@ -92,7 +92,9 @@ export function CalendarioEscritorio({ info }: { info: AdminInfo }) {
           <div className="card-body">
             <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Empresa</label>
             <select className="input" value={empresaId} onChange={(e) => setEmpresaId(e.target.value)}>
-              {empresas.map((e) => (
+              {empresas
+                .filter((e) => e.activa || e.id === empresaId)
+                .map((e) => (
                 <option key={e.id} value={e.id}>
                   {e.nombre}
                 </option>
@@ -301,6 +303,12 @@ function ResumenDiaCard({ fecha, info }: { fecha: string; info: AdminInfo }) {
         <span className="micro">{subtitulo}</span>
       </div>
       <div className="px-1.5 pb-2">{cuerpo}</div>
+      {/* Consecuencia correcta de la RLS de `imputacion` (un admin_empresa solo ve imputaciones de proyectos de SU empresa), pero sin aviso parece un descuadre. */}
+      {info.rol === 'admin_empresa' && (
+        <p className="micro px-3.5 pb-3" data-testid="resumen-dia-aviso">
+          Las horas de tu gente en proyectos de otras empresas no se incluyen.
+        </p>
+      )}
     </div>
   );
 }

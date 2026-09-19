@@ -1,5 +1,6 @@
 'use server';
 
+import { hoyMadrid, sumarDias } from '@/lib/fechas';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { createClient as createSessionClient } from '@/lib/supabase/server';
 import { getPerfilServer } from '@/lib/supabase/perfil';
@@ -53,11 +54,8 @@ export async function enviarRecordatoriosManual(): Promise<{ error: string | nul
     return { error: 'Sin permisos para enviar recordatorios', procesados: 0, omitidos: 0 };
   }
 
-  const hoy = new Date();
-  const desde = new Date(hoy);
-  desde.setDate(desde.getDate() - VENTANA_DIAS_RECORDATORIO);
-  const fechaDesde = desde.toISOString().slice(0, 10);
-  const fechaHasta = hoy.toISOString().slice(0, 10);
+  const fechaHasta = hoyMadrid();
+  const fechaDesde = sumarDias(fechaHasta, -VENTANA_DIAS_RECORDATORIO);
 
   const supabaseSesion = await createSessionClient();
   const { data, error } = await supabaseSesion.rpc('faltantes', { p_desde: fechaDesde, p_hasta: fechaHasta });
@@ -87,11 +85,8 @@ export async function enviarRecordatorioEmpleado(perfilId: string): Promise<{ er
     return { error: 'Sin permisos para enviar recordatorios', procesados: 0, omitidos: 0 };
   }
 
-  const hoy = new Date();
-  const desde = new Date(hoy);
-  desde.setDate(desde.getDate() - VENTANA_DIAS_RECORDATORIO);
-  const fechaDesde = desde.toISOString().slice(0, 10);
-  const fechaHasta = hoy.toISOString().slice(0, 10);
+  const fechaHasta = hoyMadrid();
+  const fechaDesde = sumarDias(fechaHasta, -VENTANA_DIAS_RECORDATORIO);
 
   const supabaseSesion = await createSessionClient();
   const { data, error } = await supabaseSesion.rpc('faltantes', { p_desde: fechaDesde, p_hasta: fechaHasta });

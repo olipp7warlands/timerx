@@ -11,18 +11,21 @@ import { confirmar } from '@/components/ui/confirmar';
 import { ETIQUETA_ROL } from '@/lib/auth/roles';
 import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
+import type { AreaTipologia } from '@/hooks/admin/useAreasTipologia';
+import { SelectorTipologia, HEREDAR, SIN_TIPOLOGIA, areaDeSelector } from '../compartido/SelectorTipologia';
 
 interface Props {
   info: AdminInfo;
   empresa: Empresa;
   proyectos: ProyectoAdmin[];
+  areas: AreaTipologia[];
   usuarios: UsuarioAdmin[];
   refacturacion: LineaRefacturacion[];
   porProyecto: HorasProyecto[];
   horasEmpresa: number;
   mes: number;
   onVolver: () => void;
-  onActualizar: (id: string, input: { nombre: string; cif: string | null }) => Promise<{ error: string | null }>;
+  onActualizar: (id: string, input: { nombre: string; cif: string | null; areaId: string | null }) => Promise<{ error: string | null }>;
   onDesactivar: (id: string) => Promise<{ error: string | null }>;
   onCrearProyecto: (input: NuevoProyecto) => Promise<{ error: string | null }>;
   onIrAProyecto: (proyectoId: string) => void;
@@ -35,6 +38,7 @@ export function FichaEmpresaEscritorio({
   info,
   empresa,
   proyectos,
+  areas,
   usuarios,
   refacturacion,
   porProyecto,
@@ -68,20 +72,22 @@ export function FichaEmpresaEscritorio({
   const totalRefacturacion = [...porOrigen.values()].reduce((s, v) => s + v, 0);
 
   const [editando, setEditando] = useState(false);
-  const [draft, setDraft] = useState({ nombre: empresa.nombre, cif: empresa.cif ?? '' });
+  const [draft, setDraft] = useState({ nombre: empresa.nombre, cif: empresa.cif ?? '', tipologia: empresa.areaId ?? SIN_TIPOLOGIA });
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [nuevoCodigo, setNuevoCodigo] = useState('');
+  const [nuevaTipologia, setNuevaTipologia] = useState(HEREDAR);
+  const tipologiaNombre = areas.find((a) => a.id === empresa.areaId)?.nombre ?? 'Sin tipología';
 
   function toggleEditando() {
     setEditando((v) => {
       const abriendo = !v;
-      if (abriendo) setDraft({ nombre: empresa.nombre, cif: empresa.cif ?? '' });
+      if (abriendo) setDraft({ nombre: empresa.nombre, cif: empresa.cif ?? '', tipologia: empresa.areaId ?? SIN_TIPOLOGIA });
       return abriendo;
     });
   }
 
   async function onGuardarEdicion() {
-    const { error } = await onActualizar(empresa.id, { nombre: draft.nombre, cif: draft.cif || null });
+    const { error } = await onActualizar(empresa.id, { nombre: draft.nombre, cif: draft.cif || null, areaId: areaDeSelector(draft.tipologia, null) });
     if (error) toast(error, 'error');
     else {
       toast('Datos actualizados');
@@ -110,12 +116,13 @@ export function FichaEmpresaEscritorio({
       toast('Nombre y código son obligatorios', 'error');
       return;
     }
-    const { error } = await onCrearProyecto({ empresaId: empresa.id, codigo: nuevoCodigo.trim(), nombre: nuevoNombre.trim() });
+    const { error } = await onCrearProyecto({ empresaId: empresa.id, codigo: nuevoCodigo.trim(), nombre: nuevoNombre.trim(), areaId: areaDeSelector(nuevaTipologia, empresa.areaId) });
     if (error) toast(error, 'error');
     else {
       toast(`Proyecto "${nuevoNombre.trim()}" creado`);
       setNuevoNombre('');
       setNuevoCodigo('');
+      setNuevaTipologia(HEREDAR);
     }
   }
 
@@ -143,7 +150,7 @@ export function FichaEmpresaEscritorio({
               <span className={`h-[7px] w-[7px] rounded-full ${empresa.activa ? 'bg-ink-primary' : 'bg-ink-disabled'}`} />
               {empresa.activa ? 'Activa' : 'Inactiva'}
             </span>{' '}
-            · empresa receptora de servicio
+            · <span className="role">{tipologiaNombre}</span> · empresa receptora de servicio
           </p>
         </div>
       </div>
@@ -216,9 +223,10 @@ export function FichaEmpresaEscritorio({
               </tbody>
             </table>
             {puedeCrearAqui && (
-              <div className="flex items-center gap-2 p-3">
+              <div className="flex flex-wrap items-center gap-2 p-3">
                 <input className="input" value={nuevoCodigo} onChange={(e) => setNuevoCodigo(e.target.value)} placeholder="Código" style={{ maxWidth: 100 }} />
                 <input className="input flex-1" value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} placeholder="Nombre del nuevo proyecto" style={{ maxWidth: 260 }} />
+                <SelectorTipologia className="input" ariaLabel="Tipología del nuevo proyecto" value={nuevaTipologia} onChange={setNuevaTipologia} areas={areas} heredarDe={{ areaId: empresa.areaId }} />
                 <button type="button" className="btn btn-primary btn-sm" onClick={onNuevoProyecto}>
                   ＋ Nuevo proyecto
                 </button>
@@ -318,6 +326,10 @@ export function FichaEmpresaEscritorio({
                     <div>
                       <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">CIF</label>
                       <input className="input mono" value={draft.cif} onChange={(e) => setDraft((d) => ({ ...d, cif: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Tipología</label>
+                      <SelectorTipologia value={draft.tipologia} onChange={(v) => setDraft((d) => ({ ...d, tipologia: v }))} areas={areas} />
                     </div>
                     <button type="button" className="btn btn-primary btn-sm" style={{ gridColumn: '1 / -1' }} onClick={onGuardarEdicion}>
                       Guardar cambios
