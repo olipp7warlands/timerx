@@ -159,3 +159,16 @@ C imputar_directo: AE solo si empleado Y proyecto son de SU empresa (guarda RPC 
 - **CONGELACIÓN DE SEGURIDAD en vigor**: nuevos hallazgos menores → `docs/seguridad-backlog.md`; solo críticos demostrables abren migración.
 - Backlog abierto documentado: I-residual (ban en Auth al desactivar), L (mitigado por proceso).
 
+---
+
+# RUNBOOK DE PRODUCCIÓN — ejecución por fases (prompt del usuario, 2026-09-19)
+
+- [x] **Reconciliar** `docs/runbook-produccion.md` con el prompt (este manda): reescrito; discrepancias en su §1.
+- [x] **Paso 0 — I-residual**: server action `desactivarUsuario`/`reactivarUsuario` (ban + permisos.ts), migración 025 (pre-request), verificación con JWT vigente (local y demo desplegada), revertido, huella `6c50f784` intacta, commit+push+redeploy demo.
+- [x] **Fase 1 — seed** `supabase/seed-produccion.sql` con veredicto por sección; validado en copia emulada de proyecto nuevo; bootstrap `scripts/bootstrap-admin.mjs` probado.
+- [ ] **PAUSA** — esperando del usuario (runbook §2): org/plan/región/coste del proyecto Supabase, CIF reales, jornadas por empresa, confirmar catálogo, `descripcion_obligatoria`, datos de la primera cuenta admin, dominio, despliegue (main vs rama), región Railway.
+- [ ] Fase 2 — proyecto Supabase nuevo (link, 24 migraciones, censo, config push con diff previo, seed, verificaciones 023–025 con su anon key, bootstrap, backups).
+- [ ] Fase 3 — Railway producción (servicio + cron gemelo, `CRON_SECRET` nuevo, `MODO_EMAIL=log`); demo intacta.
+- [ ] Fase 4 — verificación de estreno con cuentas de prueba (revertidas).
+- [ ] Fase 5 — runbook «ejecutado», `docs/dia-1.md`, PLAN.md «Producción».
+

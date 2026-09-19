@@ -27,15 +27,14 @@
 
 ## Límites conocidos de lo ya implementado
 
-### I-residual · Una cuenta desactivada se bloquea en la APLICACIÓN, no en la API de datos
-- **Qué**: `perfil.activo = false` hace que las páginas muestren «Cuenta desactivada» y que las acciones de servidor y las rutas API
-  la traten como sin permisos (`getPerfilActivoServer`). RLS y la API de datos de Supabase no miran `activo`, y el JWT/refresh token de la cuenta
-  sigue vigente: quien sepa llamar a la API con su sesión puede seguir leyendo lo que su rol ya le permitía.
-- **Riesgo**: bajo (solo lo que su rol ya veía; sin escalada); relevante si «desactivar» se usa como baja laboral con datos sensibles.
-- **Propuesta** (decisión pendiente, antes de datos reales): al desactivar, banear también la cuenta en Auth
-  (`auth.admin.updateUserById(id, { ban_duration })` desde una acción de servidor con las mismas guardas que `errorRestablecer`) y revertirlo al reactivar;
-  opcionalmente `activo` en las policies de lectura.
-- **Estado**: abierto.
+### I-residual · Una cuenta desactivada se bloqueaba en la APLICACIÓN, no en la API de datos — **RESUELTO (Paso 0, migración 025)**
+- **Antes**: `perfil.activo = false` solo bloqueaba páginas y acciones de servidor; el JWT vigente seguía leyendo en la API de datos.
+- **Ahora**: `desactivarUsuario` (server action con service_role y `permisos.ts`) hace `activo = false` + ban de Auth; el **pre-request de la 025** rechaza en el acto (403 `PT403`) las peticiones de cualquier JWT ya emitido de una cuenta desactivada (medido: el ban por sí solo NO revocaba el JWT). Reactivar = unban + `activo = true`. Verificado con la demo desplegada. Ver `PLAN.md` («Producción — preparación») y `docs/runbook-produccion.md` §3.
+
+### I-menor · `perfil.activo` sigue siendo escribible por API para un admin_empresa sobre los perfiles no-admin de su empresa
+- **Qué**: `perfil_update_admin` (022) deja actualizar `activo` sin pasar por la server action, así que por API un AE podría poner `activo = false` en uno de los suyos **sin ban** (el pre-request de la 025 lo bloquea igualmente en la API y las páginas; solo faltaría el ban de Auth) o `activo = true` en una cuenta baneada (sigue baneada). Sin escalada ni acceso indebido.
+- **Propuesta** (menor, sin migración urgente): privilegio por columna que excluya `activo` del UPDATE de `authenticated` (requiere rehacer el grant de tabla de `perfil` como grants por columna).
+- **Estado**: abierto (backlog).
 
 ### L · Objetos creados desde el panel de Supabase nacen abiertos a `anon`
 - **Qué**: el ACL por defecto de `supabase_admin` (panel, extensiones) concede privilegios a `anon`, `authenticated` y `service_role`; el rol de

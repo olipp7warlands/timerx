@@ -1,94 +1,121 @@
-# Runbook — Despliegue a producción real
+# Runbook de producción — proyecto Supabase NUEVO + Railway propio
 
-> **Decisión de proyecto cerrada, resto pendiente de ejecución.** Escrito como parte del inventario previo a F6. La decisión de la sección siguiente ya está confirmada por el usuario; el resto de los pasos no se ha ejecutado todavía — sigue siendo Bloque B (producción real), fuera de F6 Bloque A.
+> **Estado a 2026-09-19** — Paso 0 **HECHO** · Fase 1 **HECHA y validada** · Fases 2–5 **detenidas en la PAUSA** (faltan datos y decisiones del usuario, sección 2).
+> Este documento manda sobre cualquier versión anterior. La **demo queda intacta** (herramienta comercial, 13 cuentas, proyecto Supabase `klmtskdbewukffuziusg` y servicios Railway `timerx` + `timerx-cron-recordatorios`): nada de este runbook la modifica.
 
-## Decisión cerrada: proyecto Supabase/Railway nuevo, separado de la demo
+## 0. Decisiones cerradas
 
-**Confirmado por el usuario: producción real usa un proyecto Supabase nuevo** (no el de la demo, limpiado de datos). Razones que motivaron la recomendación, mantenidas por escrito:
-- La demo (`https://timerx-production.up.railway.app`) sigue siendo la herramienta comercial/de presentación — necesita seguir mostrando el escenario de Wowinx/Málaga CF SAD/Legal Norte con datos coherentes indefinidamente, no solo hasta que exista producción real.
-- Mezclar datos reales de nómina/refacturación de un cliente real con un proyecto que también sirve demos a terceros es un riesgo operativo innecesario (un clic en el sitio equivocado durante una demo comercial no debe poder tocar datos reales, y viceversa).
-- Las credenciales de servicio (`SUPABASE_SERVICE_ROLE_KEY`) de un proyecto de producción real no deberían compartirse con el entorno que además usa el equipo comercial/de producto para enseñar la app.
+- Producción = proyecto Supabase **nuevo** (región europea) + servicios Railway **propios** (`timerx-prod` y su cron gemelo), desde el mismo repo y rama `main`.
+- Producción **nace sin historia**: estructura real del grupo + **una** cuenta admin_grupo. Sin tarifas, asignaciones, imputaciones, ausencias, cierres, tickets ni logs.
+- **Sin email** (decisión definitiva por ahora): `MODO_EMAIL=log`; alta de cuentas **a mano** (usuario + contraseña inicial entregada en mano) o por plantilla; sin contraseña compartida.
+- El registro público de Auth está **cerrado** y la API de datos nunca es accesible para `anon` (migraciones 023–025).
 
-El resto de este runbook asume proyecto nuevo — los pasos 1-2 son creación desde cero, no limpieza de un proyecto existente.
+## 1. Reconciliación con el runbook anterior (este prompt manda)
 
-## 0. Prerrequisitos
+| Tema | Runbook anterior | Ahora |
+|---|---|---|
+| Migraciones | «001 a 019» | **24 archivos**: 001, 002, 004–025 (**no existe la 003**) |
+| Seed | «no ejecutar `seed_datos.sql`; sembrar lo estable» (sin archivo) | `supabase/seed-produccion.sql` (nuevo, con veredicto por sección y autocomprobación) |
+| Dominio | prerrequisito «dominio propio» | subdominio Railway salvo que el usuario aporte dominio (PAUSA) |
+| Railway | «servicio nuevo o environment» | servicio nuevo `timerx-prod` + **cron gemelo** (imagen `curlimages/curl`, `0 8 * * *`, `CRON_SECRET` **nuevo**); la demo no se toca |
+| Variables | 3 de Supabase, «sin `MODO_EMAIL`» | + `CRON_SECRET` (nuevo), `MODO_EMAIL=log`, `APP_URL` (dominio de producción) |
+| Auth `config push` | «archivo mínimo de 2 claves» | **falso** (lección de la 023): el CLI rellena con sus defaults lo no declarado. Diff previo obligatorio, valores remotos fijados, cambio de una línea |
+| RLS «sesión anónima = 0 filas» | se comprobaba así | desde la 024 `anon` recibe **`42501 permission denied`** en las 21 tablas (no `[]`) |
+| Primera cuenta | «desde Usuarios» (imposible sin admin) | **bootstrap** con `scripts/bootstrap-admin.mjs` |
+| Desactivar cuenta | «no bloquea el login» | bloquea todo: `activo=false` + ban de Auth + pre-request (025, Paso 0) |
+| Backups | no mencionados | **condición de entrega** (fase 2, paso 7) |
+| Verificación de seguridad | ausente | consultas de catálogo y sondas (sección 9) |
 
-- [x] Decisión de proyecto Supabase/Railway nuevo cerrada con el usuario.
-- [ ] Dominio propio disponible para producción (no `*.up.railway.app`).
-- [x] Decisión de correo cerrada: **la herramienta no envía email** (ver "Futuro opcional: activar email" al final). Cron y botón Recordar siguen en modo `log` (registran sin enviar); no hay que configurar Resend ni SMTP.
-- [ ] Datos reales del cliente: empresas reales, categorías/subcategorías reales, tarifas reales, lista real de empleados con sus emails — nada de esto existe todavía como artefacto reutilizable, hay que recopilarlo antes de sembrar el proyecto nuevo.
+## 2. PAUSA — lo que necesito del usuario (todo de una vez)
 
-## 1. Proyecto Supabase nuevo
+**A. Supabase (fase 2)**
+1. **Organización** donde crear el proyecto (el CLI ve tres: «olipp7warlands's Org» —donde vive la demo—, «Doryoku» y «A2A - Agents») y **plan**: producción sin backup **no se entrega**, y los backups programados requieren plan **Pro** (PITR es un add-on de pago). ¿Pro? ¿Contratas PITR o bastan los diarios?
+2. **Región** europea (la demo está en Ireland; opciones: Paris, Frankfurt, Ireland, London).
+3. **Nombre** del proyecto (p. ej. `TimerX Produccion`).
+4. **Cómo lo creo**: (a) tú desde el panel y me pasas el `ref` + las claves, o (b) yo con el CLI ya logueado (`supabase projects create … --org-id … --region …`) **si me autorizas el coste** y una **contraseña de la base de datos** (la genero yo aleatoria y la guardas tú en tu gestor).
 
-- [ ] Crear proyecto Supabase limpio.
-- [ ] Aplicar migraciones **001 a 019 en orden** desde `supabase/migrations/` (`supabase db push` contra el proyecto nuevo, tras `supabase link`).
-- [ ] **NO ejecutar `supabase/seed_datos.sql` tal cual** — mezcla datos de catálogo reutilizables (estructura de tarifas, ejemplo de asignaciones) con datos 100% ficticios de la demo (empresas Wowinx/Málaga CF SAD/Legal Norte, imputaciones, ausencias, las 3 líneas `enviada` de F5). Nada de `seed_datos.sql` debe llegar a producción sin reescribirse con datos reales.
-- [ ] Sembrar solo lo que sea catálogo real y estable: empresas reales del cliente, categorías/subcategorías reales (`categoria`/`subcategoria`), festivos reales del calendario laboral real, `ajuste` con los valores reales (`jornada_horas`, `tope_horas_dia`, etc. — revisar si los defaults de 002 sirven o hay que ajustarlos al cliente real).
-- [ ] Confirmar `RLS` activo en todas las tablas (ya lo está por las migraciones; verificar con una consulta de sesión anónima que da 0 filas, mismo patrón usado en las verificaciones de F3).
+**B. Datos reales (fase 1, para cerrar el seed)**
+5. **CIF real de las 3 empresas** (Wowinx SL, Málaga CF SAD, Legal Norte SL), sin guiones.
+6. **Jornada semanal**: el seed asume 8/8/8/8/5,5/0/0 **igual para las tres**. ¿Son distintas por empresa?
+7. Confirmar que el **catálogo derivado de la demo** es el real: 7 proyectos (Ximeras, Triatix, Launcher, Interno → Wowinx; Web corporativa, Masterchef → Málaga; Asesoría intragrupo → Legal Norte), 3 departamentos (3B3, Jurídico, Diseño), 4 categorías con 14 subcategorías, y 6 áreas / 22 elementos del mapa. ¿Falta o sobra algo?
+8. **`descripcion_obligatoria`**: la demo la tiene en `false` (por el seed sin descripciones); producción, sin historia previa, podría arrancar en **`true`**. ¿Cuál?
 
-## 2. Usuarios reales
+**C. Primera cuenta admin_grupo (fase 2, paso 6)**
+9. **Nombre y apellidos**, **email real** y **empresa** a la que pertenece. Recomendación: **no me des una contraseña personal**; el script genera una aleatoria, te la muestro una vez y la cambias al entrar.
 
-- [ ] **Cero usuarios por seed script** (`scripts/seed-usuarios.mjs` es solo para desarrollo/demo — no ejecutar contra producción).
-- [ ] Alta **sin correo**: uno a uno desde Usuarios (campo "Contraseña inicial" + botón Generar, que la deja visible para copiarla y entregarla en mano) o en lote con el importador (Usuarios → Importar / Exportar: las cuentas nacen sin contraseña y el admin da acceso con "Restablecer contraseña" en la ficha, que muestra una temporal una sola vez). Con el email real de cada persona.
-- [ ] **Sin contraseña compartida.** `scripts/set-passwords.mjs` (contraseña `Horas2026!`) es solo para la demo — cada usuario recibe su contraseña inicial en mano y la cambia desde el menú del avatar ("Cambiar contraseña", ya existe). El flujo "¿Olvidaste tu contraseña?" de `/login` queda **inerte también en producción** (depende del correo): si alguien olvida la contraseña, un admin usa "Restablecer contraseña" en su ficha.
+**D. Railway (fase 3)**
+10. ¿**Dominio propio** (habría que apuntar el DNS) o subdominio de Railway (`timerx-prod-….up.railway.app`)?
+11. **Despliegue**: producción sigue `main` con autodeploy (**cada push a `main` desplegaría también producción**) o una rama `produccion` que promueves a mano (recomendado cuando haya datos reales).
+12. Región Railway (la demo está en `us-east4`; para producción propongo Europa: `europe-west4`).
 
-## 3. Railway
+## 3. Paso 0 — I-residual (HECHO, en la demo; viaja a producción con el código y la migración 025)
 
-- [ ] Servicio nuevo (o al menos un `environment` de producción real separado, si se decide compartir proyecto Railway — a decidir junto con la pregunta de la sección 0).
-- [ ] Variables (`railway variable set`, nunca en texto plano en el repo): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — todas del proyecto Supabase **nuevo**, nunca reutilizar las de la demo. (No hace falta `RESEND_API_KEY` ni `MODO_EMAIL`: sin correo.)
-- [ ] `railway domain` con dominio propio del cliente/producto, no el genérico `*.up.railway.app` de la demo — requiere configurar DNS.
-- [ ] Redeploy tras fijar las `NEXT_PUBLIC_*` (se compilan en build time, no runtime — mismo aviso que en F3.5).
-- [ ] `poweredByHeader: false` ya está en `next.config.ts`, no requiere acción.
+Desactivar una cuenta ahora es **`perfil.activo = false` + ban de Auth** (server action `desactivarUsuario`, con `permisos.ts` mandando: `errorCambiarActivo`, mismos límites que la 022, y **nadie se desactiva a sí mismo**); reactivar = unban + `activo = true`. **Medido**: el ban solo corta login y refresco; un JWT ya emitido **seguía sirviendo datos** en PostgREST (200) hasta caducar (hasta 1 h). Por eso la **migración 025** añade un *pre-request* de PostgREST (`pgrst.db_pre_request`) que rechaza con **403 `PT403 «Cuenta desactivada»`** cualquier petición (tablas, vistas, RPC) de una cuenta con `activo = false`. Verificado con la demo desplegada: JWT emitido antes de desactivar → 403 en PostgREST, `user_banned` en Auth (usuario, refresco y login) → reactivar → el mismo JWT vuelve a servir y el login entra. Rollback: `alter role authenticator reset pgrst.db_pre_request; notify pgrst, 'reload config';`.
 
-## 4. Supabase Auth
+## 4. Fase 1 — Seed de producción (HECHA y validada)
 
-- [ ] `site_url` = dominio real de producción (no el de Railway demo ni `localhost`).
-- [ ] `additional_redirect_urls`: revisar si conviene mantener las de desarrollo local para poder seguir depurando contra este proyecto, o dejarlo estricto solo al dominio real.
-- [ ] Aplicar vía `supabase/config.toml` + `supabase config push`, replicando el patrón ya usado en F3.5 (archivo deliberadamente mínimo, solo las 2 claves de `[auth]`, `config diff` antes de pushear para no tocar nada más).
-- [ ] **Registro público CERRADO (obligatorio; migración 023, hallazgo B)**: `[auth] enable_signup = false` en `supabase/config.toml` (panel: Authentication → Sign In / Providers → «Allow new users to sign up» = OFF). **La config de Auth NO viaja con las migraciones**: hay que aplicarla en el proyecto nuevo. Las cuentas nacen solo por el Admin API (alta manual, invitación, importador), que no depende de este ajuste.
-- [ ] **Previsualizar SIEMPRE el diff antes de `supabase config push`**: `echo n | supabase config push` (responde «n»). El CLI rellena con SUS valores por defecto todo lo que el archivo no declara: en la 023 un push «mínimo» habría desactivado MFA y la confirmación de email y bajado `otp_length` a 6. El archivo debe declarar los valores deseados de `[auth.mfa.totp]` y `[auth.email]` (ver `supabase/config.toml`) y el diff debe ser SOLO lo que se pretende cambiar. Aplicar después con `supabase config push --yes`.
+`supabase/seed-produccion.sql`, derivado de `seed.sql` contrastado con el **estado vivo** de la demo. **Incluye**: 3 empresas (CIF = marcadores `@@CIF_…@@` a sustituir), 3 departamentos (sin `responsable_id`), 4 categorías con su departamento, 14 subcategorías, **6 áreas y 22 elementos del mapa**, 7 proyectos (sin tarifas ni asignaciones), tipologías (Wowinx → Tecnología, Málaga → Deportes, Legal Norte → sin), jornada 8/8/8/8/5,5/0/0, ajustes de producción. **Excluye**: cuentas, imputaciones, ausencias, tarifas, `coste_empleado`, tickets, cierres, `recordatorio_log` **y los restos de pruebas de la demo** (2 áreas y 2 elementos «de prueba F6», inactivos). **Ya sembrado por migración**: 8 festivos 2026 (002).
 
-## 5. Verificaciones post-deploy (mismo estándar que F3.5)
+Trampa documentada: la 002 siembra `jornada_horas = 7` y el trigger de la 019 crea la jornada de cada empresa **al insertarla**; por eso el seed fija los `ajuste` **antes** de insertar empresas. **Validación hecha**: aplicado sobre una copia emulada de proyecto nuevo (transacción abortada sobre la demo: vaciado + re-siembra de lo que hacen las migraciones + seed), su autocomprobación pasó y dio 3/3/4/14/6/22/7/21/8/5 filas, Wowinx `1:8 2:8 3:8 4:8 5:5.5 6:0 7:0`; la demo quedó intacta (conteos y huella idénticos). El seed **aborta** si la base ya tiene datos, si quedan marcadores de CIF o un CIF con formato inválido, o si los conteos no son los declarados.
 
-- [ ] `/debug`, `/debug/movil`, `/debug/movil-admin` → 404 en el dominio real.
-- [ ] Login real de al menos un usuario invitado, sesión establecida, datos reales cargando.
-- [ ] `/admin` gated correctamente por rol.
-- [ ] Cabeceras revisadas (sin `X-Powered-By`, nada inesperado).
-- [ ] `grep` del valor de `SUPABASE_SERVICE_ROLE_KEY` sobre un build local con las mismas variables → cero coincidencias en `.next` (mismo control que F3.5).
-- [ ] **Registro cerrado (verificación obligatoria)**: `curl "$SUPABASE_URL/auth/v1/settings" -H "apikey: $ANON"` → `"disable_signup": true`, y `POST /auth/v1/signup` → `422 signup_disabled`.
-- [ ] **`anon` sin EXECUTE en ninguna función de `public`** (SQL Editor, tras aplicar TODAS las migraciones incluida la 023): `select p.oid::regprocedure from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute');` → **0 filas**. Repetir tras crear cualquier función desde el panel (el ACL por defecto de `supabase_admin` no está cerrado).
-- [ ] **Sondas `anon` con la anon key del bundle desplegado** (norma C: parámetros inválidos, nunca datos reales): `cerrar_periodo`, `imputar_directo`, `aprobar_imputaciones`… → `42501 permission denied`. Conteos de `imputacion`/`ausencia`/`periodo`/`perfil`/`ticket` sin cambios.
-- [ ] **Trigger de alta**: una cuenta creada por Admin API con `{"rol":"admin_grupo"}` en los metadatos nace con `perfil.rol = 'empleado'`; el rol lo asigna después `altaUsuario` (o `scripts/seed-usuarios.mjs`).
-- [ ] **Verificación periódica de seguridad** (norma de proyecto L: nada se crea desde el panel — todo entra por migración; cada release y al menos mensual). En el SQL Editor, **ambas consultas deben devolver 0 filas**:
-  - Funciones: `select p.oid::regprocedure from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute');`
-  - Tablas, vistas y secuencias: `select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and ((c.relkind in ('r','v','m','p','f') and has_table_privilege('anon', c.oid, 'select, insert, update, delete, truncate, references, trigger')) or (c.relkind = 'S' and has_sequence_privilege('anon', c.oid, 'usage, select, update')));`
-  Si alguna devuelve filas, se corrige con una migración (`revoke … from anon`), no a mano. Comprobación externa equivalente con la anon key del bundle: un `GET /rest/v1/<tabla>` responde `42501 permission denied` (no `[]`).
+## 5. Fase 2 — Proyecto Supabase nuevo (pendiente de la PAUSA)
 
-## Todo lo que hoy es "demo" y no debe llegar a producción tal cual
+1. **Crear el proyecto** (sección 2-A). El `ref`, la URL y las claves (`anon`, `service_role`) viajan **solo** por variables de entorno de Railway y por el entorno del operador; **nunca en el repo, en `.env.local` compartido ni en este documento**.
+2. **`supabase link --project-ref <nuevo>`** y **`supabase db push`** de las 24 migraciones **en orden, sin ediciones**. Antes de empujar: `supabase db push --dry-run` debe listar exactamente 24 archivos. **Comprobar contra la demo** (SQL Editor o sonda de solo lectura): **21 tablas · 4 vistas · 1 secuencia · 53 funciones (8 de trigger) · 7 triggers · 43 policies · 46 índices · 20 PK · 35 FK · 16 CHECK · 12 UNIQUE · 7 enums · RLS en 21/21 · `authenticator` con `pgrst.db_pre_request = public.cuenta_desactivada_pre_request`**. Los mismos números o se investiga.
+3. **`config.toml` y Auth** (lección de la 023): editar `project_id` y `site_url`/`additional_redirect_urls` para el proyecto nuevo (estrictos, solo el dominio de producción); **`echo n | supabase config push` y leer el diff**: debe ser SOLO lo pretendido (`site_url`, `additional_redirect_urls`, `enable_signup`), con `[auth.mfa.totp]` y `[auth.email]` fijados a los valores del proyecto nuevo; aplicar con `supabase config push --yes`. **Verificar**: `GET $URL/auth/v1/settings` → `disable_signup: true` y un `signUp` real → `422 signup_disabled`. Cuidado: el `config.toml` del repo apunta a la demo — **revertirlo** (`git checkout supabase/config.toml`) al terminar.
+4. **Aplicar el seed**: sustituir los 3 CIF; `supabase db push --include-seed` con `[db.seed] sql_paths = ["./seed-produccion.sql"]` en un `config.toml` **temporal** (revertir después; el `seed.sql` de la demo NO debe usarse). Alternativa si el CLI no lo soporta así: pegar el archivo en el SQL Editor. **Comprobar** los conteos declarados por el propio seed (3 empresas, 3 departamentos, 4 categorías, 14 subcategorías, 6 áreas, 22 elementos, 7 proyectos, 21 filas de jornada, 8 festivos, 5 ajustes; 0 en el resto).
+5. **Verificaciones 023/024/025 con LA ANON KEY DEL PROYECTO NUEVO** (sección 9): función y tabla, 0 filas para `anon`; `GET /rest/v1/<tabla>` → `42501` en las 21; sondas (norma C, parámetros inválidos) de las 10 funciones con efectos sin sesión → `42501`; conteos sin cambios.
+6. **Bootstrap**: `NEXT_PUBLIC_SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/bootstrap-admin.mjs --proyecto <ref> --nombre … --email … --empresa …` (sección 2-C). Solo con 0 perfiles; exige el `ref`; no lee `.env.local`; probado contra la demo con una cuenta de prueba (rol, empresa y login real con la contraseña inicial) y borrada.
+7. **Backups (condición de entrega)**: comprobar y **documentar aquí** el estado real —plan del proyecto, «Scheduled backups» activos con su retención, PITR sí/no y el primer backup registrado (Dashboard → Database → Backups)—. **Producción sin backup confirmado no se entrega**; en plan Free no hay backups.
 
-Lista de repaso explícito antes de dar F6/producción por cerrada:
+## 6. Fase 3 — Railway producción (pendiente de la PAUSA)
+
+- Servicio **`timerx-prod`** desde el mismo repo/rama (o `produccion`, según la decisión 11). Variables **propias**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (del proyecto **nuevo**), `CRON_SECRET` **nuevo** (32 bytes aleatorios; no reutilizar el de la demo), `MODO_EMAIL=log`, `APP_URL` = dominio de producción. Las `NEXT_PUBLIC_*` se compilan en build: fijarlas **antes** del primer deploy.
+- **Cron gemelo** `timerx-prod-cron-recordatorios`: imagen `curlimages/curl:latest`, `cronSchedule` `0 8 * * *`, `startCommand` `curl -sf -X POST -H "Authorization: Bearer $CRON_SECRET" "$TARGET_URL"`, variables `CRON_SECRET` (el mismo del servicio prod) y `TARGET_URL` = `https://<dominio-prod>/api/cron/recordatorios`.
+- Dominio: subdominio Railway salvo dominio propio (DNS + `site_url` de Auth).
+- **La demo y su cron quedan EXACTAMENTE como están**: comprobar al terminar que `timerx` y `timerx-cron-recordatorios` siguen en verde y que sus variables no cambiaron.
+
+## 7. Fase 4 — Verificación de estreno (pendiente)
+
+Contra producción real, con la primera cuenta admin y 1–2 cuentas de prueba **que luego se borran**. Reglas: **nunca cerrar un periodo en producción** (una imputación `cerrada` es inmutable —024— y no existe reapertura); cuentas y datos de prueba con **login explícito por identidad** y reversión completa.
+- Login del admin → **cambiar contraseña** (flujo propio) → crear una cuenta empleado de prueba con contraseña → login con ella.
+- Ciclo mínimo: asignar a un proyecto, imputar, computar, aprobar, ver ficha y mapa, soporte (ticket de prueba → responder → resolver; los tickets no se borran desde la app: se siembra **a propósito**, se elimina con service_role y se llama a `ticket_ref_resincronizar()` para que el **primer ticket real sea T-001**; se declara en el informe).
+- Spot-check de la matriz de permisos: `anon` (funciones y tablas), admin_empresa contra cuentas admin_*, imputaciones cerradas inmutables (en transacción abortada), imputación directa acotada, desactivar/reactivar con JWT vigente.
+- Deep-link, atrás, F5 y móvil (iframe de 390 px o móvil real; si no, DOM + nota).
+- Revertir todo: producción se entrega con **el seed estructural + LA cuenta admin real y nada más**; citar los conteos finales.
+
+## 8. Fase 5 — Entrega (pendiente)
+
+Este documento pasa a «ejecutado» con fechas y referencias (sin claves); `docs/dia-1.md` para el usuario (URL, su cuenta, checklist de estreno); entrada final «Producción» en `PLAN.md`; la demo queda documentada como entorno comercial con sus 13 cuentas.
+
+## 9. Verificación de seguridad (en la fase 2 y periódica: cada release y al menos mensual)
+
+Norma de proyecto L: **nada se crea desde el panel de Supabase; todo entra por migración**. En el SQL Editor **las dos consultas devuelven 0 filas**:
+
+- Funciones (única excepción documentada: el pre-request de la 025, que PostgREST ejecuta con el rol de la petición): `select p.oid::regprocedure from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname <> 'cuenta_desactivada_pre_request' and has_function_privilege('anon', p.oid, 'execute');`
+- Tablas, vistas y secuencias: `select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and ((c.relkind in ('r','v','m','p','f') and has_table_privilege('anon', c.oid, 'select, insert, update, delete, truncate, references, trigger')) or (c.relkind = 'S' and has_sequence_privilege('anon', c.oid, 'usage, select, update')));`
+
+Si devuelven filas se corrige con una migración (`revoke … from anon`), no a mano. Comprobación externa equivalente con la **anon key del bundle desplegado**: `GET /rest/v1/<tabla>` → `42501 permission denied` (no `[]`); sondas con parámetros inválidos (norma C) a las funciones con efectos → `42501`; `signUp` → `422 signup_disabled`; una cuenta creada por Admin API con `{"rol":"admin_grupo"}` en los metadatos nace `empleado`. Detalle y límites en `docs/seguridad-backlog.md`.
+
+## 10. Todo lo que hoy es «demo» y no debe llegar a producción
 
 | Elemento | Dónde vive | Por qué no vale para producción |
 |---|---|---|
-| Contraseña compartida `Horas2026!` | `scripts/set-passwords.mjs` | Credencial única compartida entre 11 cuentas — solo aceptable para poder enseñar la demo desde un móvil sin depender de magic links. |
-| Seed ficticio completo | `scripts/seed-usuarios.mjs`, `supabase/seed.sql`, `supabase/seed_datos.sql` | Empresas (Wowinx SL, Málaga CF SAD, Legal Norte), proyectos (Ximeras, Triatix...), imputaciones y ausencias son todas de ejemplo. |
-| 3 líneas `enviada` de F5 | `supabase/seed_datos.sql` §8 (Leo Silva, Sara Martín) | Añadidas explícitamente para que la bandeja de aprobación se enseñe poblada en la demo. |
-| Dominio `timerx-production.up.railway.app` | Railway (F3.5) | Dominio genérico de demo, no de marca/cliente. |
-| Tickets T-014..T-017 (sembrados por la migración 018, guardados: solo si existen los perfiles demo) | `supabase/migrations/018_soporte_tickets.sql` | Datos ficticios de demo; en un proyecto nuevo la migración NO los inserta (no hay perfiles demo). |
-| `ajuste.jornada_horas` = 8 en la demo | tabla `ajuste` / `empresa_jornada` | La 019 siembra la jornada semanal de cada empresa desde ese valor (8 en la demo). En producción real, definir la jornada semanal real por empresa en Calendario. |
-| `olcasan08@gmail.com` (Oliver Pérez) como empleado invitado | Seed real vía invitación (post-F3.5) | Es la vía de acceso del propietario del proyecto a la demo desde el móvil, no un usuario real del cliente. |
-| 12h sin tarifa "a propósito" en Wowinx, septiembre | Datos reales insertados durante F3/F4 para poder enseñar el bloqueo de cierre | Escenario deliberadamente roto para demostrar `cerrar_periodo()`. |
-| `additional_redirect_urls` con `localhost`/`127.0.0.1` | `supabase/config.toml` | Solo tiene sentido si producción sigue siendo el mismo proyecto que se usa para desarrollar localmente — revisar según la decisión de la sección 0. |
+| Contraseña compartida `Horas2026!` | `scripts/set-passwords.mjs` | Credencial única compartida entre las cuentas de demo. |
+| Seed ficticio completo | `scripts/seed-usuarios.mjs`, `supabase/seed.sql`, `supabase/seed_datos.sql` | Empresas con CIF ficticios, imputaciones, ausencias y tarifas de ejemplo. **En producción solo `seed-produccion.sql`.** |
+| 3 líneas `enviada` de F5, tickets T-014..T-017, 12 h sin tarifa «a propósito» | `seed_datos.sql`, migración 018, datos de F3/F4 | Escenarios de demostración. En un proyecto nuevo la 018 no inserta tickets (no hay perfiles demo). |
+| `olcasan08@gmail.com` como empleado | demo | Acceso del propietario a la demo desde el móvil; no es un usuario del cliente. |
+| `additional_redirect_urls` con `localhost` | `supabase/config.toml` | Estricto al dominio de producción. |
+| Dominio `timerx-production.up.railway.app` y el `APP_URL` por defecto de `lib/recordatorios/enviar.ts` | Railway / código | Dominio de demo: fijar `APP_URL` en producción. |
+| Restos de pruebas en el mapa | tablas `mapa_*` de la demo | 2 áreas y 2 elementos «de prueba F6» (inactivos): excluidos del seed. |
 
-## Futuro opcional: activar email
+## 11. Futuro opcional: activar email
 
 Decisión de producto **definitiva por ahora: sin email**. Todo lo que dependía del correo queda DORMIDO, no retirado:
 
 | Pieza | Estado hoy (demo y producción) | Para activarlo (futuro) |
 |---|---|---|
-| Invitaciones (`inviteUserByEmail`) | Dormido: el alta manual y el importador crean la cuenta confirmada sin enviar nada (`createUser`). El modo `invitar` sigue en `src/lib/usuarios/alta.ts` | `MODO_EMAIL=real` **y SMTP propio en Supabase Auth** (el integrado admite muy pocos correos/hora: un import de N personas se revertiría entero al primer fallo) |
-| Recovery ("¿Olvidaste tu contraseña?", `/login` → `/reset-password`) | Construido y correcto, pero **inerte**: sin correo no llega el enlace | Mismo SMTP propio + dominio de envío verificado |
-| Recordatorios (cron diario + botón Recordar / "Recordar por email") | Se mantienen: **registran en `recordatorio_log` sin enviar** (`MODO_EMAIL` distinto de `real`) | Cuenta Resend + dominio verificado + `RESEND_API_KEY` + `MODO_EMAIL=real` |
+| Invitaciones (`inviteUserByEmail`) | Dormido: el alta manual y el importador crean la cuenta confirmada sin enviar nada (`createUser`). El modo `invitar` sigue en `src/lib/usuarios/alta.ts` | `MODO_EMAIL=real` **y SMTP propio en Supabase Auth** |
+| Recovery («¿Olvidaste tu contraseña?») | Construido pero **inerte** (no llega el enlace): un admin usa «Restablecer contraseña» en la ficha | Mismo SMTP propio + dominio de envío verificado |
+| Recordatorios (cron diario + botón «Recordar») | Registran en `recordatorio_log` **sin enviar** (`MODO_EMAIL` ≠ `real`) | Cuenta Resend + dominio verificado + `RESEND_API_KEY` + `MODO_EMAIL=real` |
 | Magic link de acceso | Solo para verificación técnica con cuentas de demo | — |
-
-Nada de esto es prerrequisito de producción.
