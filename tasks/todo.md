@@ -36,11 +36,11 @@
 ## 3. Verificación y cierre del Lote 4
 - [x] Regresión de cifras: cruda `a97033ad…` idéntica antes/después de la 020; tras las pruebas de UI la cruda es `d8d7dbcc…` con los mismos datos (orden de empates) y la CANÓNICA `6c50f784` no cambia; conteos idénticos; RLS de las columnas nuevas con intentos reales de Marina.
 - [x] Ciclo del enunciado en LOCAL con login explícito por identidad (Cristian, Andrés, Marina, Cosme): heredar→AUTO en Andrés→homónimo lo desplaza→cambiar tipología recoloca y recolorea; roscos claro/oscuro; inline; alta rápida; selectores sin inactivas (con control positivo); hero sin horas (escritorio y móvil).
-- [ ] Capturas contra el mock; build; commit + push; redeploy; retest en producción (login explícito por identidad).
+- [x] Capturas contra el mock; build; commit + push; redeploy; retest en producción (login explícito por identidad).
 
 ## Hallazgos abiertos (tareas separadas, NO tocadas)
-- [ ] **SEGURIDAD**: `perfil_update_admin` permite a un admin_empresa cambiar `rol` (incluido el suyo a `admin_grupo`) por API directa. Reproducido y revertido. Requiere guarda + retest de 3 identidades. Pendiente de confirmación del usuario.
-- [ ] `resumen_dia`/`resumen_mes`: `order by` sin desempate (huella cruda frágil). Regresión con huella canónica `6c50f784`.
+- [x] **SEGURIDAD** (cerrado en la 021): `perfil_update_admin` permite a un admin_empresa cambiar `rol` (incluido el suyo a `admin_grupo`) por API directa. Reproducido y revertido. Requiere guarda + retest de 3 identidades. Pendiente de confirmación del usuario.
+- [x] (cerrado en la 021) `resumen_dia`/`resumen_mes`: `order by` sin desempate (huella cruda frágil). Regresión con huella canónica `6c50f784`.
 
 ## Revisión
 - Lote 4 completo en local; pendiente: commit/push, redeploy y retest en producción con login explícito (ver PLAN.md).
@@ -58,10 +58,15 @@
 
 ## Pasos
 - [x] Foto base: conteos + huella ampliada (cruda `d8d7dbcc`, canónica `6c50f784`), `escalada_ANTES` (A/B/C de Marina funcionan; D ya lo frena RLS).
-- [ ] Escribir 021 y aplicarla (`db push`) → commit+push INMEDIATO.
-- [ ] `escalada_DESPUES`: A/B/C rechazadas con el RAISE; E/F/F2 (Marina) y I/J/K (Cristian) y L (service_role) intactos.
-- [ ] Importador de usuarios (ruta real con cookie de Cristian) y alta manual intactos; ficha como admin_grupo cambia empresa.
-- [ ] UI (ficha + comentarios/textos) + build + lint sin regresión.
-- [ ] Huella canónica `6c50f784` idéntica tras la 021; nueva cruda anotada como vigente; conteos idénticos.
-- [ ] Navegador, login explícito de Cristian / Marina / Andrés: local y PRODUCCIÓN (commit+push+redeploy).
-- [ ] PLAN.md + tasks/lessons.md; cerrar los dos hallazgos abiertos de arriba.
+- [x] Escribir 021 y aplicarla (`db push`) → commit+push INMEDIATO.
+- [x] `escalada_DESPUES`: A/B/C rechazadas con el RAISE; E/F/F2 (Marina) y I/J/K (Cristian) y L (service_role) intactos.
+- [x] Importador de usuarios (ruta real con cookie de Cristian) y alta manual intactos; ficha como admin_grupo cambia empresa.
+- [x] UI (ficha + comentarios/textos) + build + lint sin regresión.
+- [x] Huella canónica `6c50f784` idéntica tras la 021; nueva cruda anotada como vigente; conteos idénticos.
+- [x] Navegador, login explícito de Cristian / Marina / Andrés: local y PRODUCCIÓN (commit+push+redeploy).
+- [x] PLAN.md + tasks/lessons.md; cerrar los dos hallazgos abiertos de arriba.
+
+## Revisión (021)
+- Guarda viva y verificada: exploit de Marina ANTES (funciona) / DESPUÉS (RAISE 42501), sin sobre-bloqueo (dep/cat de su gente, reenvío sin cambios), Cristian y service_role intactos, importador de usuarios y cambio de empresa desde la ficha (admin_grupo) intactos. Huella canónica `6c50f784` idéntica; cruda estable en `fab8021d`. Local + producción con Cristian / Marina / Andrés.
+- Los dos "Hallazgos abiertos" del Lote 4 quedan CERRADOS (021).
+- **Hallazgo nuevo abierto (tarea separada, sin tocar)**: `invitarUsuario` deja a un admin_empresa invitar con `rol = 'admin_empresa'` (par en su empresa); la UI no lo ofrece. Ver PLAN.md, sección 021.
