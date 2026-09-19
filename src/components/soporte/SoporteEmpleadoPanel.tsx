@@ -10,11 +10,11 @@ type Vista = { tipo: 'lista' } | { tipo: 'nuevo' } | { tipo: 'ticket'; id: strin
 
 /**
  * Soporte del lado empleado (vive en el menú del avatar, dentro de modal en escritorio / hoja en móvil). Sin mock:
- * la spec del combinado 5+2 es la fuente de verdad. Ve SOLO sus tickets (RLS), abre uno nuevo, lee el hilo y
+ * la spec del combinado 5+2 es la fuente de verdad. Ve SOLO sus tickets (RLS + `.eq('creado_por')` explícito: un admin ve todos por RLS pero aquí solo los suyos), abre uno nuevo, lee el hilo y
  * comenta. NO cambia estados: si su problema se resolvió, lo dice en el hilo.
  */
 export function SoporteEmpleadoPanel() {
-  const { tickets, loading, recargar, crear } = useTickets();
+  const { tickets, loading, recargar, crear } = useTickets({ soloMios: true });
   const toast = useToast();
   const [vista, setVista] = useState<Vista>({ tipo: 'lista' });
   const [form, setForm] = useState<{ tipo: TipoTicket; titulo: string; descripcion: string }>({ tipo: 'incidencia', titulo: '', descripcion: '' });

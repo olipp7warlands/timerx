@@ -42,16 +42,24 @@ const SELECT = 'id, ref, titulo, descripcion, tipo, estado, creado_en, creado_po
 
 /**
  * Tickets visibles para el usuario (la RLS de la 018 acota: empleado los suyos, admin_empresa los de su empresa,
- * admin_grupo todos). Las mismas funciones sirven al lado empleado (crear) y al admin (cambiar estado, que la BD
+ * admin_grupo todos; `soloMios` los restringe además a los propios, para el panel del avatar). Las mismas funciones sirven al lado empleado (crear) y al admin (cambiar estado, que la BD
  * solo permite a admins: el cliente no decide nada).
  */
-export function useTickets() {
+export function useTickets({ soloMios = false }: { soloMios?: boolean } = {}) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
 
   const recargar = useCallback(async () => {
     setLoading(true);
-    const { data } = await createClient().from('ticket').select(SELECT).order('creado_en', { ascending: false });
+    const supabase = createClient();
+    let consulta = supabase.from('ticket').select(SELECT).order('creado_en', { ascending: false });
+    if (soloMios) {
+      // Hook de "lo mío" (norma de defensa en profundidad del PLAN): un admin ve TODOS por RLS, pero en el panel de Soporte
+      // del avatar debe ver solo los suyos -- nunca delegar esa acotación solo en la RLS.
+      const { data: sesion } = await supabase.auth.getUser();
+      consulta = consulta.eq('creado_por', sesion.user?.id ?? '');
+    }
+    const { data } = await consulta;
     setTickets(
       (data ?? []).map((t) => ({
         id: t.id,
@@ -67,7 +75,7 @@ export function useTickets() {
       }))
     );
     setLoading(false);
-  }, []);
+  }, [soloMios]);
 
   useEffect(() => {
     recargar();
