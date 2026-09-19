@@ -70,3 +70,26 @@
 - Guarda viva y verificada: exploit de Marina ANTES (funciona) / DESPUÉS (RAISE 42501), sin sobre-bloqueo (dep/cat de su gente, reenvío sin cambios), Cristian y service_role intactos, importador de usuarios y cambio de empresa desde la ficha (admin_grupo) intactos. Huella canónica `6c50f784` idéntica; cruda estable en `fab8021d`. Local + producción con Cristian / Marina / Andrés.
 - Los dos "Hallazgos abiertos" del Lote 4 quedan CERRADOS (021).
 - **Hallazgo nuevo abierto (tarea separada, sin tocar)**: `invitarUsuario` deja a un admin_empresa invitar con `rol = 'admin_empresa'` (par en su empresa); la UI no lo ofrece. Ver PLAN.md, sección 021.
+
+---
+
+# SUPERFICIE service_role — regla de roles en server actions (decisión del usuario, 2026-09-19)
+
+## Regla
+- La asignación de roles admin_* es territorio de admin_grupo: un admin_empresa solo puede crear cuentas con rol `empleado` o `responsable_proyecto` (lista blanca, no lista negra).
+- Mini-auditoría de TODA puerta service_role: ámbito de empresa Y límites de rol replicados en TS; veredicto citado (ya-correcta / corregida).
+- Hallazgo de la auditoría (además del pedido): `restablecerPasswordEmpleado` no limita por rol del objetivo → admin_empresa puede reiniciar la contraseña de un admin_* de su empresa (toma de cuenta; con un admin_grupo empleado en su empresa = escalada). Regla: admin_empresa solo restablece a cuentas no-admin.
+
+## Pasos
+- [x] Auditoría en lectura (citas en PLAN.md).
+- [x] ANTES con sesión real de Marina (UI desplegada en local, cliente manipulado): invitar cuenta con rol admin_empresa (debe funcionar hoy) y restablecer contraseña de una cuenta de prueba admin_grupo de su empresa (debe funcionar hoy).
+- [x] Fix en servidor (`invitarUsuario`, `restablecerPasswordEmpleado`) con helper único de permisos.
+- [x] DESPUÉS: mismos intentos rechazados con mensaje claro; sin sobre-bloqueo (Marina invita empleado/responsable de SU empresa; sigue rechazada fuera de su empresa; Cristian invita cualquier rol y restablece a cualquiera).
+- [x] UI alineada: la ficha no ofrece «Restablecer contraseña» a admin_empresa sobre cuentas admin_*.
+- [x] Cuentas de prueba borradas (auth + perfil); conteos idénticos; canónica `6c50f784`; build/lint sin nuevos; commit+push+redeploy; retest del par clave en producción.
+- [x] PLAN.md (tabla de veredictos con citas) + lessons.
+
+## Revisión (superficie service_role)
+- Corregidas 2 puertas: `invitarUsuario` (lista blanca de roles no-admin para admin_empresa) y `restablecerPasswordEmpleado` (admin_empresa no restablece cuentas admin_*; hallazgo de la auditoría). El resto (recordatorios manual/empleado, cron, importadores, plantillas/exports) ya-correctas, con cita en PLAN.md.
+- ANTES/DESPUÉS con sesión real de Marina + sin sobre-bloqueo + Cristian intacto; local y producción. Conteos idénticos, `6c50f784` intacta, build/lint sin nuevos.
+- Observación abierta (no service_role, sin tocar): `perfil_update_admin` deja a un admin_empresa editar columnas no estructurales (`activo`, `nombre`, `max_horas_dia`…) de los perfiles de su empresa, también de un admin_grupo que viva en ella.
