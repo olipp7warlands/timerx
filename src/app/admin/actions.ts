@@ -7,6 +7,8 @@ import { getPerfilServer } from '@/lib/supabase/perfil';
 import { procesarRecordatorios } from '@/lib/recordatorios/enviar';
 import { altaUsuario, modoAltaDesdeEntorno, type AltaUsuarioInput, type ModoAlta } from '@/lib/usuarios/alta';
 import { generarPasswordTemporal, PASSWORD_MIN } from '@/lib/usuarios/password';
+import { errorAlta, errorRestablecer } from '@/lib/usuarios/permisos';
+import type { RolUsuario } from '@/lib/auth/roles';
 
 const VENTANA_DIAS_RECORDATORIO = 5;
 
@@ -18,16 +20,14 @@ export type InvitarUsuarioInput = AltaUsuarioInput;
  * inicial, que el admin entrega en mano. Sin `password`: comportamiento por `MODO_EMAIL` (dormido salvo `real`).
  * Devuelve `modo` para que la UI diga la verdad sobre lo que ha pasado.
  * handle_new_user() (001) lee empresa_id/nombre/rol de user_metadata y crea el perfil.
- * Un admin_empresa solo puede invitar dentro de su propia empresa y nunca a admin_grupo.
+ * Permisos replicados aquí (service_role salta RLS y la guarda de la 021): ver `errorAlta` en `lib/usuarios/permisos.ts`
+ * -- un admin_empresa solo da de alta empleados/responsables de SU empresa; los roles admin_* exigen admin_grupo.
  */
 export async function invitarUsuario(input: InvitarUsuarioInput): Promise<{ error: string | null; modo?: ModoAlta }> {
   const perfil = await getPerfilServer();
-  if (!perfil || !['admin_grupo', 'admin_empresa'].includes(perfil.rol)) {
-    return { error: 'Sin permisos para invitar usuarios' };
-  }
-  if (perfil.rol === 'admin_empresa' && (input.empresaId !== perfil.empresa_id || input.rol === 'admin_grupo')) {
-    return { error: 'Un admin de empresa solo puede invitar dentro de su propia empresa' };
-  }
+  if (!perfil) return { error: 'Sin permisos para invitar usuarios' };
+  const errorPermisos = errorAlta(perfil, input);
+  if (errorPermisos) return { error: errorPermisos };
   if (input.password && input.password.length < PASSWORD_MIN) {
     return { error: `La contraseña inicial debe tener al menos ${PASSWORD_MIN} caracteres` };
   }
@@ -121,11 +121,10 @@ export async function restablecerPasswordEmpleado(perfilId: string): Promise<{ e
   }
 
   const supabaseSesion = await createSessionClient();
-  const { data: objetivo } = await supabaseSesion.from('perfil').select('id, empresa_id').eq('id', perfilId).single();
+  const { data: objetivo } = await supabaseSesion.from('perfil').select('id, empresa_id, rol').eq('id', perfilId).single();
   if (!objetivo) return { error: 'Usuario no encontrado o fuera de tu ámbito', password: null };
-  if (perfil.rol === 'admin_empresa' && objetivo.empresa_id !== perfil.empresa_id) {
-    return { error: 'Un admin de empresa solo puede restablecer contraseñas de su propia empresa', password: null };
-  }
+  const errorPermisos = errorRestablecer(perfil, { empresa_id: objetivo.empresa_id, rol: objetivo.rol as RolUsuario });
+  if (errorPermisos) return { error: errorPermisos, password: null };
 
   const password = generarPasswordTemporal();
   const supabaseAdmin = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {

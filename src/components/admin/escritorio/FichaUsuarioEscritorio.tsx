@@ -21,6 +21,7 @@ import { TablaPendientesImputacion } from '../compartido/TablaPendientesImputaci
 import { MiniCalendarioUsuario } from './MiniCalendarioUsuario';
 import { confirmar } from '@/components/ui/confirmar';
 import { ETIQUETA_ROL, type RolUsuario } from '@/lib/auth/roles';
+import { esRolAdmin } from '@/lib/usuarios/permisos';
 import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
 
@@ -44,6 +45,8 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
 
   const esAdminGrupo = info.rol === 'admin_grupo';
   const puedeEditar = esAdminGrupo || usuario.empresaId === info.empresaId;
+  // Restablecer la contraseña de una cuenta admin_* es de admin_grupo (el servidor lo impone: `errorRestablecer`).
+  const puedeRestablecer = puedeEditar && (esAdminGrupo || !esRolAdmin(usuario.rol as RolUsuario));
 
   const { empresas } = useEmpresas();
   const { departamentos } = useDepartamentos();
@@ -258,9 +261,11 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
                 <button type="button" className="btn btn-sm" onClick={toggleEditando}>
                   Editar datos
                 </button>
-                <button type="button" className="btn btn-sm" disabled={restableciendo} onClick={onRestablecerPassword}>
-                  {restableciendo ? 'Restableciendo…' : 'Restablecer contraseña'}
-                </button>
+                {puedeRestablecer && (
+                  <button type="button" className="btn btn-sm" disabled={restableciendo} onClick={onRestablecerPassword}>
+                    {restableciendo ? 'Restableciendo…' : 'Restablecer contraseña'}
+                  </button>
+                )}
                 <button type="button" className="btn btn-sm text-ink-tertiary" onClick={handleDesactivar}>
                   Desactivar usuario
                 </button>
@@ -324,6 +329,10 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
                 Guardar cambios
               </button>
             </div>
+          )}
+
+          {puedeEditar && !puedeRestablecer && (
+            <p className="mt-3 text-xs text-ink-tertiary">La contraseña de una cuenta de administrador solo la restablece el admin del grupo.</p>
           )}
 
           {!puedeEditar && (
