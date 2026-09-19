@@ -68,3 +68,22 @@ export function puedeImputarDirecto(actor: { rol: RolUsuario; empresaId: string 
   return empleadoEmpresaId === actor.empresaId && (proyectoEmpresaId === undefined || proyectoEmpresaId === actor.empresaId);
 }
 
+/**
+ * Error (o null) al DESACTIVAR/REACTIVAR la cuenta `objetivo` (server actions `desactivarUsuario`/`reactivarUsuario`, que además banean
+ * o desbanean la cuenta en Auth). Mismos límites que `puedeAdministrarPerfil` (022): admin_grupo cualquiera; admin_empresa solo perfiles
+ * NO-admin de su empresa. Nadie desactiva su propia cuenta (un admin se dejaría fuera; el último admin_grupo bloquearía el panel).
+ */
+export function errorCambiarActivo(
+  actor: { id: string; rol: RolUsuario; empresaId: string },
+  objetivo: { id: string; rol: RolUsuario; empresaId: string }
+): string | null {
+  if (actor.rol !== 'admin_grupo' && actor.rol !== 'admin_empresa') return 'Sin permisos para desactivar cuentas';
+  if (actor.id === objetivo.id) return 'No puedes desactivar tu propia cuenta';
+  if (!puedeAdministrarPerfil(actor, objetivo)) {
+    return objetivo.empresaId !== actor.empresaId
+      ? 'Un admin de empresa solo puede desactivar cuentas de su propia empresa'
+      : 'Solo el admin del grupo puede desactivar o reactivar una cuenta de administrador';
+  }
+  return null;
+}
+

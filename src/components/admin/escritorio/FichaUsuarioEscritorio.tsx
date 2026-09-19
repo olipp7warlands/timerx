@@ -165,7 +165,7 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
   }
 
   async function handleDesactivar() {
-    if (!confirmar(`¿Desactivar a ${usuario.nombre}? Dejará de contar en pendientes y recordatorios y no podrá usar la aplicación: al entrar verá «Cuenta desactivada». Puedes reactivarla cuando quieras.`)) return;
+    if (!confirmar(`¿Desactivar a ${usuario.nombre}? Dejará de contar en pendientes y recordatorios y no podrá iniciar sesión: su acceso se bloquea de inmediato, también si tiene una sesión abierta. Puedes reactivarla cuando quieras.`)) return;
     const { error } = await onDesactivar(usuario.id);
     if (error) toast(error, 'error');
     else toast(`${usuario.nombre} desactivado`);
@@ -279,7 +279,7 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
                     {restableciendo ? 'Restableciendo…' : 'Restablecer contraseña'}
                   </button>
                 )}
-                {usuario.activo ? (
+                {usuario.id === info.id ? null : usuario.activo ? (
                   <button type="button" className="btn btn-sm text-ink-tertiary" onClick={handleDesactivar}>
                     Desactivar usuario
                   </button>

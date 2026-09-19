@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { RolUsuario } from '@/lib/auth/roles';
+import { desactivarUsuario, reactivarUsuario } from '@/app/admin/actions';
 
 const SIN_PERMISO_PERFIL = 'No tienes permiso para modificar este perfil';
 
@@ -93,28 +94,24 @@ export function useUsuarios() {
     [recargar]
   );
 
-  /** Baja lógica -- no bloquea login hoy (ver ficha de usuario), solo deja de contar en faltantes()/resumen_dia()/resumen_mes()/estado_dias_mes(). */
+  /**
+   * Desactivar / reactivar pasan por las server actions (`perfil.activo` + ban/unban en Auth, con los permisos de `errorCambiarActivo`):
+   * no se escribe `activo` desde el cliente, o quedaría la cuenta sin bloquear en Auth.
+   */
   const desactivar = useCallback(
     async (id: string) => {
-      const supabase = createClient();
-      const { data, error } = await supabase.from('perfil').update({ activo: false }).eq('id', id).select('id');
-      if (error) return { error: error.message };
-      if (!data?.length) return { error: SIN_PERMISO_PERFIL };
+      const r = await desactivarUsuario(id);
       await recargar();
-      return { error: null };
+      return r;
     },
     [recargar]
   );
 
-  /** Reactivar = `activo = true` (misma regla que desactivar: perfil_update_admin, 022). */
   const reactivar = useCallback(
     async (id: string) => {
-      const supabase = createClient();
-      const { data, error } = await supabase.from('perfil').update({ activo: true }).eq('id', id).select('id');
-      if (error) return { error: error.message };
-      if (!data?.length) return { error: SIN_PERMISO_PERFIL };
+      const r = await reactivarUsuario(id);
       await recargar();
-      return { error: null };
+      return r;
     },
     [recargar]
   );

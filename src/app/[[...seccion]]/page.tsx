@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getPerfilServer } from '@/lib/supabase/perfil';
+import { getPerfilServer, sesionDesactivadaServer } from '@/lib/supabase/perfil';
 import { EmpleadoApp } from '@/components/empleado/EmpleadoApp';
 import { CuentaDesactivada } from '@/components/ui/CuentaDesactivada';
 import { BASE_EMPLEADO, parseRutaEmpleado } from '@/lib/nav/rutas';
@@ -23,6 +23,7 @@ export default async function EmpleadoPage({
 
   const perfil = await getPerfilServer();
   if (!perfil) {
+    if (await sesionDesactivadaServer()) return <CuentaDesactivada />;
     const qs = new URLSearchParams(Object.entries(await searchParams).flatMap(([k, v]) => (typeof v === 'string' ? [[k, v]] : []))).toString();
     redirect(`/login?next=${encodeURIComponent(`/${seccion.join('/')}${qs ? `?${qs}` : ''}`)}`);
   }

@@ -9,6 +9,9 @@ type Modo = 'password' | 'enlace' | 'olvido';
 
 /** "Signups not allowed for otp" (shouldCreateUser:false contra un email no dado de alta) -> mensaje accionable. */
 function mensajeError(mensaje: string): string {
+  if (/user is banned|user_banned/i.test(mensaje)) {
+    return 'Cuenta desactivada — habla con tu administrador.';
+  }
   if (/signups? not allowed/i.test(mensaje)) {
     return 'Este correo no está dado de alta. Pide acceso a tu administrador.';
   }
