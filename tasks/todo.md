@@ -166,9 +166,16 @@ C imputar_directo: AE solo si empleado Y proyecto son de SU empresa (guarda RPC 
 - [x] **Reconciliar** `docs/runbook-produccion.md` con el prompt (este manda): reescrito; discrepancias en su §1.
 - [x] **Paso 0 — I-residual**: server action `desactivarUsuario`/`reactivarUsuario` (ban + permisos.ts), migración 025 (pre-request), verificación con JWT vigente (local y demo desplegada), revertido, huella `6c50f784` intacta, commit+push+redeploy demo.
 - [x] **Fase 1 — seed** `supabase/seed-produccion.sql` con veredicto por sección; validado en copia emulada de proyecto nuevo; bootstrap `scripts/bootstrap-admin.mjs` probado.
-- [ ] **PAUSA** — esperando del usuario (runbook §2): org/plan/región/coste del proyecto Supabase, CIF reales, jornadas por empresa, confirmar catálogo, `descripcion_obligatoria`, datos de la primera cuenta admin, dominio, despliegue (main vs rama), región Railway.
-- [ ] Fase 2 — proyecto Supabase nuevo (link, 24 migraciones, censo, config push con diff previo, seed, verificaciones 023–025 con su anon key, bootstrap, backups).
-- [ ] Fase 3 — Railway producción (servicio + cron gemelo, `CRON_SECRET` nuevo, `MODO_EMAIL=log`); demo intacta.
-- [ ] Fase 4 — verificación de estreno con cuentas de prueba (revertidas).
-- [ ] Fase 5 — runbook «ejecutado», `docs/dia-1.md`, PLAN.md «Producción».
+- [x] **PAUSA** (respuestas a–m recibidas 2026-09-19). Quedan SIN rellenar por el usuario: los 3 CIF, nombre+email del primer admin_grupo y confirmar plan Pro (ver «Bloqueado» abajo).
+- [x] Fase 2 (parte técnica) — proyecto `horasgrupo-prod` (ref `duksjzgoipwwrjvvgzon`, París); worktree `../TimerX-prod` (rama `produccion`) enlazado solo a él; `db push` de las 24 migraciones (dry-run = 24, historial 24/24 sin sonda residual); censo idéntico (21 tablas, 4 vistas, 1 secuencia, 53 funciones/8 trigger, 7 triggers, 43 policies, 46 índices, 20 PK, 35 FK, 16 CHECK, 12 UNIQUE, 7 enums, RLS 21/21, pre-request fijado); catálogo: 0 funciones (salvo el pre-request) y 0 tablas/vistas/secuencias para `anon`; con la anon key nueva: 25 tablas+vistas → 42501, 18 RPC → 42501, escrituras → 42501, conteos intactos; `config push` con diff previo (solo site_url, redirects, enable_signup) → `disable_signup:true`, signUp real → 422 `signup_disabled`, 0 usuarios; backups: físico COMPLETED, `walg_enabled:true`, PITR off (decidido).
+- [ ] Fase 2 (bloqueado por el usuario) — seed con CIF reales, bootstrap del primer admin, confirmación de plan Pro.
+- [x] Fase 3 (parte técnica) — Railway `timerx-prod` (rama `produccion`, europe-west4, dominio `timerx-prod-production.up.railway.app`, variables propias, `CRON_SECRET` nuevo, `MODO_EMAIL=log`, `APP_URL`) + cron gemelo `timerx-prod-cron-recordatorios` (`0 8 * * *`); build OK; app apunta solo al Supabase de producción; cron gemelo probado (HTTP 200, EXIT 0). Demo intacta (ver revisión).
+- [ ] Fase 4 — verificación de estreno con cuentas de prueba (revertidas). Depende del bootstrap del admin.
+- [ ] Fase 5 — runbook «ejecutado» (corregir §0 rama, §2 PAUSA), `docs/dia-1.md`, PLAN.md «Producción».
+
+## Decisiones cerradas 2026-09-21 (mensaje del usuario)
+- [x] **Cron de la demo**: aplicado el mismo arreglo que al gemelo (`sh -c 'curl -sS --fail-with-body --retry 3 --retry-delay 10 --retry-all-errors …'`), fuera de la congelación (robustez operativa). Probado con disparo real (20:31 UTC: 1.er intento falla, reintento OK, 200); horario restaurado a `0 8 * * *`. Config idéntica al gemelo salvo región/vars.
+- [ ] **dia-1.md (paso del usuario)**: rotar la contraseña de la BD de `horasgrupo-prod` desde el panel de Supabase tras la entrega (la actual está en su gestor). Añadir a la checklist.
+- [ ] **Plan Pro**: NO verificable por mí (el navegador no tiene sesión en Supabase y no introduzco contraseñas); el usuario debe confirmarlo en Billing. Indicios: proyecto creado con coste autorizado, backup físico COMPLETED, `walg_enabled:true`.
+- [ ] **Datos aún sin rellenar (2.ª vez)**: 3 CIF, nombre+email del admin, confirmación Pro — llegaron como plantilla `[tu CIF]`, `[tu nombre completo]`, `[tu email real]`.
 
