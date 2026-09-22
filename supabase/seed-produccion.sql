@@ -9,8 +9,9 @@
 -- de UNA SOLA VEZ: la seccion 0 aborta si la base ya tiene datos (no se puede ejecutar contra la demo ni re-ejecutar).
 -- Los UUID son los mismos que los de la demo (referencias estables entre seed y codigo); no son secretos.
 --
--- PENDIENTE DEL USUARIO antes de aplicar (los CIF son datos reales, no se inventan): sustituir los 3 marcadores @@CIF_...@@ de la seccion 2 por
--- el CIF real de cada empresa SIN guiones ni espacios (p. ej. B12345678). La seccion final ABORTA si queda algun marcador o un CIF con formato invalido.
+-- CIF: decision del usuario (2026-09-22) -- NO van en el seed. La columna `empresa.cif` es `text unique` SIN CHECK de formato (001); con UNIQUE,
+-- varias filas en NULL conviven sin chocar (una cadena vacia en las tres si chocaria). Las 3 empresas se siembran con cif = NULL y se fijan
+-- despues, uno a uno, desde Empresas -> ficha -> Editar datos (admin_grupo, ya existe en la app). Tarea de dia 1, ver docs/dia-1.md.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -43,13 +44,13 @@ update ajuste set valor = 'false'::jsonb where clave = 'recordatorio_email';
 
 -- -----------------------------------------------------------------------------
 -- 2. EMPRESAS  (3)
--- VEREDICTO: INCLUYE. Nombres = los del grupo. CIF = REAL (marcadores @@CIF_...@@ a sustituir; la demo tiene CIF ficticios que NO se copian).
---   Se crea la jornada semanal de cada una por trigger (ver seccion 9). La tipologia (area del mapa) se asigna en la seccion 8.
+-- VEREDICTO: INCLUYE. Nombres = los del grupo. CIF = NULL (decision del usuario: se fija despues desde la ficha; la demo tiene CIF ficticios
+--   que NO se copian). Se crea la jornada semanal de cada una por trigger (ver seccion 9). La tipologia (area del mapa) se asigna en la seccion 8.
 -- -----------------------------------------------------------------------------
 insert into empresa (id, nombre, cif) values
-  ('00000000-0000-0000-0000-000000000001', 'Wowinx SL', '@@CIF_WOWINX@@'),
-  ('00000000-0000-0000-0000-000000000002', 'Málaga CF SAD', '@@CIF_MALAGA@@'),
-  ('00000000-0000-0000-0000-000000000003', 'Legal Norte SL', '@@CIF_LEGAL_NORTE@@');
+  ('00000000-0000-0000-0000-000000000001', 'Wowinx SL', null),
+  ('00000000-0000-0000-0000-000000000002', 'Málaga CF SAD', null),
+  ('00000000-0000-0000-0000-000000000003', 'Legal Norte SL', null);
 
 -- -----------------------------------------------------------------------------
 -- 3. DEPARTAMENTOS  (3)
@@ -200,8 +201,8 @@ begin
   where n <> e;
   if v_falla is not null then raise exception 'seed-produccion: conteos inesperados: %', v_falla; end if;
 
-  if exists (select 1 from empresa where cif is null or cif !~ '^[A-Z][0-9]{7}[0-9A-J]$') then
-    raise exception 'seed-produccion: hay CIF sin sustituir (@@CIF_...@@) o con formato invalido (esperado: letra + 7 digitos + digito/letra, sin guiones)';
+  if (select count(*) from empresa where cif is not null) <> 0 then
+    raise exception 'seed-produccion: alguna empresa trae CIF ya puesto (debe sembrarse NULL; se fija despues desde la ficha)';
   end if;
 
   if (select count(*) from empresa_jornada where dia_semana = 5 and horas = 5.5) <> 3

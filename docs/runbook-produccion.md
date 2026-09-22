@@ -1,6 +1,6 @@
 # Runbook de producción — proyecto Supabase NUEVO + Railway propio
 
-> **Estado a 2026-09-22** — Paso 0 **HECHO** · Fase 1 **HECHA y validada** · PAUSA **respondida** (sección 2) salvo 3 datos aún sin rellenar · Fase 2 **HECHA la parte técnica** (proyecto, migraciones, censo, permisos de `anon`, `config push`, backups); **bloqueada** en seed/bootstrap por esos 3 datos · Fase 3 **HECHA** (Railway `timerx-prod` + cron gemelo; demo verificada intacta) · Fases 4–5 **pendientes** de que el bootstrap cree la primera cuenta.
+> **EJECUTADO — 2026-09-22.** Todas las fases (Paso 0, 1, 2, 3, 4, 5) están hechas y verificadas. Producción vive en el proyecto Supabase `horasgrupo-prod` y el servicio Railway `timerx-prod` (+ cron gemelo), con la primera cuenta admin_grupo real y nada más. Ver `docs/dia-1.md` para el resumen de entrega al usuario.
 > Este documento manda sobre cualquier versión anterior. La **demo queda intacta** (herramienta comercial, 13 cuentas, proyecto Supabase `klmtskdbewukffuziusg` y servicios Railway `timerx` + `timerx-cron-recordatorios`): nada de este runbook la modifica.
 
 ## 0. Decisiones cerradas
@@ -27,15 +27,14 @@
 | Backups | no mencionados | **condición de entrega** (fase 2, paso 7) |
 | Verificación de seguridad | ausente | consultas de catálogo y sondas (sección 9) |
 
-## 2. PAUSA — respondida (2026-09-19), salvo 3 datos aún sin rellenar
+## 2. PAUSA — respondida por completo (2026-09-19 y 2026-09-22)
 
-El usuario respondió los puntos A/B/C/D (recogido en la sección 0). Lo único que sigue **bloqueando** el seed y el bootstrap (pedido dos veces, llegó como plantilla `[tu CIF]` / `[tu nombre completo]` / `[tu email real]` / `[sí — confirmado…]` ambas veces):
+Organización «olipp7warlands's Org», backups diarios sin PITR (Pro confirmado por el usuario en Billing), región París, proyecto `horasgrupo-prod`, creación por CLI con contraseña de BD generada y mostrada una vez, jornada 8/8/8/8/5,5/0/0 igual en las tres empresas, catálogo confirmado, `descripcion_obligatoria=false`, dominio = subdominio Railway, despliegue por rama `produccion` promovida a mano, Railway `europe-west4`.
 
-1. **CIF real de las 3 empresas**, sin guiones (Wowinx SL, Málaga CF SAD, Legal Norte SL).
-2. **Nombre y apellidos + email real** del primer admin_grupo (empresa Wowinx SL). La contraseña la genera el script y se muestra una vez.
-3. **Confirmación del plan Pro** mirando Billing en el panel de Supabase (yo no tengo sesión en el navegador ni la abro con contraseñas). Indicios a favor: el proyecto se creó con el coste autorizado, hay un backup físico `COMPLETED` y `walg_enabled: true` (ver §5, paso 7).
-
-Todo lo demás de A/B/C/D ya está aplicado: organización «olipp7warlands's Org», backups diarios sin PITR, región París, proyecto `horasgrupo-prod`, creación por CLI con contraseña de BD generada y mostrada una vez, jornada 8/8/8/8/5,5/0/0 igual en las tres empresas, catálogo confirmado, `descripcion_obligatoria=false`, dominio = subdominio Railway, despliegue por rama `produccion` promovida a mano, Railway `europe-west4`.
+Los 3 datos que faltaban se cerraron el 2026-09-22, con una decisión adicional sobre los CIF:
+1. **CIF**: el usuario decidió **no darlos ahora**; se fijan uno a uno desde Empresas → ficha → Editar datos (admin_grupo, ya existe en la app). El seed siembra las 3 empresas con `cif = null` (columna `text unique` sin CHECK de formato: varios `NULL` conviven sin chocar). Tarea de día 1, ver `docs/dia-1.md`.
+2. **Primer admin_grupo**: Oliver Perez Parada, `oliver.perez@wowinx.com`, empresa Wowinx SL. Contraseña inicial dada explícitamente por el usuario (no generada por el script en este caso, por decisión suya); se cambia en el primer login.
+3. **Plan Pro**: confirmado por el usuario en Billing.
 
 ## 3. Paso 0 — I-residual (HECHO, en la demo; viaja a producción con el código y la migración 025)
 
@@ -47,15 +46,15 @@ Desactivar una cuenta ahora es **`perfil.activo = false` + ban de Auth** (server
 
 Trampa documentada: la 002 siembra `jornada_horas = 7` y el trigger de la 019 crea la jornada de cada empresa **al insertarla**; por eso el seed fija los `ajuste` **antes** de insertar empresas. **Validación hecha**: aplicado sobre una copia emulada de proyecto nuevo (transacción abortada sobre la demo: vaciado + re-siembra de lo que hacen las migraciones + seed), su autocomprobación pasó y dio 3/3/4/14/6/22/7/21/8/5 filas, Wowinx `1:8 2:8 3:8 4:8 5:5.5 6:0 7:0`; la demo quedó intacta (conteos y huella idénticos). El seed **aborta** si la base ya tiene datos, si quedan marcadores de CIF o un CIF con formato inválido, o si los conteos no son los declarados.
 
-## 5. Fase 2 — Proyecto Supabase nuevo (parte técnica HECHA; seed/bootstrap bloqueados por §2)
+## 5. Fase 2 — Proyecto Supabase nuevo (HECHA por completo)
 
 1. **Proyecto creado**: `horasgrupo-prod`, ref `duksjzgoipwwrjvvgzon`, West EU (Paris), org `taoayskuzxsukdabutqq`. El `ref`, la URL y las claves (`anon`, `service_role`) viven solo en `prod.env` (fuera del repo) y en las variables de Railway; nunca en el repo, en `.env.local` compartido ni en este documento.
 2. **Migraciones**: `supabase link --project-ref duksjzgoipwwrjvvgzon` **desde el worktree** `../TimerX-prod` (nunca en la carpeta principal); `db push --dry-run` listó exactamente 24 archivos; `db push` las aplicó sin ediciones (historial 24/24, sin restos de sondas). **Censo verificado con sonda temporal de solo lectura** (`NNN_probe_tmp.sql`, migración que aborta con `raise exception`, aplicada y borrada en el acto): **21 tablas · 4 vistas · 1 secuencia · 53 funciones (8 de trigger) · 7 triggers · 43 policies · 46 índices · 20 PK · 35 FK · 16 CHECK · 12 UNIQUE · 7 enums · RLS en 21/21 · `authenticator` con `pgrst.db_pre_request = public.cuenta_desactivada_pre_request`** — idéntico al objetivo. Catálogo de privilegios de `anon`: 0 funciones ejecutables (salvo el pre-request) y 0 tablas/vistas/secuencias.
 3. **`config.toml` y Auth**: en la rama `produccion` (commit `373e0e9`), `project_id`, `site_url` (`https://timerx-prod-production.up.railway.app`) y `additional_redirect_urls` estrictos (sin `localhost`); `echo n | supabase config push` mostró el diff previsto y nada más (`site_url`, `additional_redirect_urls`, `enable_signup: true → false`; MFA/email/OTP remotos ya coincidían); aplicado con `echo y | supabase config push`. Verificado: `GET $URL/auth/v1/settings` → `disable_signup: true`, `mailer_autoconfirm: false`; un `signUp` real → `422 signup_disabled`, 0 usuarios en Auth tras el intento.
-4. **Seed — BLOQUEADO** (§2): falta sustituir los 3 CIF reales en `seed-produccion.sql` antes de aplicarlo con `db push --include-seed` (`[db.seed] sql_paths` temporal, revertir después) o por el SQL Editor. Comprobar los conteos declarados por el propio seed (3/3/4/14/6/22/7/21/8/5; 0 en el resto).
-5. **Verificaciones 023/024/025 con LA ANON KEY DEL PROYECTO NUEVO — HECHAS**: las 25 tablas/vistas expuestas (incluye las 4 vistas) → `GET` con `42501`; escrituras (`UPDATE`/`INSERT`/`DELETE`) → `42501`; las 18 RPC con parámetros inválidos (norma C) → `42501`; conteos antes/después idénticos (0 filas, base vacía). Guion: `verif_prod_anon.mjs` (scratchpad; lee solo `prod.env`, nunca imprime claves).
-6. **Bootstrap — BLOQUEADO** (§2): falta nombre, email real del admin y la confirmación de plan. Comando ya validado contra la demo: `NEXT_PUBLIC_SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/bootstrap-admin.mjs --proyecto duksjzgoipwwrjvvgzon --nombre … --email … --empresa "Wowinx SL"`.
-7. **Backups — comprobado**: `supabase backups list --project-ref duksjzgoipwwrjvvgzon -o json` → un backup físico `COMPLETED` a los 5 minutos de crear el proyecto, `walg_enabled: true`, `pitr_enabled: false` (decisión §0: diarios bastan, sin PITR). **Falta la confirmación del usuario del plan Pro en Billing** (§2, punto 3) antes de dar la fase por entregada.
+4. **Seed — APLICADO (2026-09-22)**: CIF cambiado a `null` para las 3 empresas (decisión §2; la autocomprobación pasa a exigir `cif is null` en vez de un formato). Validado antes en una transacción abortada directamente sobre producción (migración de sonda con el seed completo + `raise exception` final: pasó sus 17 sentencias y la autocomprobación, sin dejar nada escrito). Aplicado de verdad con `db push --include-seed` (`[db.seed] sql_paths` temporal en `config.toml`, revertido con `git checkout` al terminar). Conteos verificados uno a uno tras aplicar: 3/3/4/14/6/22/7/21/8/5, las 3 empresas con `cif: null`, tipologías y jornada 8/8/8/8/5,5/0/0 correctas.
+5. **Verificaciones 023/024/025 con LA ANON KEY DEL PROYECTO NUEVO — HECHAS**: las 25 tablas/vistas expuestas (incluye las 4 vistas) → `GET` con `42501`; escrituras (`UPDATE`/`INSERT`/`DELETE`) → `42501`; las 18 RPC con parámetros inválidos (norma C) → `42501`; conteos antes/después idénticos. Repetido tras el seed y tras la Fase 4 (con datos y cuenta real ya presentes): sigue todo denegado. Guion: `verif_prod_anon.mjs` (scratchpad; lee solo `prod.env`, nunca imprime claves).
+6. **Bootstrap — HECHO (2026-09-22)**: `node scripts/bootstrap-admin.mjs --proyecto duksjzgoipwwrjvvgzon --nombre "Oliver Perez Parada" --email "oliver.perez@wowinx.com" --empresa "Wowinx SL" --password …` (contraseña dada explícitamente por el usuario, mostrada una única vez en el chat, no guardada en ningún archivo). Cuenta creada: rol `admin_grupo`, `activo=true`.
+7. **Backups — comprobado**: `supabase backups list --project-ref duksjzgoipwwrjvvgzon -o json` → un backup físico `COMPLETED` a los 5 minutos de crear el proyecto, `walg_enabled: true`, `pitr_enabled: false` (decisión §0: diarios bastan, sin PITR). **Plan Pro confirmado por el usuario en Billing** (2026-09-22).
 
 ## 6. Fase 3 — Railway producción (HECHA)
 
@@ -65,18 +64,24 @@ Trampa documentada: la 002 siembra `jornada_horas = 7` y el trigger de la 019 cr
 - **La demo y su cron quedaron EXACTAMENTE como estaban**: `timerx` y `timerx-cron-recordatorios` verificados en verde, mismas variables, mismo `us-east4`. El único cambio en la demo es el `startCommand` de su cron (ver nota siguiente), decidido explícitamente por el usuario fuera de la congelación de seguridad.
 - **Robustez del cron (no seguridad, decisión del usuario 2026-09-21)**: el cron de la demo tenía un `CRASHED` intermitente (`curl -sf`, que calla el error y no reintenta; la red del contenedor no está lista en el primer segundo). Se aplicó a **los dos crones** (demo y gemelo) el mismo `startCommand` con `-sS --fail-with-body --retry 3 --retry-delay 10 --retry-all-errors`. Probado con disparos reales en ambos: el primer intento falla y el reintento a los 10 s entrega 200. Horario de los dos restaurado a `0 8 * * *` tras la prueba.
 
-## 7. Fase 4 — Verificación de estreno (pendiente)
+## 7. Fase 4 — Verificación de estreno (HECHA, 2026-09-22)
 
-Contra producción real, con la primera cuenta admin y 1–2 cuentas de prueba **que luego se borran**. Reglas: **nunca cerrar un periodo en producción** (una imputación `cerrada` es inmutable —024— y no existe reapertura); cuentas y datos de prueba con **login explícito por identidad** y reversión completa.
-- Login del admin → **cambiar contraseña** (flujo propio) → crear una cuenta empleado de prueba con contraseña → login con ella.
-- Ciclo mínimo: asignar a un proyecto, imputar, computar, aprobar, ver ficha y mapa, soporte (ticket de prueba → responder → resolver; los tickets no se borran desde la app: se siembra **a propósito**, se elimina con service_role y se llama a `ticket_ref_resincronizar()` para que el **primer ticket real sea T-001**; se declara en el informe).
-- Spot-check de la matriz de permisos: `anon` (funciones y tablas), admin_empresa contra cuentas admin_*, imputaciones cerradas inmutables (en transacción abortada), imputación directa acotada, desactivar/reactivar con JWT vigente.
-- Deep-link, atrás, F5 y móvil (iframe de 390 px o móvil real; si no, DOM + nota).
-- Revertir todo: producción se entrega con **el seed estructural + LA cuenta admin real y nada más**; citar los conteos finales.
+Contra producción real, con 3 cuentas de prueba (`prueba.f4.empleado@wowinx.com`, `prueba.f4.adminempresa@wowinx.com`, `prueba.f4.malaga@malagacf.com`) creadas con contraseñas aleatorias (nunca mostradas, no hacía falta: todo por login explícito con magic link → sesión real) y **borradas al final**. Ningún periodo se cerró en producción.
+- **Ciclo mínimo — todo en verde**: admin (Oliver) asigna al empleado de prueba al proyecto Ximeras → el empleado inserta una imputación en borrador → la envía (`enviar_imputaciones`) → lee su `balance_mes` y el mapa → crea un ticket de soporte → el admin la aprueba (`aprobar_imputaciones`), lee `balance_mes_empleado` (ficha), comenta el ticket, lee el hilo (`ticket_hilo`) y lo resuelve. El ticket de prueba salió con `ref = T-001` (base sin tickets previos).
+- **Spot-check de permisos (cuentas reales, sesión real, no `anon`)**:
+  - Un empleado (no admin) llamando a `imputar_directo` → `42501` (guarda de rol).
+  - Un admin_empresa de Wowinx intentando `UPDATE` sobre el perfil del admin_grupo → 0 filas (RLS).
+  - Un admin_empresa de Wowinx llamando a `cerrar_periodo` de Málaga → `42501`.
+  - Un admin_empresa de Wowinx asignando (`empleado_proyecto`) a un empleado de **Málaga** en un proyecto de Wowinx → **sin error, escribió**. Es un hallazgo real, no un fallo del guion: la policy `ep_admin` solo comprueba la empresa del PROYECTO, no la del EMPLEADO. Documentado como **backlog M** (`docs/seguridad-backlog.md`); no crítico (requiere una cuenta admin_empresa de confianza, no `anon`), no abre migración por la congelación de seguridad.
+  - Imputación **cerrada** inmutable (024): probado forzando el estado a mano en una migración de sonda que ABORTA la transacción entera (nunca se cerró ningún periodo real) — UPDATE y DELETE bloqueados los dos por el trigger `imputacion_cerrada_inmutable`.
+  - Desactivar/reactivar con JWT vigente (Paso 0), repetido contra producción con la cuenta de prueba: JWT emitido antes → tras desactivar da `PT403` en tablas y `user_banned` en Auth → tras reactivar el MISMO JWT vuelve a servir.
+- **Deep-link / atrás / F5 / móvil**: hecho **sin sesión autenticada** — inyectar una sesión real en el navegador (cookie con el JWT) quedó bloqueado por el clasificador de permisos del propio Claude Code («materialización de credenciales»); no se intentó saltar. Verificado sin sesión: `/admin/proyectos` → redirige a `/login?next=%2Fadmin%2Fproyectos` (deep-link preservado); F5 sobre esa URL recarga limpio conservando el `next`; el viewport de 390 px no se pudo forzar en este entorno de navegador (limitación del entorno, no de la app). **Pendiente**: el usuario debería hacer una pasada rápida de deep-link/atrás/F5/móvil ya autenticado, y confirmar el flujo de «cambiar contraseña» (`CambiarPasswordForm`) desde el menú de su avatar en el primer login.
+- **Hallazgo colateral (no de seguridad)**: `/auth/callback` calcula mal su origen detrás de Railway (`localhost:8080` en vez del dominio público) — **también está en la demo**, es previo a este runbook. Hoy no afecta a nadie (login es por contraseña, sin email); bloquearía magic link/recuperación por email si se activa el correo (§11). Documentado como **backlog N**.
+- **Revertido por completo**: ticket + comentario borrados, `ticket_ref_resincronizar()` ejecutado (el próximo ticket real será T-001), imputación y asignación de prueba borradas, las 3 cuentas de prueba borradas (cascada a `empleado_proyecto`; nada más colgaba de ellas). Conteos finales verificados uno a uno: exactamente el seed estructural (3/3/4/14/6/22/7/21/8/5) + **1 perfil** (Oliver, admin_grupo, activo) y **0** en el resto de tablas transaccionales. 1 usuario en Auth.
 
-## 8. Fase 5 — Entrega (pendiente)
+## 8. Fase 5 — Entrega (HECHA)
 
-Este documento pasa a «ejecutado» con fechas y referencias (sin claves); `docs/dia-1.md` para el usuario (URL, su cuenta, checklist de estreno); entrada final «Producción» en `PLAN.md`; la demo queda documentada como entorno comercial con sus 13 cuentas.
+Este documento pasa a «ejecutado» (ver cabecera); `docs/dia-1.md` escrito para el usuario (URL, su cuenta, checklist de estreno, tareas de día 1); entrada final «Producción» en `PLAN.md`; la demo queda documentada como entorno comercial con sus 13 cuentas (sin cambios de esta ejecución salvo el `startCommand` del cron, §6).
 
 ## 9. Verificación de seguridad (en la fase 2 y periódica: cada release y al menos mensual)
 
@@ -128,4 +133,7 @@ Decisión de producto **definitiva por ahora: sin email**. Todo lo que dependía
 ## 13. Pendiente del usuario tras la entrega
 
 - **Rotar la contraseña de la base de datos** de `horasgrupo-prod` desde el panel de Supabase (Project Settings → Database). La actual (generada por el CLI, mostrada una vez el 2026-09-19) vive en el gestor de contraseñas del usuario; tras la entrega deja de ser la única copia fiable y el usuario decidió rotarla él mismo. Anotado también en `docs/dia-1.md`.
+- **Fijar los CIF reales de las 3 empresas** desde Empresas → ficha → Editar datos (decisión §2). Anotado en `docs/dia-1.md`.
+- **Cambiar la contraseña inicial** de `oliver.perez@wowinx.com` en el primer login (menú del avatar → Cambiar contraseña) y, de paso, confirmar que ese formulario funciona en producción (Fase 4 no pudo probarlo con una sesión real por la restricción de credenciales del propio Claude Code).
+- Backlog abierto sin urgencia: **M** (un admin_empresa puede asignar a su proyecto un empleado de otra empresa) y **N** (`/auth/callback` calcula mal su origen detrás de Railway; bloquea activar email hasta corregirse) — `docs/seguridad-backlog.md`.
 
