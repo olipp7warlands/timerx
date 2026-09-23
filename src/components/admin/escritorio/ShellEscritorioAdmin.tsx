@@ -85,7 +85,7 @@ export function ShellEscritorioAdmin({ info }: Props) {
         ))}
 
         <div className="mt-auto flex items-center gap-2 border-t border-border pt-3">
-          <MenuUsuarioDesktop nombre={info.nombre} email={info.email} rol={info.rol} />
+          <MenuUsuarioDesktop nombre={info.nombre} email={info.email} rol={info.rol} onIrSoporte={() => nav.ir('soporte')} />
           {!mini && (
             <Link href="/inicio" className="btn btn-sm flex-1 justify-center">
               App empleado

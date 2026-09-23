@@ -44,5 +44,9 @@ next-env.d.ts
 # supabase CLI local state
 supabase/.temp
 
+# scripts/pack-revision.mjs: IDs del pack de revisión instalado (contiene datos del proyecto vivo, no secretos, pero
+# no es un artefacto de repo -- es el recibo del propio operador para desinstalar).
+scripts/.pack-revision-estado.json
+
 # Claude Code local harness state
 .claude/

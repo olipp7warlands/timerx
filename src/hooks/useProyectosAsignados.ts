@@ -79,5 +79,5 @@ export function useProyectosAsignados() {
     [asignaciones]
   );
 
-  return { paraFechas, loading };
+  return { paraFechas, loading, total: asignaciones.length };
 }

@@ -14,6 +14,7 @@ import { AvisoAusenciaDia } from '../compartido/AvisoAusenciaDia';
 import { useComputarDia } from '../compartido/useComputarDia';
 import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, diaAdyacenteLaborable, estadoDia, fmt, formatoMesAnio, nombreDia, sumaHoras } from '@/lib/horas/calendario';
 import { IconCalendario, IconHistorial, IconHoy } from '@/components/ui/icons';
+import { SinProyectos } from '../compartido/SinProyectos';
 import type { EmpleadoCtx } from '../types';
 
 const ESTADO_ETIQUETA: Record<string, string> = {
@@ -28,6 +29,9 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
   const [historicoAbierto, setHistoricoAbierto] = useState(false);
   const [computarTodoAbierto, setComputarTodoAbierto] = useState(false);
   const [computandoTodo, setComputandoTodo] = useState(false);
+  const computarDia = useComputarDia(ctx, ctx.selDay);
+
+  if (ctx.sinProyectos) return <SinProyectos ctx={ctx} />;
 
   const lineasPendientes = Object.values(ctx.porDia)
     .flat()
@@ -43,7 +47,6 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
   }
 
   const diaSel = ctx.dias.find((d) => d.fecha === ctx.selDay);
-  const computarDia = useComputarDia(ctx, ctx.selDay);
   const lineasHoy = ctx.porDia[ctx.selDay] ?? [];
   const totalDia = sumaHoras(lineasHoy);
   const reqDia = diaSel?.laborable ? diaSel.jornada : 0;

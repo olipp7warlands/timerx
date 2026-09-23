@@ -57,10 +57,13 @@ insert into departamento (id, nombre) values
   ('00000000-0000-0000-0004-000000000003', 'Diseño');
 
 -- 6. Categoría -> departamento (columna de la migración 015; va después de la
--- sección 5 porque es una FK a departamento). Desarrollo/Diseño -> 3B3,
+-- sección 5 porque es una FK a departamento). Desarrollo -> 3B3, Diseño -> Diseño
+-- (fix 026: el backfill original de la 015 metía Diseño bajo 3B3, bug),
 -- Abogados -> Jurídico, Gestión queda global (NULL).
 update categoria set departamento_id = '00000000-0000-0000-0004-000000000001'
-  where id in ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0001-000000000002'); -- Desarrollo, Diseño
+  where id = '00000000-0000-0000-0001-000000000001'; -- Desarrollo
+update categoria set departamento_id = '00000000-0000-0000-0004-000000000003'
+  where id = '00000000-0000-0000-0001-000000000002'; -- Diseño
 update categoria set departamento_id = '00000000-0000-0000-0004-000000000002'
   where id = '00000000-0000-0000-0001-000000000003'; -- Abogados
 

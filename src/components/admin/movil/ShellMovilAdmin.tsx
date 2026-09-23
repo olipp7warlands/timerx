@@ -55,7 +55,7 @@ export function ShellMovilAdmin({ info }: { info: AdminInfo }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <MenuUsuarioMovil nombre={info.nombre} email={info.email} rol={info.rol} />
+          <MenuUsuarioMovil nombre={info.nombre} email={info.email} rol={info.rol} onIrSoporte={() => nav.ir('soporte')} />
         </div>
       </header>
 

@@ -9,6 +9,7 @@ import { NuevaImputacionSheet, type PasoInicial } from './NuevaImputacionSheet';
 import { HistorialSheet } from './HistorialSheet';
 import { MapaSheet } from './MapaSheet';
 import { MenuUsuarioMovil } from '@/components/ui/MenuUsuario';
+import { SoporteEmpleadoPanel } from '@/components/soporte/SoporteEmpleadoPanel';
 import { IconCasa, IconReloj, IconCalendario, IconMas, IconMapa } from '@/components/ui/icons';
 import { ausenciaEnFecha, formatoDiaLargo } from '@/lib/horas/calendario';
 
@@ -36,6 +37,8 @@ export function ShellMovil(ctx: EmpleadoCtx) {
       ctx.setTab('imputar');
       ctx.setSelDay(ctx.fechaHoy);
     }
+    // Sin proyectos asignados: no tiene sentido abrir el wizard (se abriría vacío). Solo lleva al mismo aviso de Imputar.
+    if (ctx.sinProyectos) return;
     abrirHoja('tipo', false);
   }
 
@@ -59,7 +62,7 @@ export function ShellMovil(ctx: EmpleadoCtx) {
           >
             <IconMapa />
           </button>
-          <MenuUsuarioMovil nombre={ctx.nombre} email={ctx.email} rol={ctx.rol} />
+          <MenuUsuarioMovil nombre={ctx.nombre} email={ctx.email} rol={ctx.rol} onIrSoporte={() => ctx.setTab('soporte')} />
         </div>
       </header>
 
@@ -69,6 +72,12 @@ export function ShellMovil(ctx: EmpleadoCtx) {
           <ImputarMovil ctx={ctx} onAbrirHoja={abrirHoja} onAbrirHistorial={() => setHistorialAbierto(true)} />
         )}
         {ctx.tab === 'calendario' && <CalendarioMovil ctx={ctx} />}
+        {ctx.tab === 'soporte' && (
+          <div className="pt-2">
+            <h1 className="mb-3 text-lg font-extrabold">Soporte</h1>
+            <SoporteEmpleadoPanel />
+          </div>
+        )}
       </div>
 
       <button

@@ -68,11 +68,41 @@ export function IconCalendario({ className, size = 16 }: IconProps) {
   );
 }
 
-/** Tema claro/oscuro. */
+/** Tema claro/oscuro: luna (modo destino = noche). */
 export function IconTema({ className, size = 17 }: IconProps) {
   return (
     <svg {...base(size, 1.8, false)} className={className}>
       <path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z" />
+    </svg>
+  );
+}
+
+/** Tema claro/oscuro: sol (modo destino = día). */
+export function IconSol({ className, size = 17 }: IconProps) {
+  return (
+    <svg {...base(size, 1.8, false)} className={className}>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </svg>
+  );
+}
+
+/** Contraseña: llave. */
+export function IconLlave({ className, size = 16 }: IconProps) {
+  return (
+    <svg {...base(size, 1.8)} className={className}>
+      <circle cx="7.5" cy="15.5" r="4.5" />
+      <path d="m10.8 12.2 8.7-8.7M16.5 6.5l2 2M19.5 3.5l2 2" />
+    </svg>
+  );
+}
+
+/** Cerrar sesión: puerta con flecha de salida. */
+export function IconSalida({ className, size = 16 }: IconProps) {
+  return (
+    <svg {...base(size, 1.8)} className={className}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5M21 12H9" />
     </svg>
   );
 }

@@ -3,7 +3,7 @@ import type { Tab } from '@/components/empleado/types';
 
 /** Única definición de las URLs de la app -- la usan las pages (servidor) y los shells (cliente). */
 
-export const TABS_EMPLEADO: Tab[] = ['inicio', 'imputar', 'calendario'];
+export const TABS_EMPLEADO: Tab[] = ['inicio', 'imputar', 'calendario', 'soporte'];
 export const BASE_EMPLEADO = '/inicio';
 
 export function parseRutaEmpleado(segmentos: string[]): Tab | null {

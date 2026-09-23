@@ -23,7 +23,7 @@ export interface Staged {
   lineas: StagedLinea[];
 }
 
-export type Tab = 'inicio' | 'imputar' | 'calendario';
+export type Tab = 'inicio' | 'imputar' | 'calendario' | 'soporte';
 
 /** Datos y acciones que ambos shells (móvil/escritorio) consumen — misma capa, distinta disposición. */
 export interface EmpleadoCtx {
@@ -32,6 +32,7 @@ export interface EmpleadoCtx {
   fechaHoy: string;
   empresaId: string;
   empresaNombre: string;
+  usuarioId: string;
   nombre: string;
   email: string;
   rol: RolUsuario;
@@ -47,6 +48,8 @@ export interface EmpleadoCtx {
   porDia: Record<string, ImputacionLinea[]>;
   ausencias: Ausencia[];
   proyectosParaFechas: (fechas: string[]) => ProyectoAsignado[];
+  /** true = el empleado no tiene NINGÚN proyecto asignado (no confundir con "ninguno cubre esta fecha", ver `proyectosParaFechas`). */
+  sinProyectos: boolean;
   grupos: GrupoTareas[];
   balance: BalanceMes | null;
   maxHorasDia: number | null;

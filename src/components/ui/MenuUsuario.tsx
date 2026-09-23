@@ -7,12 +7,14 @@ import { BottomSheet } from '@/components/empleado/compartido/BottomSheet';
 import { ModalCentrado } from '@/components/empleado/compartido/ModalCentrado';
 import { alternarTema } from './ThemeToggle';
 import { CambiarPasswordForm } from './CambiarPasswordForm';
-import { SoporteEmpleadoPanel } from '@/components/soporte/SoporteEmpleadoPanel';
+import { IconTema, IconSol, IconLlave, IconSoporte, IconSalida } from './icons';
 
 interface Props {
   nombre: string;
   email: string;
   rol: RolUsuario;
+  /** Soporte es una página (`/soporte`, deep-link/atrás/F5), no un modal ni una hoja: el ítem del menú navega, en los dos shells. */
+  onIrSoporte: () => void;
 }
 
 /**
@@ -34,7 +36,7 @@ function iniciales(nombre: string) {
     .toUpperCase();
 }
 
-function Cabecera({ nombre, email, rol }: Props) {
+function Cabecera({ nombre, email, rol }: Pick<Props, 'nombre' | 'email' | 'rol'>) {
   return (
     <div>
       <p className="text-sm font-extrabold">{nombre}</p>
@@ -44,11 +46,28 @@ function Cabecera({ nombre, email, rol }: Props) {
   );
 }
 
-export function MenuUsuarioDesktop({ nombre, email, rol }: Props) {
+/**
+ * Modo DESTINO del tema (a qué se cambiaría si se pulsa ahora), no el modo actual -- icono y etiqueta lo dicen
+ * explícitamente. Lectura perezosa en el propio `useState` (una sola vez, al montar el menú -- que solo ocurre en
+ * cliente): nada más que este mismo `alternar()` cambia el tema entre el montaje y la primera apertura, así que no
+ * hace falta releerlo en un efecto en cada apertura.
+ */
+function useTemaDestino() {
+  const [oscuroActivo, setOscuroActivo] = useState(() => typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark');
+  const alternar = () => {
+    alternarTema();
+    setOscuroActivo((v) => !v);
+  };
+  return oscuroActivo
+    ? { alternar, Icono: IconSol, etiqueta: 'Cambiar a modo día' }
+    : { alternar, Icono: IconTema, etiqueta: 'Cambiar a modo noche' };
+}
+
+export function MenuUsuarioDesktop({ nombre, email, rol, onIrSoporte }: Props) {
   const [abierto, setAbierto] = useState(false);
   const [passwordAbierto, setPasswordAbierto] = useState(false);
-  const [soporteAbierto, setSoporteAbierto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const tema = useTemaDestino();
 
   useEffect(() => {
     if (!abierto) return;
@@ -86,10 +105,11 @@ export function MenuUsuarioDesktop({ nombre, email, rol }: Props) {
           <button
             type="button"
             role="menuitem"
-            onClick={alternarTema}
-            className="block w-full px-3.5 py-2.5 text-left text-sm font-bold text-ink-primary hover:bg-subtle"
+            onClick={tema.alternar}
+            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-bold text-ink-primary hover:bg-subtle"
           >
-            Cambiar tema
+            <tema.Icono size={16} />
+            {tema.etiqueta}
           </button>
           <button
             type="button"
@@ -98,8 +118,9 @@ export function MenuUsuarioDesktop({ nombre, email, rol }: Props) {
               setAbierto(false);
               setPasswordAbierto(true);
             }}
-            className="block w-full px-3.5 py-2.5 text-left text-sm font-bold text-ink-primary hover:bg-subtle"
+            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-bold text-ink-primary hover:bg-subtle"
           >
+            <IconLlave size={16} />
             Cambiar contraseña
           </button>
           <button
@@ -107,18 +128,20 @@ export function MenuUsuarioDesktop({ nombre, email, rol }: Props) {
             role="menuitem"
             onClick={() => {
               setAbierto(false);
-              setSoporteAbierto(true);
+              onIrSoporte();
             }}
-            className="block w-full px-3.5 py-2.5 text-left text-sm font-bold text-ink-primary hover:bg-subtle"
+            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-bold text-ink-primary hover:bg-subtle"
           >
+            <IconSoporte size={16} />
             Soporte
           </button>
           <button
             type="button"
             role="menuitem"
             onClick={cerrarSesion}
-            className="block w-full px-3.5 py-2.5 text-left text-sm font-bold text-ink-primary hover:bg-subtle"
+            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-bold text-ink-primary hover:bg-subtle"
           >
+            <IconSalida size={16} />
             Cerrar sesión
           </button>
         </div>
@@ -127,18 +150,14 @@ export function MenuUsuarioDesktop({ nombre, email, rol }: Props) {
       <ModalCentrado abierto={passwordAbierto} onCerrar={() => setPasswordAbierto(false)} titulo="Cambiar contraseña">
         <CambiarPasswordForm email={email} onExito={() => setPasswordAbierto(false)} />
       </ModalCentrado>
-
-      <ModalCentrado abierto={soporteAbierto} onCerrar={() => setSoporteAbierto(false)} titulo="Soporte" ancho="min(640px,94vw)">
-        <div className="max-h-[70vh] overflow-y-auto">{soporteAbierto && <SoporteEmpleadoPanel />}</div>
-      </ModalCentrado>
     </div>
   );
 }
 
-export function MenuUsuarioMovil({ nombre, email, rol }: Props) {
+export function MenuUsuarioMovil({ nombre, email, rol, onIrSoporte }: Props) {
   const [abierto, setAbierto] = useState(false);
   const [passwordAbierto, setPasswordAbierto] = useState(false);
-  const [soporteAbierto, setSoporteAbierto] = useState(false);
+  const tema = useTemaDestino();
 
   return (
     <>
@@ -154,8 +173,9 @@ export function MenuUsuarioMovil({ nombre, email, rol }: Props) {
         <div className="border-b border-border pb-3">
           <Cabecera nombre={nombre} email={email} rol={rol} />
         </div>
-        <button type="button" onClick={alternarTema} className="btn full mt-3 w-full justify-center">
-          Cambiar tema
+        <button type="button" onClick={tema.alternar} className="btn full mt-3 flex w-full items-center justify-center gap-2">
+          <tema.Icono size={16} />
+          {tema.etiqueta}
         </button>
         <button
           type="button"
@@ -163,29 +183,29 @@ export function MenuUsuarioMovil({ nombre, email, rol }: Props) {
             setAbierto(false);
             setPasswordAbierto(true);
           }}
-          className="btn full mt-2 w-full justify-center"
+          className="btn full mt-2 flex w-full items-center justify-center gap-2"
         >
+          <IconLlave size={16} />
           Cambiar contraseña
         </button>
         <button
           type="button"
           onClick={() => {
             setAbierto(false);
-            setSoporteAbierto(true);
+            onIrSoporte();
           }}
-          className="btn full mt-2 w-full justify-center"
+          className="btn full mt-2 flex w-full items-center justify-center gap-2"
         >
+          <IconSoporte size={16} />
           Soporte
         </button>
-        <button type="button" onClick={cerrarSesion} className="btn btn-primary full mt-2 w-full justify-center">
+        <button type="button" onClick={cerrarSesion} className="btn btn-primary full mt-2 flex w-full items-center justify-center gap-2">
+          <IconSalida size={16} />
           Cerrar sesión
         </button>
       </BottomSheet>
       <BottomSheet abierto={passwordAbierto} onCerrar={() => setPasswordAbierto(false)} titulo="Cambiar contraseña">
         <CambiarPasswordForm email={email} onExito={() => setPasswordAbierto(false)} />
-      </BottomSheet>
-      <BottomSheet abierto={soporteAbierto} onCerrar={() => setSoporteAbierto(false)} titulo="Soporte">
-        {soporteAbierto && <SoporteEmpleadoPanel />}
       </BottomSheet>
     </>
   );
