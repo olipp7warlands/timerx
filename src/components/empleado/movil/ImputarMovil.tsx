@@ -13,6 +13,7 @@ import { useComputarDia } from '../compartido/useComputarDia';
 import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, diaAdyacenteLaborable, estadoDia, fmt, formatoMesAnio, nombreDia, sumaHoras } from '@/lib/horas/calendario';
 import { IconCalendario, IconHoy, IconHistorial, IconArchivo } from '@/components/ui/icons';
+import { SinProyectos } from '../compartido/SinProyectos';
 import type { PasoInicial } from './NuevaImputacionSheet';
 import type { EmpleadoCtx } from '../types';
 
@@ -27,6 +28,9 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
   const [computarTodoAbierto, setComputarTodoAbierto] = useState(false);
   const [computandoTodo, setComputandoTodo] = useState(false);
   const descripcionObligatoria = useDescripcionObligatoria();
+  const computarDia = useComputarDia(ctx, ctx.selDay);
+
+  if (ctx.sinProyectos) return <SinProyectos ctx={ctx} />;
 
   const lineasPendientes = Object.values(ctx.porDia)
     .flat()
@@ -42,7 +46,6 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
   }
 
   const diaSel = ctx.dias.find((d) => d.fecha === ctx.selDay);
-  const computarDia = useComputarDia(ctx, ctx.selDay);
   const lineasHoy = ctx.porDia[ctx.selDay] ?? [];
   const totalDia = sumaHoras(lineasHoy);
   const reqDia = diaSel?.laborable ? diaSel.jornada : 0;

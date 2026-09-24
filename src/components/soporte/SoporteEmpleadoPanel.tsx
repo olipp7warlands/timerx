@@ -9,7 +9,7 @@ import { PuntoEstadoTicket } from './PuntoEstadoTicket';
 type Vista = { tipo: 'lista' } | { tipo: 'nuevo' } | { tipo: 'ticket'; id: string };
 
 /**
- * Soporte del lado empleado (vive en el menú del avatar, dentro de modal en escritorio / hoja en móvil). Sin mock:
+ * Soporte del lado empleado (página `/soporte`, accesible desde el menú del avatar en los dos shells). Sin mock:
  * la spec del combinado 5+2 es la fuente de verdad. Ve SOLO sus tickets (RLS + `.eq('creado_por')` explícito: un admin ve todos por RLS pero aquí solo los suyos), abre uno nuevo, lee el hilo y
  * comenta. NO cambia estados: si su problema se resolvió, lo dice en el hilo.
  */

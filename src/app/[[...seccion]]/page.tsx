@@ -5,7 +5,7 @@ import { CuentaDesactivada } from '@/components/ui/CuentaDesactivada';
 import { BASE_EMPLEADO, parseRutaEmpleado } from '@/lib/nav/rutas';
 
 /**
- * Catch-all opcional del lado empleado: `/inicio`, `/imputar`, `/calendario`.
+ * Catch-all opcional del lado empleado: `/inicio`, `/imputar`, `/calendario`, `/soporte`.
  * Monta siempre el mismo shell; la pestaña la deriva el cliente de la URL.
  * Las rutas más específicas (/login, /admin, /api, /debug*, /reset-password,
  * /auth) tienen prioridad sobre este catch-all.
@@ -34,6 +34,7 @@ export default async function EmpleadoPage({
     <EmpleadoApp
       empresaId={perfil.empresa_id}
       empresaNombre={perfil.empresa?.nombre ?? ''}
+      usuarioId={perfil.id}
       nombre={perfil.nombre}
       email={perfil.email}
       rol={perfil.rol}

@@ -5,16 +5,18 @@ import Link from 'next/link';
 import { useState } from 'react';
 import type { EmpleadoCtx } from '../types';
 import { MenuUsuarioDesktop } from '@/components/ui/MenuUsuario';
-import { IconReloj, IconChevronLeft, IconChevronRight, IconCasa, IconCalendario, IconMapa } from '@/components/ui/icons';
+import { IconReloj, IconChevronLeft, IconChevronRight, IconCasa, IconCalendario, IconMapa, IconSoporte } from '@/components/ui/icons';
 import { InicioEscritorio } from './InicioEscritorio';
 import { ImputarEscritorio } from './ImputarEscritorio';
 import { CalendarioEscritorio } from './CalendarioEscritorio';
 import { ModalMapa } from './ModalMapa';
+import { SoporteEmpleadoPanel } from '@/components/soporte/SoporteEmpleadoPanel';
 
 const TABS: { id: EmpleadoCtx['tab']; etiqueta: string; Icono: typeof IconCasa }[] = [
   { id: 'inicio', etiqueta: 'Inicio', Icono: IconCasa },
   { id: 'imputar', etiqueta: 'Imputar', Icono: IconReloj },
   { id: 'calendario', etiqueta: 'Calendario', Icono: IconCalendario },
+  { id: 'soporte', etiqueta: 'Soporte', Icono: IconSoporte },
 ];
 
 export function ShellEscritorio(ctx: EmpleadoCtx) {
@@ -69,7 +71,7 @@ export function ShellEscritorio(ctx: EmpleadoCtx) {
           >
             <IconMapa />
           </button>
-          <MenuUsuarioDesktop nombre={ctx.nombre} email={ctx.email} rol={ctx.rol} />
+          <MenuUsuarioDesktop nombre={ctx.nombre} email={ctx.email} rol={ctx.rol} onIrSoporte={() => ctx.setTab('soporte')} />
           {!mini && (ctx.rol === 'admin_empresa' || ctx.rol === 'admin_grupo') && (
             <Link href="/admin" className="btn btn-sm flex-1 justify-center">
               Panel admin
@@ -82,6 +84,12 @@ export function ShellEscritorio(ctx: EmpleadoCtx) {
         {ctx.tab === 'inicio' && <InicioEscritorio ctx={ctx} />}
         {ctx.tab === 'imputar' && <ImputarEscritorio ctx={ctx} />}
         {ctx.tab === 'calendario' && <CalendarioEscritorio ctx={ctx} />}
+        {ctx.tab === 'soporte' && (
+          <div className="mx-auto max-w-2xl">
+            <h1 className="mb-4 text-xl font-extrabold">Soporte</h1>
+            <SoporteEmpleadoPanel />
+          </div>
+        )}
       </main>
 
       <ModalMapa abierto={mapaAbierto} onCerrar={() => setMapaAbierto(false)} />

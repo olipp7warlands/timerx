@@ -21,6 +21,7 @@ export default async function DebugMovilPage() {
         <EmpleadoApp
           empresaId={perfil.empresa_id}
           empresaNombre={perfil.empresa?.nombre ?? ''}
+          usuarioId={perfil.id}
           nombre={perfil.nombre}
           email={perfil.email}
           rol={perfil.rol}

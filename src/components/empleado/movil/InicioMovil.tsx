@@ -6,6 +6,7 @@ import { BottomSheet } from '../compartido/BottomSheet';
 import { useComputarDia } from '../compartido/useComputarDia';
 import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, fmt, estadoDia, sumaHoras } from '@/lib/horas/calendario';
 import { IconHistorial, IconChevronLeft, IconChevronRight, IconCalendario, IconReloj } from '@/components/ui/icons';
+import { SinProyectos } from '../compartido/SinProyectos';
 import type { EmpleadoCtx } from '../types';
 
 interface Props {
@@ -15,6 +16,9 @@ interface Props {
 export function InicioMovil({ ctx }: Props) {
   const carruselRef = useRef<HTMLDivElement>(null);
   const computarDia = useComputarDia(ctx, ctx.fechaHoy);
+
+  if (ctx.sinProyectos) return <SinProyectos ctx={ctx} />;
+
   const diaHoy = ctx.dias.find((d) => d.fecha === ctx.fechaHoy);
   const totalHoy = sumaHoras(ctx.porDia[ctx.fechaHoy] ?? []);
   const reqHoy = diaHoy?.laborable ? diaHoy.jornada : 0;

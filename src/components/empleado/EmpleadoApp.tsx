@@ -24,6 +24,7 @@ import type { EmpleadoCtx, Staged, StagedLinea, Tab } from './types';
 interface Props {
   empresaId: string;
   empresaNombre: string;
+  usuarioId: string;
   nombre: string;
   email: string;
   rol: RolUsuario;
@@ -32,7 +33,7 @@ interface Props {
   forzarLayout?: 'movil' | 'escritorio';
 }
 
-function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, email, rol, departamentoId, forzarLayout }: Props) {
+function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email, rol, departamentoId, forzarLayout }: Props) {
   const isDesktopReal = useIsDesktop();
   const isDesktop = forzarLayout ? forzarLayout === 'escritorio' : isDesktopReal;
   const toast = useToast();
@@ -55,7 +56,10 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, email, rol, depa
   const { dias, loading: diasLoading } = useDiasMes(anio, mes, empresaId);
   const { porDia, insertar, insertarLote, ajustarHoras, eliminar, computarDia: computarDiaHook, computarTodo: computarTodoHook } = useImputacionesMes(anio, mes);
   const { ausencias, solicitar } = useAusenciasMes(anio, mes);
-  const { paraFechas: proyectosParaFechas } = useProyectosAsignados();
+  const { paraFechas: proyectosParaFechas, loading: proyectosLoading, total: totalProyectos } = useProyectosAsignados();
+  // "Sin proyectos" es un total (¿tiene alguno, alguna vez?), distinto de "ninguno cubre esta fecha" (proyectosParaFechas):
+  // mientras carga, false (no asumir vacío antes de tiempo -- evita el parpadeo del aviso en cada montaje).
+  const sinProyectos = !proyectosLoading && totalProyectos === 0;
   const { grupos } = useCategoriasTareas(departamentoId);
   const { balance } = useBalanceMes(anio, mes);
   const { maxHorasDia } = useMaxHorasDia();
@@ -233,6 +237,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, email, rol, depa
     fechaHoy,
     empresaId,
     empresaNombre,
+    usuarioId,
     nombre,
     email,
     rol,
@@ -246,6 +251,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, nombre, email, rol, depa
     porDia,
     ausencias,
     proyectosParaFechas,
+    sinProyectos,
     grupos,
     balance,
     maxHorasDia,

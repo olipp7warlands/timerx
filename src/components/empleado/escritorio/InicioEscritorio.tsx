@@ -9,11 +9,15 @@ import { ModalCentrado } from '../compartido/ModalCentrado';
 import { useComputarDia } from '../compartido/useComputarDia';
 import { ausenciaEnFecha, CLASE_AUSENCIA_DIA, fmt, estadoDia, sumaHoras, formatoMesAnio, formatoDiaLargo } from '@/lib/horas/calendario';
 import { IconHistorial, IconCalendario } from '@/components/ui/icons';
+import { SinProyectos } from '../compartido/SinProyectos';
 import type { EmpleadoCtx } from '../types';
 
 export function InicioEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
   const [historicoAbierto, setHistoricoAbierto] = useState(false);
   const computarDia = useComputarDia(ctx, ctx.fechaHoy);
+
+  if (ctx.sinProyectos) return <SinProyectos ctx={ctx} />;
+
   const diaHoy = ctx.dias.find((d) => d.fecha === ctx.fechaHoy);
   const totalHoy = sumaHoras(ctx.porDia[ctx.fechaHoy] ?? []);
   const reqHoy = diaHoy?.laborable ? diaHoy.jornada : 0;

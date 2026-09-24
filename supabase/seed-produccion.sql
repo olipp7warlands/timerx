@@ -63,11 +63,12 @@ insert into departamento (id, nombre, activo) values
 
 -- -----------------------------------------------------------------------------
 -- 4. CATEGORIAS  (4) con su departamento_id (migracion 015)   |   5. SUBCATEGORIAS / TAREAS  (14)
--- VEREDICTO: INCLUYE tal cual estan en la demo (Desarrollo/Diseno -> 3B3, Abogados -> Juridico, Gestion global).
+-- VEREDICTO: INCLUYE. Desarrollo -> 3B3, Diseno -> Diseno, Abogados -> Juridico, Gestion global. (Fix del bug de
+--   estreno v1.1 / migracion 026: la demo tenia Diseno mal casada con 3B3, bug heredado del backfill original de la 015.)
 -- -----------------------------------------------------------------------------
 insert into categoria (id, nombre, activa, departamento_id) values
   ('00000000-0000-0000-0001-000000000001', 'Desarrollo', true, '00000000-0000-0000-0004-000000000001'),
-  ('00000000-0000-0000-0001-000000000002', 'Diseño', true, '00000000-0000-0000-0004-000000000001'),
+  ('00000000-0000-0000-0001-000000000002', 'Diseño', true, '00000000-0000-0000-0004-000000000003'),
   ('00000000-0000-0000-0001-000000000003', 'Abogados', true, '00000000-0000-0000-0004-000000000002'),
   ('00000000-0000-0000-0001-000000000004', 'Gestión', true, null);
 
