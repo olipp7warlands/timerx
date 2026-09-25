@@ -97,3 +97,13 @@ export function errorDeFila(fila: number, motivos: string[]): ErrorFila | null {
 export function claveTexto(t: string): string {
   return t.trim().toLowerCase();
 }
+
+/** Catálogo nombre -> id (sin distinguir mayúsculas). Un nombre repetido es ambiguo (`null`): no se puede resolver por nombre. */
+export function indexarPorNombre(filas: { id: string; nombre: string }[]): Map<string, string | null> {
+  const mapa = new Map<string, string | null>();
+  for (const f of filas) {
+    const k = claveTexto(f.nombre);
+    mapa.set(k, mapa.has(k) ? null : f.id);
+  }
+  return mapa;
+}

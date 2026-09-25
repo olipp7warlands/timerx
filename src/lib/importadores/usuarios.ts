@@ -1,22 +1,12 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { altaUsuario, modoAltaDesdeEntorno, type AltaUsuarioInput } from '@/lib/usuarios/alta';
-import { claveTexto, definir, errorDeFila } from './nucleo';
+import { claveTexto, definir, errorDeFila, indexarPorNombre as indexar } from './nucleo';
 
 const ROLES: AltaUsuarioInput['rol'][] = ['empleado', 'responsable_proyecto', 'admin_empresa', 'admin_grupo'];
 const RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface FilaUsuario extends AltaUsuarioInput {
   fila: number;
-}
-
-/** Catálogo nombre -> id (sin distinguir mayúsculas). Un nombre repetido es ambiguo: no se puede resolver por nombre. */
-function indexar(filas: { id: string; nombre: string }[]) {
-  const mapa = new Map<string, string | null>();
-  for (const f of filas) {
-    const k = claveTexto(f.nombre);
-    mapa.set(k, mapa.has(k) ? null : f.id);
-  }
-  return mapa;
 }
 
 export const importadorUsuarios = definir<FilaUsuario>({

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useCategorias } from '@/hooks/admin/useCategorias';
 import { useDepartamentos } from '@/hooks/admin/useDepartamentos';
 import { useToast } from '@/components/empleado/compartido/Toast';
+import { ImportadorBloque } from '../compartido/ImportadorBloque';
 import type { AdminInfo } from '../types';
 
 const CAT_COLOR: Record<string, string> = {
@@ -14,7 +15,7 @@ const CAT_COLOR: Record<string, string> = {
 };
 
 export function CategoriasEscritorio({ info }: { info: AdminInfo }) {
-  const { categorias, crearCategoria, crearSubcategoria } = useCategorias();
+  const { categorias, recargar, crearCategoria, crearSubcategoria } = useCategorias();
   const { departamentos } = useDepartamentos();
   const toast = useToast();
   const esAdminGrupo = info.rol === 'admin_grupo';
@@ -89,6 +90,21 @@ export function CategoriasEscritorio({ info }: { info: AdminInfo }) {
               <button type="button" className="btn btn-primary full" onClick={onCrearSubcategoria}>
                 Crear subcategoría
               </button>
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-head">
+              <h2 className="text-sm font-extrabold">Importar / Exportar</h2>
+            </div>
+            <div className="card-body">
+              <ImportadorBloque
+                tipo="categorias"
+                titulo="Catálogo de tareas"
+                descripcion="Altas masivas desde Excel, una fila por tarea. Crea categorías y tareas nuevas (una tarea existente es un error; no reubica categorías). Todo o nada."
+                exportHref="/api/export/categorias"
+                exportEtiqueta="Exportar catálogo"
+                onImportado={recargar}
+              />
             </div>
           </div>
         </div>

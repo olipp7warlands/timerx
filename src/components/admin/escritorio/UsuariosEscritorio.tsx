@@ -172,6 +172,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
     if (!seleccionado) return <p className="p-4 text-sm text-ink-tertiary">Cargando…</p>;
     return (
       <FichaUsuarioEscritorio
+        key={seleccionado.id}
         info={info}
         usuario={seleccionado}
         unicoAdminGrupo={esAdminGrupo && esUnicoAdminGrupo(usuarios, seleccionado.id)}

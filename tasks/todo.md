@@ -1,3 +1,22 @@
+# LOTE v1.4 (2026-09-25) — departamento en ficha + importadores de catálogo (Empresas, Proyectos, Categorías)
+
+> main → demo → commit listo para promoción. Pack de producción intacto. Línea base demo: conteos en `base14_conteos.txt` + huella `snap2` (scratchpad).
+
+## Hallazgos de lectura (antes de tocar código)
+- **Punto 2 (jornada)**: el trigger `empresa_jornada_defecto` (019) YA siembra 7 filas al insertar una empresa (UI, importador, cualquier vía) → **no hay 029 por la condición del enunciado**. Medido: empresa creada con sesión de AG → 7 filas. PERO su valor sale de `ajuste.jornada_horas` (8) → **8/8/8/8/8/0/0**, no el estándar 8/8/8/8/**5,5**/0/0. Evidencia en PRODUCCIÓN: «Oli FC» (creada por UI tras el seed) tiene 8 el viernes; las 3 sembradas, 5,5. Decisión pendiente del usuario (ver informe).
+- **Punto 1 (departamento)**: NO reproducible como «falta el campo»: la ficha ya tiene el select (4 opciones), carga y guarda (verificado en la UI real: Enrique «sin dep» → Jurídico; Leo 3B3 → Diseño; revertidos).
+
+## Pasos
+- [x] 1. Paridad ficha↔inline (diff de campos, `key` por usuario) y tabla de paridad.
+- [x] 3a/b/c. Importadores empresas/proyectos/categorías + plantillas + exports + cards por sección (solo AG).
+- [x] Verificación: paridad con capturas; empresa nueva (UI e importada) con jornada; round-trip por entidad; import real 2-3 filas con una errónea + reversión con conteos; tipología heredada vs explícita en el mapa AUTO; plantillas abiertas; huella; build/lint.
+- [x] PLAN.md / lessons / commit / demo en verde / COMMIT LISTO PARA PROMOCIÓN.
+
+## Revisión (v1.4)
+- Sin migraciones nuevas (punto 2: la 019 ya siembra la jornada; discrepancia 8 vs 5,5 documentada y a decidir). 3 importadores + 3 exports + paridad ficha↔inline. Verificado con sesión real de Cristian; conteos y huellas idénticos; build/lint sin nuevos.
+
+---
+
 # LOTE v1.2 + v1.3 combinado (2026-09-25) — main → demo → verificación → commit listo para promoción
 
 > Flujo: trabajo en `main` (demo, autodeploy). NO se toca producción ni el pack de revisión de producción. Todo llega allí en la próxima promoción (runbook §12).

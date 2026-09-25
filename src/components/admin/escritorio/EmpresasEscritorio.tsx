@@ -10,6 +10,7 @@ import { useProyectosAdmin } from '@/hooks/admin/useProyectosAdmin';
 import { useUsuarios } from '@/hooks/admin/useUsuarios';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { Donut } from '../compartido/Donut';
+import { ImportadorBloque } from '../compartido/ImportadorBloque';
 import { SelectorTipologia, SIN_TIPOLOGIA, areaDeSelector } from '../compartido/SelectorTipologia';
 import { FichaEmpresaEscritorio } from './FichaEmpresaEscritorio';
 import { useNavAdmin } from '../NavAdmin';
@@ -22,7 +23,7 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
   const anio = hoy.getFullYear();
   const mes = hoy.getMonth() + 1;
 
-  const { empresas, loading, crear, actualizar, desactivar } = useEmpresas();
+  const { empresas, loading, recargar, crear, actualizar, desactivar } = useEmpresas();
   const { porEmpresa, porProyecto } = useHorasPorEmpresaYProyecto(anio, mes);
   const { areas, colorDe } = useAreasTipologia();
   const { lineas: refact } = useRefacturacion(anio, mes);
@@ -104,6 +105,23 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
                 <button type="button" className="btn btn-primary full" onClick={crearEmpresa}>
                   Crear empresa
                 </button>
+              </div>
+            </div>
+          )}
+          {esAdminGrupo && (
+            <div className="card">
+              <div className="card-head">
+                <h2 className="text-sm font-extrabold">Importar / Exportar</h2>
+              </div>
+              <div className="card-body">
+                <ImportadorBloque
+                  tipo="empresas"
+                  titulo="Empresas"
+                  descripcion="Altas masivas desde Excel. Solo crea empresas nuevas (un nombre existente es un error). Todo o nada; cada empresa nace con su jornada."
+                  exportHref="/api/export/empresas"
+                  exportEtiqueta="Exportar empresas"
+                  onImportado={recargar}
+                />
               </div>
             </div>
           )}
