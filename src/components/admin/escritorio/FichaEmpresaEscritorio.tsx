@@ -184,6 +184,11 @@ export function FichaEmpresaEscritorio({
             <h2 className="text-sm font-extrabold">Proyectos de la empresa</h2>
           </div>
           <div className="px-1.5 pb-2">
+            {proyectosDeEmpresa.length === 0 ? (
+              <p className="px-3 pb-1 pt-3 text-sm text-ink-tertiary" data-testid="empresa-sin-proyectos">
+                {puedeCrearAqui ? 'Aún no hay proyectos — crea el primero aquí:' : 'Esta empresa aún no tiene proyectos.'}
+              </p>
+            ) : (
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
@@ -222,6 +227,7 @@ export function FichaEmpresaEscritorio({
                 })}
               </tbody>
             </table>
+            )}
             {puedeCrearAqui && (
               <div className="flex flex-wrap items-center gap-2 p-3">
                 <input className="input" value={nuevoCodigo} onChange={(e) => setNuevoCodigo(e.target.value)} placeholder="Código" style={{ maxWidth: 100 }} />
@@ -245,6 +251,16 @@ export function FichaEmpresaEscritorio({
             )}
           </div>
           <div className="px-1.5 pb-2">
+            {empleadosDeEmpresa.length === 0 ? (
+              <div className="px-3 pb-1 pt-3" data-testid="empresa-sin-empleados">
+                <p className="text-sm text-ink-tertiary">{puedeCrearAqui ? 'Sin empleados — invita al primero.' : 'Esta empresa aún no tiene empleados.'}</p>
+                {puedeCrearAqui && (
+                  <button type="button" className="btn btn-primary btn-sm mt-3" onClick={() => onIrAInvitarUsuario(empresa.id)}>
+                    ＋ Invitar al primer usuario ›
+                  </button>
+                )}
+              </div>
+            ) : (
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
@@ -275,6 +291,7 @@ export function FichaEmpresaEscritorio({
                 ))}
               </tbody>
             </table>
+            )}
             <p className="foot px-3 pb-2.5 pt-3 text-xs text-ink-tertiary">Cambiar a alguien de empresa se hace desde su ficha de usuario (Editar datos).</p>
           </div>
         </div>

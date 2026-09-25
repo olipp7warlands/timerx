@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Stepper } from '../compartido/Stepper';
+import { SelectorTarea } from '../compartido/SelectorTarea';
+import { buscarTarea } from '@/lib/horas/tareas';
 import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import type { ProyectoAsignado } from '@/hooks/useProyectosAsignados';
 import type { GrupoTareas } from '@/hooks/useCategoriasTareas';
@@ -10,6 +12,7 @@ import type { StagedLinea } from '../types';
 interface ComposerLineaProps {
   proyectos: ProyectoAsignado[];
   grupos: GrupoTareas[];
+  otras: GrupoTareas[];
   maxHorasDia: number | null;
   etiquetaBoton?: string;
   onAnadir: (linea: StagedLinea) => void;
@@ -23,7 +26,7 @@ interface ComposerLineaProps {
  * sobrevive a los re-renders de la tabla/lista sin necesitar el truco del mock
  * de "renderComposer() una sola vez".
  */
-export function ComposerLinea({ proyectos, grupos, maxHorasDia, etiquetaBoton = 'Añadir', onAnadir }: ComposerLineaProps) {
+export function ComposerLinea({ proyectos, grupos, otras, maxHorasDia, etiquetaBoton = 'Añadir', onAnadir }: ComposerLineaProps) {
   const [proyectoId, setProyectoId] = useState('');
   const [subcategoriaId, setSubcategoriaId] = useState('');
   const [horas, setHoras] = useState(1);
@@ -34,22 +37,16 @@ export function ComposerLinea({ proyectos, grupos, maxHorasDia, etiquetaBoton = 
     if (!proyectos.some((p) => p.id === proyectoId)) setProyectoId(proyectos[0]?.id ?? '');
   }, [proyectos, proyectoId]);
 
+  // Por defecto, la primera tarea de lo que se ofrece (o, si la persona solo tiene «otras», la primera de ellas).
   useEffect(() => {
-    if (!subcategoriaId && grupos[0]?.subcategorias[0]) setSubcategoriaId(grupos[0].subcategorias[0].id);
-  }, [grupos, subcategoriaId]);
+    if (!subcategoriaId) setSubcategoriaId((grupos[0] ?? otras[0])?.subcategorias[0]?.id ?? '');
+  }, [grupos, otras, subcategoriaId]);
 
   function anadir() {
     const proyecto = proyectos.find((p) => p.id === proyectoId);
-    let subcategoriaNombre = '';
-    let categoriaNombre = '';
-    for (const g of grupos) {
-      const s = g.subcategorias.find((s) => s.id === subcategoriaId);
-      if (s) {
-        subcategoriaNombre = s.nombre;
-        categoriaNombre = g.categoriaNombre;
-        break;
-      }
-    }
+    const tarea = buscarTarea(grupos, otras, subcategoriaId);
+    const subcategoriaNombre = tarea?.nombre ?? '';
+    const categoriaNombre = tarea?.categoriaNombre ?? '';
     if (!proyecto || !subcategoriaNombre) return;
     if (descripcionObligatoria && !descripcion.trim()) return;
     onAnadir({
@@ -84,17 +81,7 @@ export function ComposerLinea({ proyectos, grupos, maxHorasDia, etiquetaBoton = 
             </option>
           ))}
         </select>
-        <select className="input" aria-label="Tarea" value={subcategoriaId} onChange={(e) => setSubcategoriaId(e.target.value)}>
-          {grupos.map((g) => (
-            <optgroup key={g.categoriaId} label={g.categoriaNombre}>
-              {g.subcategorias.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nombre}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
+        <SelectorTarea grupos={grupos} otras={otras} value={subcategoriaId} onChange={setSubcategoriaId} ariaLabel="Tarea" />
         <Stepper value={horas} max={maxHorasDia ?? 12} onChange={setHoras} />
         <button type="button" className="btn btn-primary" disabled={descripcionObligatoria && !descripcion.trim()} onClick={anadir}>
           {etiquetaBoton}

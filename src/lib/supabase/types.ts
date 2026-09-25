@@ -859,6 +859,8 @@ export type Database = {
           creado_por: string
           descripcion: string
           estado: Database["public"]["Enums"]["ticket_estado"]
+          estado_cambiado_en: string | null
+          estado_cambiado_por: string | null
           id: string
           ref: string
           tipo: Database["public"]["Enums"]["ticket_tipo"]
@@ -869,6 +871,8 @@ export type Database = {
           creado_por: string
           descripcion: string
           estado?: Database["public"]["Enums"]["ticket_estado"]
+          estado_cambiado_en?: string | null
+          estado_cambiado_por?: string | null
           id?: string
           ref?: string
           tipo: Database["public"]["Enums"]["ticket_tipo"]
@@ -879,6 +883,8 @@ export type Database = {
           creado_por?: string
           descripcion?: string
           estado?: Database["public"]["Enums"]["ticket_estado"]
+          estado_cambiado_en?: string | null
+          estado_cambiado_por?: string | null
           id?: string
           ref?: string
           tipo?: Database["public"]["Enums"]["ticket_tipo"]
@@ -888,6 +894,13 @@ export type Database = {
           {
             foreignKeyName: "ticket_creado_por_fkey"
             columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_estado_cambiado_por_fkey"
+            columns: ["estado_cambiado_por"]
             isOneToOne: false
             referencedRelation: "perfil"
             referencedColumns: ["id"]
@@ -926,6 +939,39 @@ export type Database = {
           },
           {
             foreignKeyName: "ticket_comentario_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "ticket"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_lectura: {
+        Row: {
+          perfil_id: string
+          ticket_id: string
+          ultimo_visto: string
+        }
+        Insert: {
+          perfil_id: string
+          ticket_id: string
+          ultimo_visto?: string
+        }
+        Update: {
+          perfil_id?: string
+          ticket_id?: string
+          ultimo_visto?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_lectura_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_lectura_ticket_id_fkey"
             columns: ["ticket_id"]
             isOneToOne: false
             referencedRelation: "ticket"
@@ -1117,6 +1163,7 @@ export type Database = {
         Args: { p_anio: number; p_empresa: string; p_mes: number }
         Returns: undefined
       }
+      cuenta_desactivada_pre_request: { Args: never; Returns: undefined }
       descripcion_obligatoria: { Args: never; Returns: boolean }
       dias_ausencia_en_mes: {
         Args: {
@@ -1293,7 +1340,14 @@ export type Database = {
           texto: string
         }[]
       }
+      ticket_marcar_visto: { Args: { p_ticket: string }; Returns: undefined }
       ticket_ref_resincronizar: { Args: never; Returns: number }
+      tickets_con_novedad: {
+        Args: never
+        Returns: {
+          ticket_id: string
+        }[]
+      }
       tiene_ausencia_aprobada: {
         Args: { p_fecha: string; p_perfil: string }
         Returns: boolean

@@ -1,28 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { repartirTareas, type CategoriaCatalogo, type PerfilTareas } from '@/lib/horas/tareas';
 
-export interface GrupoTareas {
-  categoriaId: string;
-  categoriaNombre: string;
-  subcategorias: { id: string; nombre: string }[];
-}
+export type { GrupoTareas } from '@/lib/horas/tareas';
 
 /**
- * Catálogo completo de categorías/subcategorías activas (las 4 reales, no el subconjunto de los mocks).
- * `departamentoId`: acota a globales (categoria.departamento_id NULL) + las del propio departamento.
- * Sin departamento (null/undefined), se ven todas -- comportamiento previo, sin cambios.
+ * Catálogo de categorías/subcategorías activas (las reales, no el subconjunto de los mocks) repartido para la persona que
+ * imputa con la regla única de `repartirTareas`: `grupos` = lo que ve por defecto, `otras` = el resto («Otras tareas…»;
+ * vacío si no tiene categoría). Sin perfil (p. ej. la página de depuración) se ve todo en `grupos`.
+ * El catálogo se lee UNA vez; cambiar de categoría/departamento solo recalcula el reparto.
  */
-export function useCategoriasTareas(departamentoId?: string | null) {
-  const [grupos, setGrupos] = useState<GrupoTareas[]>([]);
+export function useCategoriasTareas(perfil: PerfilTareas = {}) {
+  const [catalogo, setCatalogo] = useState<CategoriaCatalogo[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelado = false;
 
     async function cargar() {
-      setLoading(true);
       const supabase = createClient();
       const { data } = await supabase
         .from('subcategoria')
@@ -31,17 +28,16 @@ export function useCategoriasTareas(departamentoId?: string | null) {
         .order('nombre');
 
       if (cancelado) return;
-      const porCategoria = new Map<string, GrupoTareas>();
+      const porCategoria = new Map<string, CategoriaCatalogo>();
       for (const s of data ?? []) {
-        const cat = (s as any).categoria;
+        const cat = s.categoria;
         if (!cat) continue;
-        if (departamentoId && cat.departamento_id && cat.departamento_id !== departamentoId) continue;
         if (!porCategoria.has(cat.id)) {
-          porCategoria.set(cat.id, { categoriaId: cat.id, categoriaNombre: cat.nombre, subcategorias: [] });
+          porCategoria.set(cat.id, { categoriaId: cat.id, categoriaNombre: cat.nombre, departamentoId: cat.departamento_id, subcategorias: [] });
         }
         porCategoria.get(cat.id)!.subcategorias.push({ id: s.id, nombre: s.nombre });
       }
-      setGrupos([...porCategoria.values()].sort((a, b) => a.categoriaNombre.localeCompare(b.categoriaNombre)));
+      setCatalogo([...porCategoria.values()]);
       setLoading(false);
     }
 
@@ -49,7 +45,10 @@ export function useCategoriasTareas(departamentoId?: string | null) {
     return () => {
       cancelado = true;
     };
-  }, [departamentoId]);
+  }, []);
 
-  return { grupos, loading };
+  const { categoriaId, departamentoId } = perfil;
+  const reparto = useMemo(() => repartirTareas(catalogo, { categoriaId, departamentoId }), [catalogo, categoriaId, departamentoId]);
+
+  return { grupos: reparto.grupos, otras: reparto.otras, loading };
 }

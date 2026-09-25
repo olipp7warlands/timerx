@@ -3,6 +3,7 @@
 import { Suspense } from 'react';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
 import { ToastProvider } from '@/components/empleado/compartido/Toast';
+import { SoporteNovedadProvider } from '@/hooks/useNovedadSoporte';
 import { NavAdminProvider } from './NavAdmin';
 import { ShellEscritorioAdmin } from './escritorio/ShellEscritorioAdmin';
 import { ShellMovilAdmin } from './movil/ShellMovilAdmin';
@@ -31,7 +32,9 @@ export function AdminApp(props: Props) {
       {/* useSearchParams (hand-offs efímeros) exige Suspense en cualquier page que pudiera prerenderizarse. */}
       <Suspense fallback={<div className="min-h-screen bg-bg" />}>
         <NavAdminProvider aislado={!!props.forzarLayout}>
-          <AdminAppInterno {...props} />
+          <SoporteNovedadProvider>
+            <AdminAppInterno {...props} />
+          </SoporteNovedadProvider>
         </NavAdminProvider>
       </Suspense>
     </ToastProvider>

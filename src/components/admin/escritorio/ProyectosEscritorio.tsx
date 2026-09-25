@@ -94,7 +94,7 @@ export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Tipología</label>
             <SelectorTipologia value={form.tipologia} onChange={(v) => setForm((f) => ({ ...f, tipologia: v }))} areas={areas} heredarDe={{ areaId: areaDeLaEmpresa }} />
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Código</label>
-            <input className="input mono" value={form.codigo} onChange={(e) => setForm((f) => ({ ...f, codigo: e.target.value }))} placeholder="XIM" />
+            <input id="proyecto-codigo" className="input mono" value={form.codigo} onChange={(e) => setForm((f) => ({ ...f, codigo: e.target.value }))} placeholder="XIM" />
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Nombre del proyecto</label>
             <input className="input" value={form.nombre} onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))} placeholder="Ximeras" />
             <button type="button" className="btn btn-primary full" onClick={crearProyecto}>
@@ -129,6 +129,16 @@ export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
               </tr>
             </thead>
             <tbody>
+              {!loading && proyectos.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-2.5 py-4 text-sm text-ink-tertiary" data-testid="proyectos-vacio">
+                    Aún no hay proyectos — crea el primero con el formulario «Crear proyecto».{' '}
+                    <button type="button" className="btn-text" onClick={() => document.getElementById('proyecto-codigo')?.focus()}>
+                      Ir al formulario
+                    </button>
+                  </td>
+                </tr>
+              )}
               {proyectos.map((p) => {
                 const horas = porProyecto.find((h) => h.proyectoId === p.id)?.horas ?? 0;
                 return (

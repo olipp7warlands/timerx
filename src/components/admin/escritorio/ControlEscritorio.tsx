@@ -16,6 +16,8 @@ import { TablaPendientesImputacion } from '../compartido/TablaPendientesImputaci
 import { useNavAdmin } from '../NavAdmin';
 import { fmt } from '@/lib/horas/calendario';
 import { puedeImputarDirecto } from '@/lib/usuarios/permisos';
+import { buscarTarea, repartirTareas, type CategoriaCatalogo } from '@/lib/horas/tareas';
+import { SelectorTarea } from '@/components/empleado/compartido/SelectorTarea';
 import type { AdminInfo } from '../types';
 
 export function ControlEscritorio({ info }: { info: AdminInfo }) {
@@ -50,10 +52,21 @@ export function ControlEscritorio({ info }: { info: AdminInfo }) {
   // Un `?empleado=` de fuera del ámbito (hand-off desde una ficha ajena) se trata como no seleccionado.
   const empleadoIdEfectivo = usuarios.some((u) => u.id === form.empleadoId) ? form.empleadoId : '';
   const empleadoSeleccionado = usuarios.find((u) => u.id === empleadoIdEfectivo);
-  const categoriasFiltradas = empleadoSeleccionado?.departamentoId
-    ? categorias.filter((c) => !c.departamentoId || c.departamentoId === empleadoSeleccionado.departamentoId)
-    : categorias;
-  const subcategorias = categoriasFiltradas.flatMap((c) => c.subcategorias.map((s) => ({ ...s, categoriaNombre: c.nombre })));
+  // Tareas ofrecidas: la MISMA regla que ve el empleado (`repartirTareas`), aplicada a la persona DESTINO de la imputación:
+  // su categoría + transversales por defecto, «Otras tareas…» con el resto; sin categoría, el filtro por departamento.
+  const catalogo = useMemo<CategoriaCatalogo[]>(
+    () =>
+      categorias.map((c) => ({
+        categoriaId: c.id,
+        categoriaNombre: c.nombre,
+        departamentoId: c.departamentoId,
+        subcategorias: c.subcategorias.filter((s) => s.activa).map((s) => ({ id: s.id, nombre: s.nombre })),
+      })),
+    [categorias]
+  );
+  const { grupos: tareas, otras: otrasTareas } = repartirTareas(catalogo, { categoriaId: empleadoSeleccionado?.categoriaId, departamentoId: empleadoSeleccionado?.departamentoId });
+  // Si al cambiar de empleado la tarea elegida deja de estar disponible, se trata como no seleccionada.
+  const subcategoriaEfectiva = buscarTarea(tareas, otrasTareas, form.subcategoriaId) ? form.subcategoriaId : '';
   const idsVigentes = proyectoIdsParaFecha(form.fecha);
   const proyectosDisponibles = proyectos.filter((p) => idsVigentes.includes(p.id));
   // Si el empleado/fecha cambian y el proyecto elegido deja de ser válido, se trata como
@@ -65,7 +78,7 @@ export function ControlEscritorio({ info }: { info: AdminInfo }) {
   }
 
   async function guardarImputacion() {
-    if (!empleadoIdEfectivo || !proyectoIdEfectivo || !form.subcategoriaId || !form.fecha || !form.horas) {
+    if (!empleadoIdEfectivo || !proyectoIdEfectivo || !subcategoriaEfectiva || !form.fecha || !form.horas) {
       toast('Completa empleado, proyecto, subcategoría, fecha y horas', 'error');
       return;
     }
@@ -76,7 +89,7 @@ export function ControlEscritorio({ info }: { info: AdminInfo }) {
     const { error } = await imputar({
       empleadoId: empleadoIdEfectivo,
       proyectoId: proyectoIdEfectivo,
-      subcategoriaId: form.subcategoriaId,
+      subcategoriaId: subcategoriaEfectiva,
       fecha: form.fecha,
       horas: Number(form.horas.replace(',', '.')),
       descripcion: form.descripcion || undefined,
@@ -133,15 +146,15 @@ export function ControlEscritorio({ info }: { info: AdminInfo }) {
                 ))}
               </select>
             )}
-            <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Subcategoría</label>
-            <select className="input" value={form.subcategoriaId} onChange={(e) => setForm((f) => ({ ...f, subcategoriaId: e.target.value }))}>
-              <option value="">Selecciona subcategoría</option>
-              {subcategorias.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.categoriaNombre} · {s.nombre}
-                </option>
-              ))}
-            </select>
+            <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Tarea</label>
+            <SelectorTarea
+              grupos={tareas}
+              otras={otrasTareas}
+              value={subcategoriaEfectiva}
+              onChange={(id) => setForm((f) => ({ ...f, subcategoriaId: id }))}
+              ariaLabel="Tarea"
+              placeholder="Selecciona tarea"
+            />
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Fecha</label>
             <input className="input mono" type="date" value={form.fecha} onChange={(e) => setForm((f) => ({ ...f, fecha: e.target.value }))} />
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Horas</label>

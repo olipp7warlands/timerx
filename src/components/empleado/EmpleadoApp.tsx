@@ -16,6 +16,7 @@ import { ausenciaEnFecha, fmt } from '@/lib/horas/calendario';
 import { navegar } from '@/lib/nav/navegar';
 import { parseRutaEmpleado } from '@/lib/nav/rutas';
 import { ToastProvider, useToast } from './compartido/Toast';
+import { SoporteNovedadProvider } from '@/hooks/useNovedadSoporte';
 import { ShellMovil } from './movil/ShellMovil';
 import { ShellEscritorio } from './escritorio/ShellEscritorio';
 import type { RolUsuario } from '@/lib/auth/roles';
@@ -29,11 +30,13 @@ interface Props {
   email: string;
   rol: RolUsuario;
   departamentoId?: string | null;
+  /** Categoría de la persona (`perfil.categoria_id`): decide qué tareas ve por defecto (`repartirTareas`). */
+  categoriaId?: string | null;
   /** Solo para verificación visual (/debug/movil, /debug/escritorio): fuerza el layout sin depender del viewport real. */
   forzarLayout?: 'movil' | 'escritorio';
 }
 
-function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email, rol, departamentoId, forzarLayout }: Props) {
+function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email, rol, departamentoId, categoriaId, forzarLayout }: Props) {
   const isDesktopReal = useIsDesktop();
   const isDesktop = forzarLayout ? forzarLayout === 'escritorio' : isDesktopReal;
   const toast = useToast();
@@ -60,7 +63,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email
   // "Sin proyectos" es un total (¿tiene alguno, alguna vez?), distinto de "ninguno cubre esta fecha" (proyectosParaFechas):
   // mientras carga, false (no asumir vacío antes de tiempo -- evita el parpadeo del aviso en cada montaje).
   const sinProyectos = !proyectosLoading && totalProyectos === 0;
-  const { grupos } = useCategoriasTareas(departamentoId);
+  const { grupos, otras: otrasTareas } = useCategoriasTareas({ categoriaId, departamentoId });
   const { balance } = useBalanceMes(anio, mes);
   const { maxHorasDia } = useMaxHorasDia();
   const descripcionObligatoria = useDescripcionObligatoria();
@@ -253,6 +256,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email
     proyectosParaFechas,
     sinProyectos,
     grupos,
+    otrasTareas,
     balance,
     maxHorasDia,
     reutilizarDia,
@@ -277,7 +281,9 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email
 export function EmpleadoApp(props: Props) {
   return (
     <ToastProvider>
-      <EmpleadoAppInterno {...props} />
+      <SoporteNovedadProvider>
+        <EmpleadoAppInterno {...props} />
+      </SoporteNovedadProvider>
     </ToastProvider>
   );
 }

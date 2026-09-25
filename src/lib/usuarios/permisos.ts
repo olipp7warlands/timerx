@@ -69,6 +69,17 @@ export function puedeImputarDirecto(actor: { rol: RolUsuario; empresaId: string 
 }
 
 /**
+ * ¿Es `id` el ÚNICO admin_grupo ACTIVO de la lista? La guarda de la 028 no deja degradarlo (la BD rechaza el cambio de rol con
+ * «Eres el único admin del grupo — nombra otro antes»): la UI no ofrece el cambio en vez de dejarlo al error de BD.
+ * Solo es fiable para quien ve a todos los perfiles (admin_grupo); para el resto siempre es `false` y no se usa.
+ */
+export const MENSAJE_UNICO_ADMIN_GRUPO = 'Eres el único admin del grupo — nombra otro antes';
+export function esUnicoAdminGrupo(usuarios: { id: string; rol: RolUsuario; activo: boolean }[], id: string): boolean {
+  const activos = usuarios.filter((u) => u.rol === 'admin_grupo' && u.activo);
+  return activos.length === 1 && activos[0].id === id;
+}
+
+/**
  * Error (o null) al DESACTIVAR/REACTIVAR la cuenta `objetivo` (server actions `desactivarUsuario`/`reactivarUsuario`, que además banean
  * o desbanean la cuenta en Auth). Mismos límites que `puedeAdministrarPerfil` (022): admin_grupo cualquiera; admin_empresa solo perfiles
  * NO-admin de su empresa. Nadie desactiva su propia cuenta (un admin se dejaría fuera; el último admin_grupo bloquearía el panel).

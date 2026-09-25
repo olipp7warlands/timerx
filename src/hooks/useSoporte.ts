@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { resultadoMutacion } from '@/lib/supabase/mutaciones';
 import { MES_NOMBRES, nombreDia } from '@/lib/horas/calendario';
+import { useNovedadSoporte } from './useNovedadSoporte';
 
 export type TipoTicket = 'incidencia' | 'mejora' | 'consulta';
 export type EstadoTicket = 'abierto' | 'en_curso' | 'resuelto';
@@ -130,16 +131,22 @@ export function useTicketHilo(ticketId: string | null) {
   // El hilo cargado va etiquetado con SU ticket: `mensajes` y `loading` se derivan, sin setState síncrono en el efecto.
   const [hilo, setHilo] = useState<{ ticketId: string; mensajes: MensajeTicket[] } | null>(null);
 
+  const { marcarVisto } = useNovedadSoporte();
+
   useEffect(() => {
     if (!ticketId) return;
     let vigente = true;
-    leerHilo(ticketId).then((mensajes) => {
-      if (vigente) setHilo({ ticketId, mensajes });
-    });
+    // Abrir el ticket = visto (migración 027). Primero se marca y luego se lee el hilo: un comentario que llegue entre las dos
+    // cosas se ve en el hilo y como mucho deja el punto encendido hasta la siguiente carga, nunca apaga un aviso que no se vio.
+    marcarVisto(ticketId)
+      .then(() => leerHilo(ticketId))
+      .then((mensajes) => {
+        if (vigente) setHilo({ ticketId, mensajes });
+      });
     return () => {
       vigente = false;
     };
-  }, [ticketId]);
+  }, [ticketId, marcarVisto]);
 
   const vigente = hilo !== null && hilo.ticketId === ticketId;
   const mensajes = vigente ? hilo.mensajes : [];
