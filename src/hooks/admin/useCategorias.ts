@@ -17,6 +17,20 @@ export interface Categoria {
   subcategorias: Subcategoria[];
 }
 
+export interface OpcionSelect {
+  valor: string;
+  etiqueta: string;
+}
+
+/**
+ * Opciones de un select de categoría de la ADMINISTRACIÓN (ficha de usuario, edición inline, alta de usuario): TODO el catálogo
+ * más «Sin categoría». La categoría es del trabajador y NO está atada a su departamento (el filtro por departamento/categoría es
+ * solo del selector de TAREA al imputar: `lib/horas/tareas.ts`). Única fuente: si dos vías ofrecen listas distintas, es un bug.
+ */
+export function opcionesCategoria(categorias: Categoria[]): OpcionSelect[] {
+  return [{ valor: '', etiqueta: 'Sin categoría' }, ...categorias.map((c) => ({ valor: c.id, etiqueta: c.nombre }))];
+}
+
 /** categoria_select/subcategoria_select son abiertas; la escritura es solo admin_grupo. */
 export function useCategorias() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);

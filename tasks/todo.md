@@ -1,3 +1,11 @@
+# LOTE v1.5 (2026-09-25) — categoría en ficha + pestañas con iconos en Empresas y Proyectos
+
+- [x] 1. Causa raíz de «categoría no seleccionable»: hipótesis (hook filtrado) REFUTADA; no reproducible ni en la UI equivalente ni en BD; auditoría de selects citada y `opcionesCategoria/opcionesDepartamento` como única fuente.
+- [x] 2. Pestañas `?vista=` en Empresas y Proyectos (+ formularios desplegables). [x] 3. Iconos en pestañas (Importar, Costes nuevos).
+- [x] Verificación (F5/atrás, round-trip en pestaña, ambos temas, AE), conteos/huellas idénticos, build/lint sin nuevos. Pendiente: commit/push, demo en verde, promoción (sin migraciones).
+
+---
+
 # LOTE v1.4 (2026-09-25) — departamento en ficha + importadores de catálogo (Empresas, Proyectos, Categorías)
 
 > main → demo → commit listo para promoción. Pack de producción intacto. Línea base demo: conteos en `base14_conteos.txt` + huella `snap2` (scratchpad).
