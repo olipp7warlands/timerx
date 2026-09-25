@@ -7,10 +7,12 @@ import { IconMapa } from '@/components/ui/icons';
 interface Props {
   areas: AreaMapa[];
   variante: 'grid' | 'stack';
+  /** Texto del estado vacío (por defecto, el genérico de solo lectura); el editor del mapa lo sustituye por uno que apunta a la acción. */
+  mensajeVacio?: string;
 }
 
 /** Render de solo lectura del Mapa del grupo, compartido por las 4 superficies (idéntico al mock: acordeón independiente por elemento, sin "cerrar los demás"). */
-export function MapaGrid({ areas, variante }: Props) {
+export function MapaGrid({ areas, variante, mensajeVacio = 'Todavía no hay áreas en el mapa.' }: Props) {
   const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
 
   function toggle(id: string) {
@@ -26,7 +28,7 @@ export function MapaGrid({ areas, variante }: Props) {
     return (
       <p className="flex items-center gap-2 text-sm text-ink-tertiary">
         <IconMapa />
-        Todavía no hay áreas en el mapa.
+        {mensajeVacio}
       </p>
     );
   }

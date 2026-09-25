@@ -41,15 +41,24 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
 
   const [personaNueva, setPersonaNueva] = useState('');
   const [tipologiaGuardada, setTipologiaGuardada] = useState(false);
-  const [recienAsignados, setRecienAsignados] = useState<(PersonaHoras & { recienAsignada: true })[]>([]);
-  const [finalizados, setFinalizados] = useState<Set<string>>(new Set());
+  /** Solo para la etiqueta «recién asignada» de esta sesión: la lista sale de las asignaciones reales. */
+  const [recienAsignados, setRecienAsignados] = useState<Set<string>>(new Set());
 
   const hoyStr = hoyMadrid();
-  const idsVigentes = new Set(asignaciones.filter((a) => !a.hasta || a.hasta >= hoyStr).map((a) => a.empleadoId));
+  const vigentes = asignaciones.filter((a) => !a.hasta || a.hasta >= hoyStr);
+  const idsVigentes = new Set(vigentes.map((a) => a.empleadoId));
   const disponibles = usuarios.filter((u) => !idsVigentes.has(u.id));
 
-  const personasActivas = ficha?.porPersona ?? [];
-  const filasPersonas = [...personasActivas, ...recienAsignados.filter((r) => !personasActivas.some((p) => p.perfilId === r.perfilId))];
+  // «Personas en el proyecto» = las que han imputado este mes (con sus horas) + las ASIGNADAS vigentes aunque aún no hayan imputado
+  // (0 h). Antes solo salían las primeras: un proyecto nuevo, sin horas, no dejaba ni ver ni añadir personas (estado vacío que ocultaba la acción).
+  const personasConHoras = ficha?.porPersona ?? [];
+  const idsConHoras = new Set(personasConHoras.map((p) => p.perfilId));
+  const personasSinHoras: PersonaHoras[] = vigentes
+    .filter((a) => !idsConHoras.has(a.empleadoId))
+    .map((a) => ({ perfilId: a.empleadoId, nombre: a.nombre, departamento: a.departamento, categoriaNombre: a.categoriaNombre ?? 'Sin categoría', horas: 0 }));
+  const filasPersonas = [...personasConHoras, ...personasSinHoras];
+  const horasMes = ficha?.horasMes ?? 0;
+  const hastaDe = (perfilId: string) => asignaciones.find((a) => a.empleadoId === perfilId)?.hasta ?? null;
 
   async function onCambiarArea(valor: string) {
     const { error } = await onCambiarTipologia(valor === '' ? null : valor);
@@ -70,10 +79,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
       return;
     }
     toast(`${u.nombre} asignado al proyecto`);
-    setRecienAsignados((r) => [
-      ...r,
-      { perfilId: u.id, nombre: u.nombre, departamento: u.departamento, categoriaNombre: u.categoriaNombre ?? 'Sin categoría', horas: 0, recienAsignada: true },
-    ]);
+    setRecienAsignados((s) => new Set(s).add(u.id));
     setPersonaNueva('');
     recargarAsig();
   }
@@ -85,7 +91,6 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
       return;
     }
     toast(`${nombre} finalizado en el proyecto`);
-    setFinalizados((s) => new Set(s).add(perfilId));
     recargarAsig();
   }
 
@@ -115,16 +120,15 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
 
       {loading ? (
         <p className="text-sm text-ink-tertiary">Cargando…</p>
-      ) : !ficha || ficha.horasMes === 0 ? (
-        <div className="card">
-          <div className="card-body">
-            <p className="text-sm text-ink-tertiary">
-              Sin actividad registrada en {nombreMes.toLowerCase()}. Cuando el proyecto reciba imputaciones, aquí verás sus horas, personas y departamentos.
-            </p>
-          </div>
-        </div>
       ) : (
         <>
+          {horasMes === 0 && (
+            <p className="mb-4 text-sm text-ink-tertiary" data-testid="proyecto-sin-actividad">
+              Sin actividad aprobada en {nombreMes.toLowerCase()}: las horas, categorías y departamentos aparecerán con las primeras imputaciones. Mientras tanto, asigna aquí a las personas del proyecto.
+            </p>
+          )}
+          {ficha && horasMes > 0 && (
+            <>
           <div className="mb-4 grid grid-cols-4 gap-3.5 max-[1100px]:grid-cols-2">
             <div className="card p-4">
               <p className="mono text-2xl font-extrabold">
@@ -170,11 +174,19 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
             </div>
           </div>
 
+            </>
+          )}
+
           <div className="card">
             <div className="card-head">
               <h2 className="text-sm font-extrabold">Personas en el proyecto</h2>
             </div>
             <div className="px-1.5 pb-2">
+              {filasPersonas.length === 0 ? (
+                <p className="px-3 pb-1 pt-3 text-sm text-ink-tertiary" data-testid="proyecto-sin-personas">
+                  Sin personas asignadas — añade la primera:
+                </p>
+              ) : (
               <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
@@ -188,12 +200,13 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
                 </thead>
                 <tbody>
                   {filasPersonas.map((p) => {
-                    const finalizado = finalizados.has(p.perfilId);
+                    const hasta = hastaDe(p.perfilId);
+                    const finalizado = hasta !== null && hasta <= hoyStr;
                     return (
                       <tr key={`${p.perfilId}-${p.categoriaNombre}`} className={`hover:bg-subtle ${finalizado ? 'opacity-55' : ''}`}>
                         <td className="border-b border-border px-2.5 py-2.5 font-extrabold">
                           {p.nombre}
-                          {'recienAsignada' in p && <span className="micro ml-1.5 font-normal text-ink-tertiary">· recién asignada</span>}
+                          {recienAsignados.has(p.perfilId) && <span className="micro ml-1.5 font-normal text-ink-tertiary">· recién asignada</span>}
                         </td>
                         <td className="border-b border-border px-2.5 py-2.5">{p.departamento ?? '—'}</td>
                         <td className="border-b border-border px-2.5 py-2.5">
@@ -201,9 +214,9 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
                           {p.categoriaNombre}
                         </td>
                         <td className="mono border-b border-border px-2.5 py-2.5 text-right">{fmt(p.horas)}</td>
-                        <td className="mono border-b border-border px-2.5 py-2.5 text-right">{ficha.horasMes ? Math.round((p.horas / ficha.horasMes) * 100) : 0}%</td>
+                        <td className="mono border-b border-border px-2.5 py-2.5 text-right">{horasMes ? Math.round((p.horas / horasMes) * 100) : 0}%</td>
                         <td className="border-b border-border px-2.5 py-2.5 text-right">
-                          {finalizado ? <span className="micro text-ink-tertiary">hasta hoy</span> : (
+                          {finalizado ? <span className="micro text-ink-tertiary">hasta {hasta === hoyStr ? 'hoy' : hasta!.split('-').reverse().join('/')}</span> : (
                             <button type="button" className="btn btn-sm" onClick={() => onFinalizar(p.perfilId, p.nombre)}>
                               Finalizar
                             </button>
@@ -214,6 +227,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
                   })}
                 </tbody>
               </table>
+              )}
               <div className="flex items-center gap-2 p-3">
                 <select className="input max-w-[320px] flex-1" value={personaNueva} disabled={disponibles.length === 0} onChange={(e) => setPersonaNueva(e.target.value)}>
                   <option value="">{disponibles.length === 0 ? 'Sin personas disponibles' : 'Selecciona persona'}</option>

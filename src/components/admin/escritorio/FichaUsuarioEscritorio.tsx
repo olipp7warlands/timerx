@@ -13,15 +13,15 @@ import { useAprobacionImputaciones } from '@/hooks/admin/useAprobacionImputacion
 import { useAusenciasAdmin } from '@/hooks/admin/useAusenciasAdmin';
 import { useFichaUsuario } from '@/hooks/admin/useFichaUsuario';
 import { useBalanceMesEmpleado } from '@/hooks/admin/useBalanceMesEmpleado';
-import { useCosteVigente } from '@/hooks/admin/useCosteVigente';
 import { enviarRecordatorioEmpleado, restablecerPasswordEmpleado } from '@/app/admin/actions';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { ModalCentrado } from '@/components/empleado/compartido/ModalCentrado';
 import { TablaPendientesImputacion } from '../compartido/TablaPendientesImputacion';
 import { MiniCalendarioUsuario } from './MiniCalendarioUsuario';
+import { CosteEmpleado } from './CosteEmpleado';
 import { confirmar } from '@/components/ui/confirmar';
 import { ETIQUETA_ROL, type RolUsuario } from '@/lib/auth/roles';
-import { esRolAdmin, puedeAdministrarPerfil, puedeImputarDirecto } from '@/lib/usuarios/permisos';
+import { MENSAJE_UNICO_ADMIN_GRUPO, esRolAdmin, puedeAdministrarPerfil, puedeImputarDirecto } from '@/lib/usuarios/permisos';
 import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
 
@@ -30,6 +30,8 @@ const ETIQUETA_TIPO_AUSENCIA: Record<string, string> = { vacaciones: 'Vacaciones
 interface Props {
   info: AdminInfo;
   usuario: UsuarioAdmin;
+  /** Es el único admin_grupo activo: la BD (028) no deja quitarle el rol, así que el selector de rol se muestra bloqueado con el motivo. */
+  unicoAdminGrupo?: boolean;
   onVolver: () => void;
   onIrAControl: (empleadoId: string) => void;
   onActualizar: (id: string, input: ActualizarUsuarioInput) => Promise<{ error: string | null }>;
@@ -37,7 +39,7 @@ interface Props {
   onReactivar: (id: string) => Promise<{ error: string | null }>;
 }
 
-export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, onActualizar, onDesactivar, onReactivar }: Props) {
+export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false, onVolver, onIrAControl, onActualizar, onDesactivar, onReactivar }: Props) {
   const hoy = useMemo(() => new Date(), []);
   const anio = hoy.getFullYear();
   const mes = hoy.getMonth() + 1;
@@ -58,8 +60,6 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
   const { categorias } = useCategorias();
   const { proyectos } = useProyectosAdmin();
   const { balance, loading: loadingBalance } = useBalanceMesEmpleado(usuario.id, anio, mes);
-  // Dato salarial: solo admin_grupo -- ni se consulta para el resto de roles (además de la RLS de coste_empleado).
-  const { coste, loading: loadingCoste } = useCosteVigente(usuario.id, esAdminGrupo);
   const { porProyecto, ultimas, loading: loadingFicha } = useFichaUsuario(usuario.id, anio, mes);
   const { asignaciones, loading: loadingAsig, recargar: recargarAsig } = useAsignacionesEmpleado(usuario.id);
   const { asignar, finalizar } = useAsignaciones();
@@ -201,15 +201,8 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
             </span>{' '}
             · {usuario.activo ? 'Activo' : 'Inactivo'}
           </p>
-          {esAdminGrupo && (
-            <p className="micro mt-1" data-testid="coste-vigente">
-              Coste/hora vigente:{' '}
-              <span className="mono font-extrabold text-ink-primary">
-                {loadingCoste ? '…' : coste ? `${coste.costeHora.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €/h` : 'sin coste registrado'}
-              </span>
-              {coste && <> · desde {coste.desde.split('-').reverse().join('/')}</>}
-            </p>
-          )}
+          {/* Dato salarial: solo admin_grupo -- el componente ni se monta (ni consulta) para el resto de roles (además de la RLS de coste_empleado). */}
+          {esAdminGrupo && <CosteEmpleado perfilId={usuario.id} />}
         </div>
       </div>
 
@@ -334,7 +327,13 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
                 {esAdminGrupo && (
                   <div>
                     <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Rol</label>
-                    <select className="input" value={draft.rol} onChange={(e) => setDraft((d) => ({ ...d, rol: e.target.value as RolUsuario }))}>
+                    <select
+                      className="input"
+                      value={draft.rol}
+                      disabled={unicoAdminGrupo}
+                      aria-describedby={unicoAdminGrupo ? 'aviso-unico-admin' : undefined}
+                      onChange={(e) => setDraft((d) => ({ ...d, rol: e.target.value as RolUsuario }))}
+                    >
                       <option value="empleado">Empleado</option>
                       <option value="responsable_proyecto">Responsable de proyecto</option>
                       <option value="admin_empresa">Admin de empresa</option>
@@ -344,6 +343,11 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
                 )}
               </div>
               {!esAdminGrupo && <p className="text-xs text-ink-tertiary">La empresa y el rol de una persona solo los cambia un admin del grupo.</p>}
+              {unicoAdminGrupo && (
+                <p id="aviso-unico-admin" className="text-xs font-bold text-ink-secondary" data-testid="aviso-unico-admin">
+                  {MENSAJE_UNICO_ADMIN_GRUPO}. Mientras sea el único, su rol no se puede cambiar.
+                </p>
+              )}
               <button type="button" className="btn btn-primary btn-sm" onClick={onGuardarEdicion}>
                 Guardar cambios
               </button>
@@ -390,7 +394,14 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
             {loadingFicha ? (
               <p className="text-sm text-ink-tertiary">Cargando…</p>
             ) : porProyecto.length === 0 ? (
-              <p className="text-sm text-ink-tertiary">Sin horas imputadas este mes.</p>
+              <div data-testid="usuario-sin-horas">
+                <p className="text-sm text-ink-tertiary">{puedeImputarDirecto(info, usuario.empresaId) ? 'Sin horas este mes — regístrale las primeras:' : 'Sin horas imputadas este mes.'}</p>
+                {puedeImputarDirecto(info, usuario.empresaId) && (
+                  <button type="button" className="btn btn-primary btn-sm mt-2.5" onClick={() => onIrAControl(usuario.id)}>
+                    Imputación directa ›
+                  </button>
+                )}
+              </div>
             ) : (
               <div className="space-y-2">
                 {porProyecto.map((p) => {
@@ -418,7 +429,9 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
             {loadingAsig ? (
               <p className="text-sm text-ink-tertiary">Cargando…</p>
             ) : asignacionesVigentes.length === 0 ? (
-              <p className="text-sm text-ink-tertiary">Sin proyectos asignados todavía — asígnale el primero aquí abajo.</p>
+              <p className="text-sm text-ink-tertiary" data-testid="usuario-sin-proyectos">
+                Sin proyectos asignados — asigna el primero:
+              </p>
             ) : (
               asignacionesVigentes.map((a) => (
                 <div key={a.proyectoId} className="flex items-center gap-2 border-b border-border py-1.5 text-[13px] last:border-b-0">
@@ -543,7 +556,14 @@ export function FichaUsuarioEscritorio({ info, usuario, onVolver, onIrAControl, 
               ) : ultimas.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-2.5 py-3">
-                    <p className="text-sm text-ink-tertiary">Todavía no ha imputado ninguna línea.</p>
+                    <p className="text-sm text-ink-tertiary" data-testid="usuario-sin-imputaciones">
+                      {puedeImputarDirecto(info, usuario.empresaId) ? 'Aún no hay imputaciones — registra la primera con ' : 'Todavía no ha imputado ninguna línea.'}
+                      {puedeImputarDirecto(info, usuario.empresaId) && (
+                        <button type="button" className="btn-text" onClick={() => onIrAControl(usuario.id)}>
+                          imputación directa ›
+                        </button>
+                      )}
+                    </p>
                   </td>
                 </tr>
               ) : (

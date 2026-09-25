@@ -50,7 +50,10 @@ export interface EmpleadoCtx {
   proyectosParaFechas: (fechas: string[]) => ProyectoAsignado[];
   /** true = el empleado no tiene NINGÚN proyecto asignado (no confundir con "ninguno cubre esta fecha", ver `proyectosParaFechas`). */
   sinProyectos: boolean;
+  /** Tareas que se ofrecen por defecto (categoría propia + transversales, o el filtro por departamento). */
   grupos: GrupoTareas[];
+  /** Resto del catálogo, tras «Otras tareas…» (vacío si la persona no tiene categoría). */
+  otrasTareas: GrupoTareas[];
   balance: BalanceMes | null;
   maxHorasDia: number | null;
 

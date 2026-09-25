@@ -8,6 +8,8 @@ import { ModalCentrado } from '@/components/empleado/compartido/ModalCentrado';
 import { alternarTema } from './ThemeToggle';
 import { CambiarPasswordForm } from './CambiarPasswordForm';
 import { IconTema, IconSol, IconLlave, IconSoporte, IconSalida } from './icons';
+import { PuntoNovedad } from './PuntoNovedad';
+import { useNovedadSoporte } from '@/hooks/useNovedadSoporte';
 
 interface Props {
   nombre: string;
@@ -64,6 +66,7 @@ function useTemaDestino() {
 }
 
 export function MenuUsuarioDesktop({ nombre, email, rol, onIrSoporte }: Props) {
+  const { hay: hayNovedad } = useNovedadSoporte();
   const [abierto, setAbierto] = useState(false);
   const [passwordAbierto, setPasswordAbierto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -93,9 +96,10 @@ export function MenuUsuarioDesktop({ nombre, email, rol, onIrSoporte }: Props) {
         aria-label="Cuenta"
         aria-haspopup="menu"
         aria-expanded={abierto}
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-xs font-extrabold text-on-accent"
+        className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-xs font-extrabold text-on-accent"
       >
         {iniciales(nombre)}
+        {hayNovedad && <PuntoNovedad className="absolute -right-0.5 -top-0.5" testId="punto-novedad-avatar" />}
       </button>
       {abierto && (
         <div role="menu" className="card absolute bottom-full left-0 z-50 mb-2 w-60 overflow-hidden py-1 shadow-[var(--sombra)]">
@@ -134,6 +138,7 @@ export function MenuUsuarioDesktop({ nombre, email, rol, onIrSoporte }: Props) {
           >
             <IconSoporte size={16} />
             Soporte
+            {hayNovedad && <PuntoNovedad className="ml-auto" testId="punto-novedad-menu" />}
           </button>
           <button
             type="button"
@@ -155,6 +160,7 @@ export function MenuUsuarioDesktop({ nombre, email, rol, onIrSoporte }: Props) {
 }
 
 export function MenuUsuarioMovil({ nombre, email, rol, onIrSoporte }: Props) {
+  const { hay: hayNovedad } = useNovedadSoporte();
   const [abierto, setAbierto] = useState(false);
   const [passwordAbierto, setPasswordAbierto] = useState(false);
   const tema = useTemaDestino();
@@ -165,9 +171,10 @@ export function MenuUsuarioMovil({ nombre, email, rol, onIrSoporte }: Props) {
         type="button"
         onClick={() => setAbierto(true)}
         aria-label="Cuenta"
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-xs font-extrabold text-on-accent"
+        className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-xs font-extrabold text-on-accent"
       >
         {iniciales(nombre)}
+        {hayNovedad && <PuntoNovedad className="absolute -right-0.5 -top-0.5" testId="punto-novedad-avatar" />}
       </button>
       <BottomSheet abierto={abierto} onCerrar={() => setAbierto(false)} titulo="Cuenta">
         <div className="border-b border-border pb-3">
@@ -198,6 +205,7 @@ export function MenuUsuarioMovil({ nombre, email, rol, onIrSoporte }: Props) {
         >
           <IconSoporte size={16} />
           Soporte
+          {hayNovedad && <PuntoNovedad testId="punto-novedad-menu" />}
         </button>
         <button type="button" onClick={cerrarSesion} className="btn btn-primary full mt-2 flex w-full items-center justify-center gap-2">
           <IconSalida size={16} />

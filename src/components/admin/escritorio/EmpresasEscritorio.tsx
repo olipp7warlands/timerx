@@ -96,7 +96,7 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
               </div>
               <div className="card-body">
                 <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Nombre</label>
-                <input className="input" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Wowinx SL" />
+                <input id="empresa-nombre" className="input" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Wowinx SL" />
                 <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">CIF</label>
                 <input className="input mono" value={cif} onChange={(e) => setCif(e.target.value)} placeholder="B-12345678" />
                 <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Tipología (área del mapa)</label>
@@ -136,6 +136,22 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
                 </tr>
               </thead>
               <tbody>
+                {!loading && empresas.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="px-2.5 py-4 text-sm text-ink-tertiary" data-testid="empresas-vacio">
+                      {esAdminGrupo ? (
+                        <>
+                          Aún no hay empresas — crea la primera con el formulario «Crear empresa».{' '}
+                          <button type="button" className="btn-text" onClick={() => document.getElementById('empresa-nombre')?.focus()}>
+                            Ir al formulario
+                          </button>
+                        </>
+                      ) : (
+                        'Aún no hay empresas en el grupo.'
+                      )}
+                    </td>
+                  </tr>
+                )}
                 {empresas.map((e) => {
                   const horasEmpresa = porEmpresa.find((p) => p.empresaId === e.id)?.horas ?? 0;
                   const proyectosActivos = proyectos.filter((p) => p.empresaId === e.id && p.activo).length;

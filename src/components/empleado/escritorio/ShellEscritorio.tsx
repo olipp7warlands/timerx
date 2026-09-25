@@ -11,6 +11,8 @@ import { ImputarEscritorio } from './ImputarEscritorio';
 import { CalendarioEscritorio } from './CalendarioEscritorio';
 import { ModalMapa } from './ModalMapa';
 import { SoporteEmpleadoPanel } from '@/components/soporte/SoporteEmpleadoPanel';
+import { PuntoNovedad } from '@/components/ui/PuntoNovedad';
+import { useNovedadSoporte } from '@/hooks/useNovedadSoporte';
 
 const TABS: { id: EmpleadoCtx['tab']; etiqueta: string; Icono: typeof IconCasa }[] = [
   { id: 'inicio', etiqueta: 'Inicio', Icono: IconCasa },
@@ -22,6 +24,7 @@ const TABS: { id: EmpleadoCtx['tab']; etiqueta: string; Icono: typeof IconCasa }
 export function ShellEscritorio(ctx: EmpleadoCtx) {
   const [mini, setMini] = useState(false);
   const [mapaAbierto, setMapaAbierto] = useState(false);
+  const { hay: hayNovedad } = useNovedadSoporte();
 
   return (
     <div className="flex min-h-screen bg-bg">
@@ -58,6 +61,7 @@ export function ShellEscritorio(ctx: EmpleadoCtx) {
             {t.id === ctx.tab && <span className="absolute -left-3 top-2 bottom-2 w-[3px] rounded-r bg-ink-primary" />}
             <t.Icono />
             {!mini && t.etiqueta}
+            {t.id === 'soporte' && hayNovedad && <PuntoNovedad className={mini ? 'absolute right-1.5 top-1.5' : 'ml-auto'} testId="punto-novedad-soporte" />}
           </button>
         ))}
 

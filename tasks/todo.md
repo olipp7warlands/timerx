@@ -1,3 +1,38 @@
+# LOTE v1.2 + v1.3 combinado (2026-09-25) — main → demo → verificación → commit listo para promoción
+
+> Flujo: trabajo en `main` (demo, autodeploy). NO se toca producción ni el pack de revisión de producción. Todo llega allí en la próxima promoción (runbook §12).
+> Línea base medida hoy (la demo ha evolvido desde el 19/09: 141 imputaciones, 8 proyectos, 5 categorías, 5 tickets): conteos en `base_conteos.txt` (scratchpad), huella `snap2` cruda `c77ae3a7` / **canónica `016e5c34`** (la `6c50f784` del 19/09 correspondía a otros datos).
+
+## Decisiones (tomadas leyendo el código; todas reversibles)
+- ENTORNO.md: archivos LOCALES excluidos en `.git/info/exclude` (compartido por los worktrees): no viajan a `produccion` en una promoción ni disparan despliegue; no ensucian ningún árbol.
+- **027** (tickets): `ticket_lectura` (PK ticket_id+perfil_id, RLS solo filas propias) + `ticket.estado_cambiado_en/_por` (trigger `BEFORE UPDATE OF estado`) para detectar cambios de estado + RPC `ticket_marcar_visto` (usa la hora del SERVIDOR, no la del cliente) + RPC `tickets_con_novedad()` (invoker, solo tickets propios). Novedad = comentario de otra persona O cambio de estado hecho por otra persona, posterior a `ultimo_visto`.
+- **028** (guarda): trigger `BEFORE UPDATE OF rol ON perfil` con invariante «siempre queda >= 1 admin_grupo activo» (vale para TODOS los llamadores, service_role incluido; el mensaje es el del enunciado). La ficha/inline dejan de ofrecer el rol al único admin.
+- Contexto React `SoporteNovedadProvider` en `EmpleadoApp` y `AdminApp` (no un store de módulo: no filtra estado entre usuarios) — un solo recuento al cargar, sin tiempo real.
+- Punto también sobre el botón del avatar (única forma de descubrirlo en móvil empleado, que no tiene pestaña Soporte).
+- Tareas (F): función pura única `repartirTareas` (`src/lib/horas/tareas.ts`) — la usan hook del empleado (composer, precargado, wizard) y la imputación directa del admin.
+
+## Pasos (marcar al cerrar)
+- [x] 0. ENTORNO.md en los dos worktrees + salida de `git worktree list` (enlazados desde el runbook §12).
+- [x] Baseline: conteos + snap2 (scripts en el scratchpad de la sesión).
+- [x] 1. Migración 027 → `db push` → commit+push INMEDIATO de la migración; sondas: RLS propia, anon, mismo-perfil, hostil.
+- [x] 2. Migración 028 → `db push` → commit+push INMEDIATO; sonda directa (transacción abortada con impersonación) + camino positivo con sesión real.
+- [x] 3. C: hook/contexto de novedad, punto en menú (4 shells) + sidebar/pestaña + fila de lista; `marcarVisto` al abrir.
+- [x] 4. D: «Registrar coste» + mini-histórico (INSERT versionado, 23505 → error claro).
+- [x] 5. E: verificar «Editar datos» en ficha propia; UI del único admin; mensajes.
+- [x] 6. A: pestañas `?vista=` (Usuarios/Importar/Costes), formulario colapsable + hand-off `?invitar=`.
+- [x] 7. B: inventario de textos pasivos + estados vacíos operativos (tabla antes/después con capturas).
+- [x] 8. F: `repartirTareas` + hook + `SelectorTarea` (web) + «Otras tareas ›» (hoja móvil) + imputación directa.
+- [x] 9. Verificación única (ver enunciado) + build/lint sin nuevos + conteos + huella canónica.
+- [x] 10. PLAN.md / runbook (enlaces ENTORNO) / lessons; commit en main, demo en verde, COMMIT LISTO PARA PROMOCIÓN.
+
+
+## Revisión (v1.2 + v1.3)
+- 027 y 028 aplicadas a la demo y pusheadas en el acto (`6795941`, `655475b`); el resto en un solo commit de código. Producción NO tocada: pendientes de promoción **027 y 028** + el código.
+- Verificado con sesiones reales (Cristian, Leo, Marina), ambos temas y móvil (iframe 390 px); conteos + huellas (`c77ae3a7` cruda / `016e5c34` canónica) idénticos; build limpio; lint 78 (≤ 79 preexistentes).
+- Abierto/decisiones a confirmar: (1) E no tenía bloqueo visible en la ficha propia (ver PLAN.md); (2) punto también sobre el avatar; (3) la guarda 028 vale también para service_role.
+
+---
+
 # TODO — Correctivo de verificación (Soporte/Leo en producción) → Lote 4 (migración 020)
 
 > Combinado 5+2 (018, 019) aceptado por el usuario el 2026-09-19: cerrado y desplegado, detalle en PLAN.md.

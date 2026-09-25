@@ -128,6 +128,7 @@ Decisión de producto **definitiva por ahora: sin email**. Todo lo que dependía
   5. Verificaciones post-deploy de la sección 9 (anon, registro cerrado, cabeceras) y un login real.
 - **Rollback**: `git revert` del merge en `produccion` y push (el código vuelve al estado previo); las migraciones no se deshacen (son aditivas: una migración defectuosa se corrige con otra).
 - **Nunca** se empuja a `produccion` desde otra rama ni se edita a mano en el panel de Railway/Supabase (norma L).
+- **Qué carpeta es cuál**: cada worktree lleva un `ENTORNO.md` en su raíz que lo dice y trae el `git worktree list` (locales, excluidos de git): [`../TimerX/ENTORNO.md`](../ENTORNO.md) (rama `main` = DEMO, trabajo diario) y [`../TimerX-prod/ENTORNO.md`](../../TimerX-prod/ENTORNO.md) (rama `produccion` = PRODUCCIÓN REAL, solo promociones de esta sección). Migraciones pendientes de promoción tras el lote v1.2+v1.3: **027 y 028** (la 026 viajó ya con la promoción de v1.1; ver PLAN.md).
 - **Ya ejecutado una vez** (2026-09-19/21): worktree creado, `timerx-prod` desplegado desde `produccion` en el commit `8f31efd`, `config.toml` propio commiteado y pusheado (`373e0e9`). Los próximos pasos de este flujo (2–5) se repiten en cada promoción posterior.
 
 ## 13. Pendiente del usuario tras la entrega

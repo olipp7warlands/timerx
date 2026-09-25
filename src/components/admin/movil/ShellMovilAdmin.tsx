@@ -14,6 +14,8 @@ import { OtraSeccionMovil } from './OtraSeccionMovil';
 import { MapaMovil } from './MapaMovil';
 import { SoporteAdmin } from '../compartido/SoporteAdmin';
 import { useTicketsAbiertos } from '@/hooks/admin/useTicketsAbiertos';
+import { useNovedadSoporte } from '@/hooks/useNovedadSoporte';
+import { PuntoNovedad } from '@/components/ui/PuntoNovedad';
 
 const ETIQUETAS: Record<SeccionAdmin, string> = {
   inicio: 'Inicio',
@@ -36,6 +38,7 @@ export function ShellMovilAdmin({ info }: { info: AdminInfo }) {
   const nav = useNavAdmin();
   const seccion = nav.seccion;
   const { abiertos, recargar: recargarAbiertos } = useTicketsAbiertos();
+  const { hay: hayNovedad } = useNovedadSoporte();
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-bg pb-11">
@@ -98,8 +101,9 @@ export function ShellMovilAdmin({ info }: { info: AdminInfo }) {
                 {item.id === seccion && <span className="absolute -left-3 top-2 bottom-2 w-[3px] rounded-r bg-ink-primary" />}
                 <item.Icono />
                 {item.etiqueta}
+                {item.id === 'soporte' && hayNovedad && <PuntoNovedad className="ml-auto" testId="punto-novedad-soporte" />}
                 {item.id === 'soporte' && abiertos > 0 && (
-                  <span className="mono ml-auto rounded-full bg-accent px-1.5 py-px text-[10.5px] font-extrabold text-on-accent" aria-label={`${abiertos} tickets abiertos`} data-testid="badge-soporte">
+                  <span className={`mono ${hayNovedad ? '' : 'ml-auto'} rounded-full bg-accent px-1.5 py-px text-[10.5px] font-extrabold text-on-accent`} aria-label={`${abiertos} tickets abiertos`} data-testid="badge-soporte">
                     {abiertos}
                   </span>
                 )}

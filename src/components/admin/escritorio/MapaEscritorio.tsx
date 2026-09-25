@@ -114,7 +114,7 @@ export function MapaEscritorio({ info }: { info: AdminInfo }) {
         <p className="mb-3 text-xs font-semibold text-ink-tertiary">
           Referencia viva de áreas y proyectos, visible para todo el mundo desde el botón de mapa. Se genera dinámicamente: lo que edites aquí es lo que ven.
         </p>
-        {previewLoading ? <p className="text-sm text-ink-tertiary">Cargando…</p> : <MapaGrid areas={areasPreview} variante="grid" />}
+        {previewLoading ? <p className="text-sm text-ink-tertiary">Cargando…</p> : <MapaGrid areas={areasPreview} variante="grid" mensajeVacio={esAdminGrupo ? 'Aún no hay áreas en el mapa — crea la primera en «Áreas», más abajo.' : undefined} />}
       </div>
 
       {!esAdminGrupo ? (

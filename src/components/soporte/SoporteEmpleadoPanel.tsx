@@ -5,6 +5,8 @@ import { ETIQUETA_TIPO_TICKET, fechaTicket, useTickets, type TipoTicket } from '
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { HiloTicket } from './HiloTicket';
 import { PuntoEstadoTicket } from './PuntoEstadoTicket';
+import { PuntoNovedad } from '@/components/ui/PuntoNovedad';
+import { useNovedadSoporte } from '@/hooks/useNovedadSoporte';
 
 type Vista = { tipo: 'lista' } | { tipo: 'nuevo' } | { tipo: 'ticket'; id: string };
 
@@ -16,6 +18,7 @@ type Vista = { tipo: 'lista' } | { tipo: 'nuevo' } | { tipo: 'ticket'; id: strin
 export function SoporteEmpleadoPanel() {
   const { tickets, loading, recargar, crear } = useTickets({ soloMios: true });
   const toast = useToast();
+  const { ids: novedades } = useNovedadSoporte();
   const [vista, setVista] = useState<Vista>({ tipo: 'lista' });
   const [form, setForm] = useState<{ tipo: TipoTicket; titulo: string; descripcion: string }>({ tipo: 'incidencia', titulo: '', descripcion: '' });
   const [enviando, setEnviando] = useState(false);
@@ -103,7 +106,10 @@ export function SoporteEmpleadoPanel() {
                 <span className="block truncate text-sm font-extrabold">{t.titulo}</span>
                 <span className="micro">{fechaTicket(t.creadoEn)}</span>
               </span>
-              <PuntoEstadoTicket estado={t.estado} />
+              <span className="flex shrink-0 items-center gap-2">
+                <PuntoEstadoTicket estado={t.estado} />
+                {novedades.has(t.id) && <PuntoNovedad etiqueta="Respuesta nueva" testId="punto-novedad-fila" />}
+              </span>
             </button>
           ))
         )}

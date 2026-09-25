@@ -7,6 +7,7 @@ import { Stepper } from '../compartido/Stepper';
 import { CalendarGrid } from '../compartido/CalendarGrid';
 import { SelectorRangoFechas, type RangoFechas } from '../compartido/SelectorRangoFechas';
 import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
+import type { GrupoTareas } from '@/lib/horas/tareas';
 import { ausenciaEnFecha, CLASE_AUSENCIA_DIA } from '@/lib/horas/calendario';
 import type { EmpleadoCtx } from '../types';
 
@@ -86,9 +87,11 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
   const [multiDias, setMultiDias] = useState<Set<string>>(new Set());
   const [mostrarCalMulti, setMostrarCalMulti] = useState(false);
   const [rangoAus, setRangoAus] = useState<RangoFechas>({ inicio: null, fin: null });
+  const [otrasAbiertas, setOtrasAbiertas] = useState(false);
 
   useEffect(() => {
     if (abierto) {
+      setOtrasAbiertas(false);
       dispatch({ tipo: 'RESET', paso: pasoInicial });
       setMultiDias(new Set([ctx.selDay]));
       setMostrarCalMulti(false);
@@ -141,6 +144,35 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
     if (exito) onCerrar();
   }
 
+  // Un grupo de tareas (cabecera con su punto de color + rejilla): lo usan las tareas por defecto y, desplegadas, «Otras tareas».
+  function grupoTareas(g: GrupoTareas) {
+    return (
+      <div key={g.categoriaId}>
+        <p className="micro mb-2 flex items-center gap-2">
+          <CatDot categoria={g.categoriaNombre} /> {g.categoriaNombre}
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {g.subcategorias.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className="opt rounded-2xl border border-border p-3 text-left text-sm"
+              onClick={() =>
+                dispatch({
+                  tipo: 'AVANZAR',
+                  paso: 'horas',
+                  sel: { categoriaNombre: g.categoriaNombre, subcategoriaId: s.id, subcategoriaNombre: s.nombre },
+                })
+              }
+            >
+              {s.nombre}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <BottomSheet
       abierto={abierto}
@@ -181,31 +213,21 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
 
       {state.actual === 'tarea' && (
         <div className="space-y-4">
-          {ctx.grupos.map((g) => (
-            <div key={g.categoriaId}>
-              <p className="micro mb-2 flex items-center gap-2">
-                <CatDot categoria={g.categoriaNombre} /> {g.categoriaNombre}
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {g.subcategorias.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    className="opt rounded-2xl border border-border p-3 text-left text-sm"
-                    onClick={() =>
-                      dispatch({
-                        tipo: 'AVANZAR',
-                        paso: 'horas',
-                        sel: { categoriaNombre: g.categoriaNombre, subcategoriaId: s.id, subcategoriaNombre: s.nombre },
-                      })
-                    }
-                  >
-                    {s.nombre}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+          {ctx.grupos.map((g) => grupoTareas(g))}
+          {ctx.otrasTareas.length > 0 && (
+            <>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between rounded-2xl border border-dashed border-border-strong p-3 text-left text-sm font-extrabold text-ink-tertiary"
+                aria-expanded={otrasAbiertas}
+                onClick={() => setOtrasAbiertas((v) => !v)}
+              >
+                Otras tareas
+                <span aria-hidden="true">{otrasAbiertas ? '⌄' : '›'}</span>
+              </button>
+              {otrasAbiertas && ctx.otrasTareas.map((g) => grupoTareas(g))}
+            </>
+          )}
         </div>
       )}
 

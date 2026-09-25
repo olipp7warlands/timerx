@@ -161,6 +161,7 @@ export function ImputarEscritorio({ ctx }: { ctx: EmpleadoCtx }) {
               <ComposerLinea
                 proyectos={proyectosDia}
                 grupos={ctx.grupos}
+                otras={ctx.otrasTareas}
                 maxHorasDia={ctx.maxHorasDia}
                 onAnadir={(l) => ctx.guardarHoras({ proyectoId: l.proyectoId, subcategoriaId: l.subcategoriaId, horas: l.horas, fecha: ctx.selDay, descripcion: l.descripcion })}
               />

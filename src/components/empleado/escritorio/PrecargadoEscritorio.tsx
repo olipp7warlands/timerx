@@ -52,7 +52,7 @@ export function PrecargadoEscritorio({ ctx }: Props) {
       {proyectosDia.length === 0 ? (
         <p className="text-sm text-ink-tertiary">No tienes proyectos asignados para este día. Habla con tu administrador.</p>
       ) : (
-        <ComposerLinea proyectos={proyectosDia} grupos={ctx.grupos} maxHorasDia={ctx.maxHorasDia} etiquetaBoton="＋ Añadir al lote" onAnadir={ctx.anadirLineaStaged} />
+        <ComposerLinea proyectos={proyectosDia} grupos={ctx.grupos} otras={ctx.otrasTareas} maxHorasDia={ctx.maxHorasDia} etiquetaBoton="＋ Añadir al lote" onAnadir={ctx.anadirLineaStaged} />
       )}
       <div className="flex gap-2 pt-1">
         <button type="button" className="btn flex-1 justify-center" onClick={ctx.descartarStaged}>
