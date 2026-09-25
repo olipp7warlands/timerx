@@ -12,8 +12,8 @@
 - [x] Verificación: paridad con capturas; empresa nueva (UI e importada) con jornada; round-trip por entidad; import real 2-3 filas con una errónea + reversión con conteos; tipología heredada vs explícita en el mapa AUTO; plantillas abiertas; huella; build/lint.
 - [x] PLAN.md / lessons / commit / demo en verde / COMMIT LISTO PARA PROMOCIÓN.
 
-## Revisión (v1.4)
-- Sin migraciones nuevas (punto 2: la 019 ya siembra la jornada; discrepancia 8 vs 5,5 documentada y a decidir). 3 importadores + 3 exports + paridad ficha↔inline. Verificado con sesión real de Cristian; conteos y huellas idénticos; build/lint sin nuevos.
+## Revisión (v1.4 + 029)
+- Migración 029 (jornada por defecto 8/8/8/8/5,5/0/0 editable; `jornada_horas` obsoleto) aplicada a la demo y verificada; el punto 2 pasó de «sin 029» a 029 por decisión del usuario. 3 importadores + 3 exports + paridad ficha↔inline. Verificado con sesión real de Cristian; conteos y huellas idénticos; build/lint sin nuevos.
 
 ---
 

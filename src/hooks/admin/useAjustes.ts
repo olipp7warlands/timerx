@@ -4,8 +4,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { resultadoMutacion } from '@/lib/supabase/mutaciones';
 
+/** Jornada semanal por defecto de las empresas NUEVAS (lunes..domingo, 029). Sustituye a la jornada plana `jornada_horas`, obsoleta. */
+export const JORNADA_DEFECTO_INICIAL = [8, 8, 8, 8, 5.5, 0, 0];
+
 export interface Ajustes {
-  jornadaHoras: number;
+  jornadaDefecto: number[];
   topeHorasDia: number;
   descripcionObligatoria: boolean;
   bloquearMesesCerrados: boolean;
@@ -13,7 +16,7 @@ export interface Ajustes {
 }
 
 const CLAVE_DB: Record<keyof Ajustes, string> = {
-  jornadaHoras: 'jornada_horas',
+  jornadaDefecto: 'jornada_semanal_defecto',
   topeHorasDia: 'tope_horas_dia',
   descripcionObligatoria: 'descripcion_obligatoria',
   bloquearMesesCerrados: 'bloquear_meses_cerrados',
@@ -31,7 +34,7 @@ export function useAjustes() {
     const { data } = await supabase.from('ajuste').select('clave, valor');
     const porClave = Object.fromEntries((data ?? []).map((f: any) => [f.clave, f.valor]));
     setAjustes({
-      jornadaHoras: Number(porClave.jornada_horas ?? 7),
+      jornadaDefecto: Array.isArray(porClave.jornada_semanal_defecto) && porClave.jornada_semanal_defecto.length === 7 ? porClave.jornada_semanal_defecto.map(Number) : JORNADA_DEFECTO_INICIAL,
       topeHorasDia: Number(porClave.tope_horas_dia ?? 12),
       descripcionObligatoria: Boolean(porClave.descripcion_obligatoria ?? true),
       bloquearMesesCerrados: Boolean(porClave.bloquear_meses_cerrados ?? true),
@@ -45,7 +48,7 @@ export function useAjustes() {
   }, [recargar]);
 
   const actualizar = useCallback(
-    async (clave: keyof Ajustes, valor: number | boolean) => {
+    async (clave: keyof Ajustes, valor: number | boolean | number[]) => {
       const supabase = createClient();
       const { data, error } = await supabase.from('ajuste').update({ valor }).eq('clave', CLAVE_DB[clave]).select('clave');
       const r = resultadoMutacion(error, data);
