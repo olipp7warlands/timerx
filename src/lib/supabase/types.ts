@@ -1281,6 +1281,7 @@ export type Database = {
           laborable: boolean
         }[]
       }
+      jornada_defecto: { Args: { p_dia: number }; Returns: number }
       jornada_horas: { Args: never; Returns: number }
       periodo_cerrado: {
         Args: { p_empresa: string; p_fecha: string }

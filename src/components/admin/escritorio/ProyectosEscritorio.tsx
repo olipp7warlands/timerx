@@ -8,6 +8,7 @@ import { useEmpresas } from '@/hooks/admin/useEmpresas';
 import { useHorasPorEmpresaYProyecto } from '@/hooks/admin/useHorasPorEmpresaYProyecto';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { Donut } from '../compartido/Donut';
+import { ImportadorBloque } from '../compartido/ImportadorBloque';
 import { SelectorTipologia, HEREDAR, areaDeSelector } from '../compartido/SelectorTipologia';
 import { FichaProyectoEscritorio } from './FichaProyectoEscritorio';
 import { useNavAdmin } from '../NavAdmin';
@@ -20,7 +21,7 @@ export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
   const anio = hoy.getFullYear();
   const mes = hoy.getMonth() + 1;
 
-  const { proyectos, loading, crear, cambiarTipologia } = useProyectosAdmin();
+  const { proyectos, loading, recargar, crear, cambiarTipologia } = useProyectosAdmin();
   const { empresas } = useEmpresas();
   const { porProyecto } = useHorasPorEmpresaYProyecto(anio, mes);
   const { areas, colorDe } = useAreasTipologia();
@@ -102,6 +103,23 @@ export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
             </button>
           </div>
         </div>
+        {esAdminGrupo && (
+            <div className="card">
+              <div className="card-head">
+                <h2 className="text-sm font-extrabold">Importar / Exportar</h2>
+              </div>
+              <div className="card-body">
+                <ImportadorBloque
+                  tipo="proyectos"
+                  titulo="Proyectos"
+                  descripcion="Altas masivas desde Excel. Solo crea proyectos nuevos (un código existente en su empresa es un error). Tipología vacía = hereda la de la empresa. Todo o nada."
+                  exportHref="/api/export/proyectos"
+                  exportEtiqueta="Exportar proyectos"
+                  onImportado={recargar}
+                />
+              </div>
+            </div>
+        )}
         <div className="card">
           <div className="card-head">
             <h2 className="text-sm font-extrabold">Horas por proyecto</h2>

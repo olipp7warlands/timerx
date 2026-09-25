@@ -21,6 +21,7 @@ import { MiniCalendarioUsuario } from './MiniCalendarioUsuario';
 import { CosteEmpleado } from './CosteEmpleado';
 import { confirmar } from '@/components/ui/confirmar';
 import { ETIQUETA_ROL, type RolUsuario } from '@/lib/auth/roles';
+import { cambiosDePerfil } from '@/lib/usuarios/edicion';
 import { MENSAJE_UNICO_ADMIN_GRUPO, esRolAdmin, puedeAdministrarPerfil, puedeImputarDirecto } from '@/lib/usuarios/permisos';
 import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
@@ -145,18 +146,22 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
   }
 
   async function onGuardarEdicion() {
-    // Empresa y rol solo los cambia admin_grupo (la BD lo impone desde la 021): al resto ni se le ofrecen ni se envían.
-    const cambiaEmpresa = esAdminGrupo && draft.empresaId !== usuario.empresaId;
-    const cambiaRol = esAdminGrupo && draft.rol !== usuario.rol;
-    if (cambiaEmpresa || cambiaRol) {
-      const partes = [cambiaEmpresa && 'la empresa (afecta a sus horas requeridas por calendario y al ámbito intragrupo)', cambiaRol && 'el rol'].filter(Boolean);
+    // SOLO los campos cambiados (`cambiosDePerfil`, como la edición inline). Empresa y rol solo los cambia admin_grupo (la BD lo impone desde la 021): al resto ni se le ofrecen ni se envían.
+    const cambios = cambiosDePerfil(
+      { empresaId: usuario.empresaId, departamentoId: usuario.departamentoId, categoriaId: usuario.categoriaId, rol: usuario.rol as RolUsuario },
+      { empresaId: draft.empresaId, departamentoId: draft.departamentoId || null, categoriaId: draft.categoriaId || null, rol: draft.rol },
+      esAdminGrupo
+    );
+    if (Object.keys(cambios).length === 0) {
+      toast('No hay cambios que guardar');
+      setEditando(false);
+      return;
+    }
+    if (cambios.empresaId !== undefined || cambios.rol !== undefined) {
+      const partes = [cambios.empresaId !== undefined && 'la empresa (afecta a sus horas requeridas por calendario y al ámbito intragrupo)', cambios.rol !== undefined && 'el rol'].filter(Boolean);
       if (!confirmar(`Vas a cambiar ${partes.join(' y ')} de ${usuario.nombre}. ¿Confirmas?`)) return;
     }
-    const { error } = await onActualizar(usuario.id, {
-      ...(esAdminGrupo && { empresaId: draft.empresaId, rol: draft.rol }),
-      departamentoId: draft.departamentoId || null,
-      categoriaId: draft.categoriaId || null,
-    });
+    const { error } = await onActualizar(usuario.id, cambios);
     if (error) toast(error, 'error');
     else {
       toast('Datos actualizados');

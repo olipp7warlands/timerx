@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAjustes, type Ajustes } from '@/hooks/admin/useAjustes';
+import { fmt } from '@/lib/horas/calendario';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import type { AdminInfo } from '../types';
 
@@ -10,6 +11,8 @@ export function AjustesEscritorio({ info }: { info: AdminInfo }) {
   const toast = useToast();
   const esAdminGrupo = info.rol === 'admin_grupo';
   const [topeInput, setTopeInput] = useState('');
+  // Jornada por defecto de empresas nuevas: lo tecleado (`borrador`) o, si no hay, lo guardado.
+  const [jornadaBorrador, setJornadaBorrador] = useState<string[] | null>(null);
 
   if (!ajustes) return <p className="text-sm text-ink-tertiary">Cargando…</p>;
 
@@ -27,6 +30,24 @@ export function AjustesEscritorio({ info }: { info: AdminInfo }) {
     const { error } = await actualizar('topeHorasDia', horas);
     if (error) toast(error, 'error');
     else toast('Tope de horas actualizado');
+  }
+
+  const jornada = jornadaBorrador ?? ajustes.jornadaDefecto.map((h) => String(h).replace('.', ','));
+  const numero = (v: string) => Number(v.trim().replace(',', '.'));
+  const totalJornada = jornada.reduce((s, v) => s + (numero(v) || 0), 0);
+
+  async function guardarJornada() {
+    const horas = jornada.map(numero);
+    if (horas.some((h) => Number.isNaN(h) || h < 0 || h > 24)) {
+      toast('Cada día debe tener entre 0 y 24 horas', 'error');
+      return;
+    }
+    const { error } = await actualizar('jornadaDefecto', horas);
+    if (error) toast(error, 'error');
+    else {
+      setJornadaBorrador(null);
+      toast('Jornada por defecto actualizada');
+    }
   }
 
   return (
@@ -49,6 +70,42 @@ export function AjustesEscritorio({ info }: { info: AdminInfo }) {
             </div>
           ) : (
             <span className="mono">{ajustes.topeHorasDia}</span>
+          )}
+        </div>
+
+        <div className="border-b border-border py-3.5" data-testid="ajuste-jornada-defecto">
+          <div className="flex items-center justify-between gap-3.5">
+            <div>
+              <p className="font-extrabold">Jornada por defecto de las empresas nuevas</p>
+              <p className="mt-0.5 text-xs font-semibold text-ink-tertiary">
+                Horas de lunes a domingo con las que nace cada empresa nueva (formulario o importador). No cambia las empresas ya creadas: su jornada se edita en Calendario. 0 = día no laborable.
+              </p>
+            </div>
+            <span className="mono shrink-0" data-testid="jornada-defecto-total">
+              {fmt(totalJornada)} h/sem
+            </span>
+          </div>
+          <div className="mt-2.5 grid grid-cols-7 gap-1.5 text-center">
+            {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((d) => (
+              <span key={d} className="micro">
+                {d}
+              </span>
+            ))}
+            {jornada.map((v, i) => (
+              <input
+                key={i}
+                className="input mono px-0 text-center"
+                aria-label={`Horas por defecto del ${['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'][i]}`}
+                value={v}
+                disabled={!esAdminGrupo}
+                onChange={(e) => setJornadaBorrador(jornada.map((x, j) => (j === i ? e.target.value : x)))}
+              />
+            ))}
+          </div>
+          {esAdminGrupo && (
+            <button type="button" className="btn btn-sm mt-2.5" disabled={jornadaBorrador === null} onClick={guardarJornada}>
+              Guardar jornada por defecto
+            </button>
           )}
         </div>
 
