@@ -10,6 +10,11 @@ export interface Departamento {
   responsableNombre: string | null;
 }
 
+/** Opciones de un select de departamento de la administración (todos los departamentos + «Sin departamento»): única fuente para ficha, inline y alta. */
+export function opcionesDepartamento(departamentos: Departamento[]): { valor: string; etiqueta: string }[] {
+  return [{ valor: '', etiqueta: 'Sin departamento' }, ...departamentos.map((d) => ({ valor: d.id, etiqueta: d.nombre }))];
+}
+
 /** departamento_select es abierto; departamento_admin no acota por empresa (no tiene empresa_id: se documenta, no se inventa filtro). */
 export function useDepartamentos() {
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);

@@ -8,6 +8,8 @@ import { useEmpresas } from '@/hooks/admin/useEmpresas';
 import { useHorasPorEmpresaYProyecto } from '@/hooks/admin/useHorasPorEmpresaYProyecto';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { Donut } from '../compartido/Donut';
+import { Pestanas, propsPanelPestana } from '../compartido/Pestanas';
+import { IconCarpeta, IconImportar } from '@/components/ui/icons';
 import { ImportadorBloque } from '../compartido/ImportadorBloque';
 import { SelectorTipologia, HEREDAR, areaDeSelector } from '../compartido/SelectorTipologia';
 import { FichaProyectoEscritorio } from './FichaProyectoEscritorio';
@@ -29,6 +31,13 @@ export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
 
   const esAdminGrupo = info.rol === 'admin_grupo';
   const [form, setForm] = useState({ empresaId: info.empresaId, codigo: '', nombre: '', tipologia: HEREDAR });
+  // Vistas: la activa vive en la URL (`?vista=importar`; sin parámetro = proyectos), como en Usuarios. Importar es solo admin_grupo;
+  // «＋ Nuevo proyecto» (formulario desplegable) lo tiene también admin_empresa, para su empresa.
+  const [formAbierto, setFormAbierto] = useState(false);
+  const vista: 'proyectos' | 'importar' = esAdminGrupo && nav.consulta.get('vista') === 'importar' ? 'importar' : 'proyectos';
+  function cambiarVista(v: 'proyectos' | 'importar') {
+    nav.ir('proyectos', { query: v === 'proyectos' ? undefined : { vista: v }, conservarScroll: true });
+  }
   // Empresas seleccionables: solo las activas (`empresa.activa` deja de ser decorativa, Lote 4), salvo la ya elegida en el formulario.
   const empresasSeleccionables = empresas.filter((e) => e.activa || e.id === form.empresaId);
   const areaDeLaEmpresa = empresas.find((e) => e.id === form.empresaId)?.areaId ?? null;
@@ -75,119 +84,160 @@ export function ProyectosEscritorio({ info }: { info: AdminInfo }) {
   const totalHoras = porProyecto.reduce((s, p) => s + p.horas, 0);
   const proyectosRosco = porProyecto.slice(0, 6);
   const coloresProyectos = coloresRosco(proyectosRosco.map((p) => p.areaId), colorDe);
+  const etiqueta = 'mb-1 block text-xs font-extrabold text-ink-tertiary';
 
   return (
-    <div className="split grid grid-cols-[300px_minmax(0,1fr)] items-start gap-4.5 max-[920px]:grid-cols-1">
-      <div className="stack space-y-4">
-        <div className="card">
-          <div className="card-head">
-            <h2 className="text-sm font-extrabold">Crear proyecto</h2>
-          </div>
-          <div className="card-body">
-            <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Empresa</label>
-            <select className="input" value={form.empresaId} disabled={!esAdminGrupo} onChange={(e) => setForm((f) => ({ ...f, empresaId: e.target.value }))}>
-              {empresasSeleccionables.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.nombre}
-                </option>
-              ))}
-            </select>
-            <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Tipología</label>
-            <SelectorTipologia value={form.tipologia} onChange={(v) => setForm((f) => ({ ...f, tipologia: v }))} areas={areas} heredarDe={{ areaId: areaDeLaEmpresa }} />
-            <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Código</label>
-            <input id="proyecto-codigo" className="input mono" value={form.codigo} onChange={(e) => setForm((f) => ({ ...f, codigo: e.target.value }))} placeholder="XIM" />
-            <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Nombre del proyecto</label>
-            <input className="input" value={form.nombre} onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))} placeholder="Ximeras" />
-            <button type="button" className="btn btn-primary full" onClick={crearProyecto}>
-              Crear proyecto
-            </button>
-          </div>
-        </div>
-        {esAdminGrupo && (
-            <div className="card">
-              <div className="card-head">
-                <h2 className="text-sm font-extrabold">Importar / Exportar</h2>
-              </div>
-              <div className="card-body">
-                <ImportadorBloque
-                  tipo="proyectos"
-                  titulo="Proyectos"
-                  descripcion="Altas masivas desde Excel. Solo crea proyectos nuevos (un código existente en su empresa es un error). Tipología vacía = hereda la de la empresa. Todo o nada."
-                  exportHref="/api/export/proyectos"
-                  exportEtiqueta="Exportar proyectos"
-                  onImportado={recargar}
-                />
-              </div>
-            </div>
-        )}
-        <div className="card">
-          <div className="card-head">
-            <h2 className="text-sm font-extrabold">Horas por proyecto</h2>
-            <span className="micro">{formatoMes(mes)}</span>
-          </div>
-          <div className="card-body">
-            <Donut total={totalHoras} segmentos={proyectosRosco.map((p, i) => ({ etiqueta: p.proyectoNombre, valor: p.horas, color: coloresProyectos[i] }))} />
-          </div>
-        </div>
-      </div>
+    <div className="space-y-4">
+      {esAdminGrupo && (
+        <Pestanas
+          pestanas={[
+            { id: 'proyectos' as const, etiqueta: 'Proyectos', Icono: IconCarpeta },
+            { id: 'importar' as const, etiqueta: 'Importar', Icono: IconImportar },
+          ]}
+          activa={vista}
+          onCambiar={cambiarVista}
+          ariaLabel="Vistas de proyectos"
+          prefijo="proyectos"
+        />
+      )}
 
-      <div className="card">
-        <div className="card-head">
-          <h2 className="text-sm font-extrabold">Proyectos</h2>
-        </div>
-        <div className="px-1.5 pb-2">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
-                <th className="border-b border-border px-2.5 py-2">Proyecto</th>
-                <th className="border-b border-border px-2.5 py-2">Empresa</th>
-                <th className="border-b border-border px-2.5 py-2 text-right">Horas · mes</th>
-                <th className="border-b border-border px-2.5 py-2">Estado</th>
-                <th className="border-b border-border px-2.5 py-2 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!loading && proyectos.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-2.5 py-4 text-sm text-ink-tertiary" data-testid="proyectos-vacio">
-                    Aún no hay proyectos — crea el primero con el formulario «Crear proyecto».{' '}
-                    <button type="button" className="btn-text" onClick={() => document.getElementById('proyecto-codigo')?.focus()}>
-                      Ir al formulario
-                    </button>
-                  </td>
-                </tr>
-              )}
-              {proyectos.map((p) => {
-                const horas = porProyecto.find((h) => h.proyectoId === p.id)?.horas ?? 0;
-                return (
-                  <tr
-                    key={p.id}
-                    className="row-link hover:bg-subtle"
-                    onClick={(e) => {
-                      if (!(e.target as HTMLElement).closest('button')) nav.ir('proyectos', { fichaId: p.id });
-                    }}
-                  >
-                    <td className="border-b border-border px-2.5 py-2.5 font-extrabold">{p.nombre}</td>
-                    <td className="border-b border-border px-2.5 py-2.5">{p.empresaNombre}</td>
-                    <td className={`mono border-b border-border px-2.5 py-2.5 text-right ${horas === 0 ? 'text-ink-tertiary' : ''}`}>{fmt(horas)}</td>
-                    <td className="border-b border-border px-2.5 py-2.5">
-                      <span className="flex items-center gap-1.5 text-xs font-extrabold text-ink-secondary">
-                        <span className={`h-[7px] w-[7px] rounded-full ${horas > 0 ? 'bg-ink-primary' : 'bg-ink-disabled'}`} />
-                        {horas > 0 ? 'Activo' : 'Sin actividad'}
-                      </span>
-                    </td>
-                    <td className="border-b border-border px-2.5 py-2.5 text-right">
-                      <button type="button" className="btn btn-sm" onClick={() => nav.ir('proyectos', { fichaId: p.id })}>
-                        Ver
-                      </button>
-                    </td>
+      {vista === 'proyectos' && (
+        <div className="split grid grid-cols-[300px_minmax(0,1fr)] items-start gap-4.5 max-[920px]:grid-cols-1" {...propsPanelPestana('proyectos', 'proyectos')}>
+          <div className="card">
+            <div className="card-head">
+              <h2 className="text-sm font-extrabold">Horas por proyecto</h2>
+              <span className="micro">{formatoMes(mes)}</span>
+            </div>
+            <div className="card-body">
+              <Donut total={totalHoras} segmentos={proyectosRosco.map((p, i) => ({ etiqueta: p.proyectoNombre, valor: p.horas, color: coloresProyectos[i] }))} />
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <h2 className="text-sm font-extrabold">
+                Proyectos <span className="micro font-bold">· {proyectos.length}</span>
+              </h2>
+              <button
+                type="button"
+                className={`btn btn-sm ${formAbierto ? '' : 'btn-primary'}`}
+                aria-expanded={formAbierto}
+                aria-controls="form-nuevo-proyecto"
+                onClick={() => setFormAbierto((v) => !v)}
+                data-testid="nuevo-proyecto-toggle"
+              >
+                {formAbierto ? 'Cerrar formulario' : '＋ Nuevo proyecto'}
+              </button>
+            </div>
+
+            {formAbierto && (
+              <div id="form-nuevo-proyecto" className="card-body border-b border-border" data-testid="form-nuevo-proyecto">
+                <h3 className="mb-3 text-[13px] font-extrabold">Crear proyecto</h3>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-x-4 gap-y-3">
+                  <div>
+                    <label className={etiqueta}>Empresa</label>
+                    <select className="input" value={form.empresaId} disabled={!esAdminGrupo} onChange={(e) => setForm((f) => ({ ...f, empresaId: e.target.value }))}>
+                      {empresasSeleccionables.map((e) => (
+                        <option key={e.id} value={e.id}>
+                          {e.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={etiqueta}>Tipología</label>
+                    <SelectorTipologia value={form.tipologia} onChange={(v) => setForm((f) => ({ ...f, tipologia: v }))} areas={areas} heredarDe={{ areaId: areaDeLaEmpresa }} />
+                  </div>
+                  <div>
+                    <label className={etiqueta}>Código</label>
+                    <input id="proyecto-codigo" className="input mono" autoFocus value={form.codigo} onChange={(e) => setForm((f) => ({ ...f, codigo: e.target.value }))} placeholder="XIM" />
+                  </div>
+                  <div>
+                    <label className={etiqueta}>Nombre del proyecto</label>
+                    <input className="input" value={form.nombre} onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))} placeholder="Ximeras" />
+                  </div>
+                </div>
+                <button type="button" className="btn btn-primary mt-4" onClick={crearProyecto}>
+                  Crear proyecto
+                </button>
+              </div>
+            )}
+
+            <div className="px-1.5 pb-2">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
+                    <th className="border-b border-border px-2.5 py-2">Proyecto</th>
+                    <th className="border-b border-border px-2.5 py-2">Empresa</th>
+                    <th className="border-b border-border px-2.5 py-2 text-right">Horas · mes</th>
+                    <th className="border-b border-border px-2.5 py-2">Estado</th>
+                    <th className="border-b border-border px-2.5 py-2 text-right">Acciones</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {!loading && proyectos.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-2.5 py-4 text-sm text-ink-tertiary" data-testid="proyectos-vacio">
+                        Aún no hay proyectos — crea el primero.{' '}
+                        {!formAbierto && (
+                          <button type="button" className="btn-text" onClick={() => setFormAbierto(true)}>
+                            ＋ Nuevo proyecto
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                  {proyectos.map((p) => {
+                    const horas = porProyecto.find((h) => h.proyectoId === p.id)?.horas ?? 0;
+                    return (
+                      <tr
+                        key={p.id}
+                        className="row-link hover:bg-subtle"
+                        onClick={(e) => {
+                          if (!(e.target as HTMLElement).closest('button')) nav.ir('proyectos', { fichaId: p.id });
+                        }}
+                      >
+                        <td className="border-b border-border px-2.5 py-2.5 font-extrabold">{p.nombre}</td>
+                        <td className="border-b border-border px-2.5 py-2.5">{p.empresaNombre}</td>
+                        <td className={`mono border-b border-border px-2.5 py-2.5 text-right ${horas === 0 ? 'text-ink-tertiary' : ''}`}>{fmt(horas)}</td>
+                        <td className="border-b border-border px-2.5 py-2.5">
+                          <span className="flex items-center gap-1.5 text-xs font-extrabold text-ink-secondary">
+                            <span className={`h-[7px] w-[7px] rounded-full ${horas > 0 ? 'bg-ink-primary' : 'bg-ink-disabled'}`} />
+                            {horas > 0 ? 'Activo' : 'Sin actividad'}
+                          </span>
+                        </td>
+                        <td className="border-b border-border px-2.5 py-2.5 text-right">
+                          <button type="button" className="btn btn-sm" onClick={() => nav.ir('proyectos', { fichaId: p.id })}>
+                            Ver
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {vista === 'importar' && (
+        <div className="card" {...propsPanelPestana('proyectos', 'importar')}>
+          <div className="card-head">
+            <h2 className="text-sm font-extrabold">Importar y exportar proyectos</h2>
+          </div>
+          <div className="card-body max-w-3xl">
+            <ImportadorBloque
+              tipo="proyectos"
+              titulo="Proyectos"
+              descripcion="Altas masivas desde Excel. Solo crea proyectos nuevos (un código existente en su empresa es un error). Tipología vacía = hereda la de la empresa. Todo o nada."
+              exportHref="/api/export/proyectos"
+              exportEtiqueta="Exportar proyectos"
+              onImportado={recargar}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

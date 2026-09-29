@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useUsuarios, type ActualizarUsuarioInput, type UsuarioAdmin } from '@/hooks/admin/useUsuarios';
-import { useDepartamentos } from '@/hooks/admin/useDepartamentos';
+import { opcionesDepartamento, useDepartamentos } from '@/hooks/admin/useDepartamentos';
 import { useEmpresas } from '@/hooks/admin/useEmpresas';
-import { useCategorias } from '@/hooks/admin/useCategorias';
+import { opcionesCategoria, useCategorias } from '@/hooks/admin/useCategorias';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { invitarUsuario } from '@/app/admin/actions';
 import { confirmar } from '@/components/ui/confirmar';
@@ -16,14 +16,15 @@ import { ImportadorBloque } from '../compartido/ImportadorBloque';
 import { CeldaEditable } from '../compartido/CeldaEditable';
 import { Pestanas, propsPanelPestana } from '../compartido/Pestanas';
 import { useNavAdmin } from '../NavAdmin';
+import { IconImportar, IconMoneda, IconUsuarios } from '@/components/ui/icons';
 import type { AdminInfo } from '../types';
 
 /** Vistas de la sección: la activa vive en la URL (`?vista=importar` / `?vista=costes`; sin parámetro = usuarios), como `?dia=` del calendario. */
 type Vista = 'usuarios' | 'importar' | 'costes';
-const PESTANAS: { id: Vista; etiqueta: string }[] = [
-  { id: 'usuarios', etiqueta: 'Usuarios' },
-  { id: 'importar', etiqueta: 'Importar' },
-  { id: 'costes', etiqueta: 'Costes' },
+const PESTANAS = [
+  { id: 'usuarios' as Vista, etiqueta: 'Usuarios', Icono: IconUsuarios },
+  { id: 'importar' as Vista, etiqueta: 'Importar', Icono: IconImportar },
+  { id: 'costes' as Vista, etiqueta: 'Costes', Icono: IconMoneda },
 ];
 
 export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
@@ -243,10 +244,9 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                 <div>
                   <label className={etiquetaCampo}>Departamento</label>
                   <select className="input" value={form.departamentoId} onChange={(e) => setForm((f) => ({ ...f, departamentoId: e.target.value }))}>
-                    <option value="">Sin departamento</option>
-                    {departamentos.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.nombre}
+                    {opcionesDepartamento(departamentos).map((o) => (
+                      <option key={o.valor} value={o.valor}>
+                        {o.etiqueta}
                       </option>
                     ))}
                   </select>
@@ -263,10 +263,9 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                 <div>
                   <label className={etiquetaCampo}>Categoría por defecto</label>
                   <select className="input" value={form.categoriaId} onChange={(e) => setForm((f) => ({ ...f, categoriaId: e.target.value }))}>
-                    <option value="">Sin categoría</option>
-                    {categorias.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.nombre}
+                    {opcionesCategoria(categorias).map((o) => (
+                      <option key={o.valor} value={o.valor}>
+                        {o.etiqueta}
                       </option>
                     ))}
                   </select>
@@ -392,7 +391,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                         <CeldaEditable
                           editable={puedeEditar}
                           valor={u.departamentoId ?? ''}
-                          opciones={[{ valor: '', etiqueta: 'Sin departamento' }, ...departamentos.map((d) => ({ valor: d.id, etiqueta: d.nombre }))]}
+                          opciones={opcionesDepartamento(departamentos)}
                           abierta={abierta('departamento')}
                           guardada={guardada('departamento')}
                           onAbrir={() => setCelda({ id: u.id, campo: 'departamento' })}
@@ -418,7 +417,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                         <CeldaEditable
                           editable={puedeEditar}
                           valor={u.categoriaId ?? ''}
-                          opciones={[{ valor: '', etiqueta: 'Sin categoría' }, ...categorias.map((c) => ({ valor: c.id, etiqueta: c.nombre }))]}
+                          opciones={opcionesCategoria(categorias)}
                           abierta={abierta('categoria')}
                           guardada={guardada('categoria')}
                           onAbrir={() => setCelda({ id: u.id, campo: 'categoria' })}

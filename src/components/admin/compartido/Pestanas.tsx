@@ -1,9 +1,10 @@
 'use client';
 
 import { useRef } from 'react';
+import type { IconProps } from '@/components/ui/icons';
 
 interface Props<T extends string> {
-  pestanas: { id: T; etiqueta: string }[];
+  pestanas: { id: T; etiqueta: string; Icono?: (props: IconProps) => React.JSX.Element }[];
   activa: T;
   onCambiar: (id: T) => void;
   ariaLabel: string;
@@ -55,10 +56,11 @@ export function Pestanas<T extends string>({ pestanas, activa, onCambiar, ariaLa
             tabIndex={seleccionada ? 0 : -1}
             onClick={() => onCambiar(p.id)}
             onKeyDown={(e) => onKeyDown(e, i)}
-            className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-extrabold ${
+            className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-extrabold ${
               seleccionada ? 'border-ink-primary text-ink-primary' : 'border-transparent text-ink-tertiary hover:text-ink-primary'
             }`}
           >
+            {p.Icono && <p.Icono size={16} />}
             {p.etiqueta}
           </button>
         );

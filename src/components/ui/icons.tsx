@@ -281,3 +281,26 @@ export function IconMenu({ className, size = 17 }: IconProps) {
     </svg>
   );
 }
+
+/** Importar: bandeja con flecha hacia arriba (subir un archivo). */
+export function IconImportar({ className, size = 16 }: IconProps) {
+  return (
+    <svg {...base(size, 1.8)} className={className}>
+      <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+      <path d="M12 16V4" />
+      <path d="m7.5 8.5 4.5-4.5 4.5 4.5" />
+    </svg>
+  );
+}
+
+/** Costes / dinero: moneda con «€» y el canto de otra moneda detrás (distinta de Tarifas, que es una sola moneda centrada). */
+export function IconMoneda({ className, size = 16 }: IconProps) {
+  return (
+    <svg {...base(size, 1.8)} className={className}>
+      <circle cx="10" cy="10" r="7" />
+      <path d="M12.5 7.6a3.2 3.2 0 1 0 0 4.8" />
+      <path d="M7.2 9h4.3M7.2 11h4.3" />
+      <path d="M16.5 19.2A8.5 8.5 0 0 0 20.2 12" />
+    </svg>
+  );
+}

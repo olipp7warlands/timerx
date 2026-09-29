@@ -4,8 +4,8 @@ import { hoyMadrid } from '@/lib/fechas';
 import { useMemo, useState } from 'react';
 import type { UsuarioAdmin, ActualizarUsuarioInput } from '@/hooks/admin/useUsuarios';
 import { useEmpresas } from '@/hooks/admin/useEmpresas';
-import { useDepartamentos } from '@/hooks/admin/useDepartamentos';
-import { useCategorias } from '@/hooks/admin/useCategorias';
+import { opcionesDepartamento, useDepartamentos } from '@/hooks/admin/useDepartamentos';
+import { opcionesCategoria, useCategorias } from '@/hooks/admin/useCategorias';
 import { useProyectosAdmin } from '@/hooks/admin/useProyectosAdmin';
 import { useAsignacionesEmpleado } from '@/hooks/admin/useAsignacionesEmpleado';
 import { useAsignaciones } from '@/hooks/admin/useAsignaciones';
@@ -310,10 +310,9 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
                 <div>
                   <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Departamento</label>
                   <select className="input" value={draft.departamentoId} onChange={(e) => setDraft((d) => ({ ...d, departamentoId: e.target.value }))}>
-                    <option value="">Sin departamento</option>
-                    {departamentos.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.nombre}
+                    {opcionesDepartamento(departamentos).map((o) => (
+                      <option key={o.valor} value={o.valor}>
+                        {o.etiqueta}
                       </option>
                     ))}
                   </select>
@@ -321,10 +320,9 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
                 <div>
                   <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Categoría</label>
                   <select className="input" value={draft.categoriaId} onChange={(e) => setDraft((d) => ({ ...d, categoriaId: e.target.value }))}>
-                    <option value="">Sin categoría</option>
-                    {categorias.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.nombre}
+                    {opcionesCategoria(categorias).map((o) => (
+                      <option key={o.valor} value={o.valor}>
+                        {o.etiqueta}
                       </option>
                     ))}
                   </select>

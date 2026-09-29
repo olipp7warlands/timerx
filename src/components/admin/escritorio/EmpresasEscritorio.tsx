@@ -10,6 +10,8 @@ import { useProyectosAdmin } from '@/hooks/admin/useProyectosAdmin';
 import { useUsuarios } from '@/hooks/admin/useUsuarios';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { Donut } from '../compartido/Donut';
+import { Pestanas, propsPanelPestana } from '../compartido/Pestanas';
+import { IconEmpresa, IconImportar } from '@/components/ui/icons';
 import { ImportadorBloque } from '../compartido/ImportadorBloque';
 import { SelectorTipologia, SIN_TIPOLOGIA, areaDeSelector } from '../compartido/SelectorTipologia';
 import { FichaEmpresaEscritorio } from './FichaEmpresaEscritorio';
@@ -35,6 +37,12 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
   const [nombre, setNombre] = useState('');
   const [cif, setCif] = useState('');
   const [tipologia, setTipologia] = useState(SIN_TIPOLOGIA);
+  // Vistas: la activa vive en la URL (`?vista=importar`; sin parámetro = empresas), como en Usuarios. Importar es solo admin_grupo.
+  const [formAbierto, setFormAbierto] = useState(false);
+  const vista: 'empresas' | 'importar' = esAdminGrupo && nav.consulta.get('vista') === 'importar' ? 'importar' : 'empresas';
+  function cambiarVista(v: 'empresas' | 'importar') {
+    nav.ir('empresas', { query: v === 'empresas' ? undefined : { vista: v }, conservarScroll: true });
+  }
 
   // Ficha derivada de la URL. Con `empresas` aún cargando se ESPERA (nunca se redirige al listado);
   // solo si tras cargar el id no existe se vuelve al listado con aviso.
@@ -85,46 +93,25 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
 
   const totalHoras = porEmpresa.reduce((s, e) => s + e.horas, 0);
   const coloresEmpresas = coloresRosco(porEmpresa.map((e) => e.areaId), colorDe);
+  const etiqueta = 'mb-1 block text-xs font-extrabold text-ink-tertiary';
 
   return (
     <div className="space-y-4">
-      <div className="split grid grid-cols-[300px_minmax(0,1fr)] items-start gap-4.5 max-[920px]:grid-cols-1">
-        <div className="stack space-y-4">
-          {esAdminGrupo && (
-            <div className="card">
-              <div className="card-head">
-                <h2 className="text-sm font-extrabold">Crear empresa</h2>
-              </div>
-              <div className="card-body">
-                <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Nombre</label>
-                <input id="empresa-nombre" className="input" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Wowinx SL" />
-                <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">CIF</label>
-                <input className="input mono" value={cif} onChange={(e) => setCif(e.target.value)} placeholder="B-12345678" />
-                <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Tipología (área del mapa)</label>
-                <SelectorTipologia value={tipologia} onChange={setTipologia} areas={areas} />
-                <button type="button" className="btn btn-primary full" onClick={crearEmpresa}>
-                  Crear empresa
-                </button>
-              </div>
-            </div>
-          )}
-          {esAdminGrupo && (
-            <div className="card">
-              <div className="card-head">
-                <h2 className="text-sm font-extrabold">Importar / Exportar</h2>
-              </div>
-              <div className="card-body">
-                <ImportadorBloque
-                  tipo="empresas"
-                  titulo="Empresas"
-                  descripcion="Altas masivas desde Excel. Solo crea empresas nuevas (un nombre existente es un error). Todo o nada; cada empresa nace con su jornada."
-                  exportHref="/api/export/empresas"
-                  exportEtiqueta="Exportar empresas"
-                  onImportado={recargar}
-                />
-              </div>
-            </div>
-          )}
+      {esAdminGrupo && (
+        <Pestanas
+          pestanas={[
+            { id: 'empresas' as const, etiqueta: 'Empresas', Icono: IconEmpresa },
+            { id: 'importar' as const, etiqueta: 'Importar', Icono: IconImportar },
+          ]}
+          activa={vista}
+          onCambiar={cambiarVista}
+          ariaLabel="Vistas de empresas"
+          prefijo="empresas"
+        />
+      )}
+
+      {vista === 'empresas' && (
+        <div className="split grid grid-cols-[300px_minmax(0,1fr)] items-start gap-4.5 max-[920px]:grid-cols-1" {...propsPanelPestana('empresas', 'empresas')}>
           <div className="card">
             <div className="card-head">
               <h2 className="text-sm font-extrabold">Horas recibidas</h2>
@@ -134,83 +121,141 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
               <Donut total={totalHoras} segmentos={porEmpresa.map((e, i) => ({ etiqueta: e.empresaNombre, valor: e.horas, color: coloresEmpresas[i] }))} />
             </div>
           </div>
-        </div>
 
-        <div className="card">
-          <div className="card-head">
-            <h2 className="text-sm font-extrabold">Empresas del grupo</h2>
-          </div>
-          <div className="px-1.5 pb-2">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
-                  <th className="border-b border-border px-2.5 py-2">Empresa</th>
-                  <th className="border-b border-border px-2.5 py-2">CIF</th>
-                  <th className="border-b border-border px-2.5 py-2 text-right">Proyectos</th>
-                  <th className="border-b border-border px-2.5 py-2 text-right">Horas · mes</th>
-                  <th className="border-b border-border px-2.5 py-2 text-right">Refacturación · mes</th>
-                  <th className="border-b border-border px-2.5 py-2">Estado</th>
-                  <th className="border-b border-border px-2.5 py-2 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {!loading && empresas.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="px-2.5 py-4 text-sm text-ink-tertiary" data-testid="empresas-vacio">
-                      {esAdminGrupo ? (
-                        <>
-                          Aún no hay empresas — crea la primera con el formulario «Crear empresa».{' '}
-                          <button type="button" className="btn-text" onClick={() => document.getElementById('empresa-nombre')?.focus()}>
-                            Ir al formulario
-                          </button>
-                        </>
-                      ) : (
-                        'Aún no hay empresas en el grupo.'
-                      )}
-                    </td>
+          <div className="card">
+            <div className="card-head">
+              <h2 className="text-sm font-extrabold">
+                Empresas del grupo <span className="micro font-bold">· {empresas.length}</span>
+              </h2>
+              {esAdminGrupo && (
+                <button
+                  type="button"
+                  className={`btn btn-sm ${formAbierto ? '' : 'btn-primary'}`}
+                  aria-expanded={formAbierto}
+                  aria-controls="form-nueva-empresa"
+                  onClick={() => setFormAbierto((v) => !v)}
+                  data-testid="nueva-empresa-toggle"
+                >
+                  {formAbierto ? 'Cerrar formulario' : '＋ Nueva empresa'}
+                </button>
+              )}
+            </div>
+
+            {esAdminGrupo && formAbierto && (
+              <div id="form-nueva-empresa" className="card-body border-b border-border" data-testid="form-nueva-empresa">
+                <h3 className="mb-3 text-[13px] font-extrabold">Crear empresa</h3>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-x-4 gap-y-3">
+                  <div>
+                    <label className={etiqueta}>Nombre</label>
+                    <input id="empresa-nombre" className="input" autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Wowinx SL" />
+                  </div>
+                  <div>
+                    <label className={etiqueta}>CIF</label>
+                    <input className="input mono" value={cif} onChange={(e) => setCif(e.target.value)} placeholder="B-12345678" />
+                  </div>
+                  <div>
+                    <label className={etiqueta}>Tipología (área del mapa)</label>
+                    <SelectorTipologia value={tipologia} onChange={setTipologia} areas={areas} />
+                  </div>
+                </div>
+                <button type="button" className="btn btn-primary mt-4" onClick={crearEmpresa}>
+                  Crear empresa
+                </button>
+              </div>
+            )}
+
+            <div className="px-1.5 pb-2">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
+                    <th className="border-b border-border px-2.5 py-2">Empresa</th>
+                    <th className="border-b border-border px-2.5 py-2">CIF</th>
+                    <th className="border-b border-border px-2.5 py-2 text-right">Proyectos</th>
+                    <th className="border-b border-border px-2.5 py-2 text-right">Horas · mes</th>
+                    <th className="border-b border-border px-2.5 py-2 text-right">Refacturación · mes</th>
+                    <th className="border-b border-border px-2.5 py-2">Estado</th>
+                    <th className="border-b border-border px-2.5 py-2 text-right">Acciones</th>
                   </tr>
-                )}
-                {empresas.map((e) => {
-                  const horasEmpresa = porEmpresa.find((p) => p.empresaId === e.id)?.horas ?? 0;
-                  const proyectosActivos = proyectos.filter((p) => p.empresaId === e.id && p.activo).length;
-                  const importe = refact.filter((l) => l.empresaDestinoId === e.id).reduce((s, l) => s + l.importe, 0);
-                  return (
-                    <tr
-                      key={e.id}
-                      className={`row-link hover:bg-subtle ${e.activa ? '' : 'opacity-60'}`}
-                      onClick={(ev) => {
-                        if (!(ev.target as HTMLElement).closest('button')) nav.ir('empresas', { fichaId: e.id });
-                      }}
-                    >
-                      <td className="border-b border-border px-2.5 py-2.5 font-extrabold">
-                        {e.nombre}
-                        {!e.activa && <span className="mapa-tag ml-2 align-middle">Inactiva</span>}
-                      </td>
-                      <td className="mono border-b border-border px-2.5 py-2.5">{e.cif ?? '—'}</td>
-                      <td className="mono border-b border-border px-2.5 py-2.5 text-right">{proyectosActivos}</td>
-                      <td className="mono border-b border-border px-2.5 py-2.5 text-right">{fmt(horasEmpresa)}</td>
-                      <td className="mono border-b border-border px-2.5 py-2.5 text-right">{importe.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</td>
-                      <td className="border-b border-border px-2.5 py-2.5">
-                        <span className="flex items-center gap-1.5 text-xs font-extrabold text-ink-secondary">
-                          <span className={`h-[7px] w-[7px] rounded-full ${e.activa ? 'bg-ink-primary' : 'bg-ink-disabled'}`} />
-                          {e.activa ? 'Activa' : 'Inactiva'}
-                        </span>
-                      </td>
-                      <td className="border-b border-border px-2.5 py-2.5 text-right">
-                        <button type="button" className="btn btn-sm" onClick={() => nav.ir('empresas', { fichaId: e.id })}>
-                          Ver
-                        </button>
+                </thead>
+                <tbody>
+                  {!loading && empresas.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="px-2.5 py-4 text-sm text-ink-tertiary" data-testid="empresas-vacio">
+                        {esAdminGrupo ? (
+                          <>
+                            Aún no hay empresas — crea la primera.{' '}
+                            {!formAbierto && (
+                              <button type="button" className="btn-text" onClick={() => setFormAbierto(true)}>
+                                ＋ Nueva empresa
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          'Aún no hay empresas en el grupo.'
+                        )}
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <p className="foot px-3 pb-2.5 pt-3 text-xs text-ink-tertiary">La empresa del proyecto es la que recibe el servicio: contra ella se calcula la refacturación.</p>
+                  )}
+                  {empresas.map((e) => {
+                    const horasEmpresa = porEmpresa.find((p) => p.empresaId === e.id)?.horas ?? 0;
+                    const proyectosActivos = proyectos.filter((p) => p.empresaId === e.id && p.activo).length;
+                    const importe = refact.filter((l) => l.empresaDestinoId === e.id).reduce((s, l) => s + l.importe, 0);
+                    return (
+                      <tr
+                        key={e.id}
+                        className={`row-link hover:bg-subtle ${e.activa ? '' : 'opacity-60'}`}
+                        onClick={(ev) => {
+                          if (!(ev.target as HTMLElement).closest('button')) nav.ir('empresas', { fichaId: e.id });
+                        }}
+                      >
+                        <td className="border-b border-border px-2.5 py-2.5 font-extrabold">
+                          {e.nombre}
+                          {!e.activa && <span className="mapa-tag ml-2 align-middle">Inactiva</span>}
+                        </td>
+                        <td className="mono border-b border-border px-2.5 py-2.5">{e.cif ?? '—'}</td>
+                        <td className="mono border-b border-border px-2.5 py-2.5 text-right">{proyectosActivos}</td>
+                        <td className="mono border-b border-border px-2.5 py-2.5 text-right">{fmt(horasEmpresa)}</td>
+                        <td className="mono border-b border-border px-2.5 py-2.5 text-right">{importe.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</td>
+                        <td className="border-b border-border px-2.5 py-2.5">
+                          <span className="flex items-center gap-1.5 text-xs font-extrabold text-ink-secondary">
+                            <span className={`h-[7px] w-[7px] rounded-full ${e.activa ? 'bg-ink-primary' : 'bg-ink-disabled'}`} />
+                            {e.activa ? 'Activa' : 'Inactiva'}
+                          </span>
+                        </td>
+                        <td className="border-b border-border px-2.5 py-2.5 text-right">
+                          <button type="button" className="btn btn-sm" onClick={() => nav.ir('empresas', { fichaId: e.id })}>
+                            Ver
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <p className="foot px-3 pb-2.5 pt-3 text-xs text-ink-tertiary">La empresa del proyecto es la que recibe el servicio: contra ella se calcula la refacturación.</p>
+              {!esAdminGrupo && <p className="px-3 pb-2 text-xs text-ink-tertiary">El alta de empresas es solo para admin de grupo.</p>}
+            </div>
           </div>
         </div>
-      </div>
-      {!esAdminGrupo && <p className="text-xs text-ink-tertiary">El alta de empresas es solo para admin de grupo.</p>}
+      )}
+
+      {vista === 'importar' && (
+        <div className="card" {...propsPanelPestana('empresas', 'importar')}>
+          <div className="card-head">
+            <h2 className="text-sm font-extrabold">Importar y exportar empresas</h2>
+          </div>
+          <div className="card-body max-w-3xl">
+            <ImportadorBloque
+              tipo="empresas"
+              titulo="Empresas"
+              descripcion="Altas masivas desde Excel. Solo crea empresas nuevas (un nombre existente es un error). Todo o nada; cada empresa nace con su jornada."
+              exportHref="/api/export/empresas"
+              exportEtiqueta="Exportar empresas"
+              onImportado={recargar}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
