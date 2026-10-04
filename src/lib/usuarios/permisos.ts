@@ -27,7 +27,7 @@ export function errorAlta(actor: Actor, input: { empresaId: string; rol: string 
   if (actor.rol !== 'admin_empresa') return 'Sin permisos para invitar usuarios';
   if (input.empresaId !== actor.empresa_id) return 'Un admin de empresa solo puede invitar dentro de su propia empresa';
   if (!(ROLES_NO_ADMIN as readonly string[]).includes(input.rol)) {
-    return 'Un admin de empresa solo puede dar de alta empleados y responsables de proyecto: los roles de administrador los asigna el admin del grupo';
+    return 'Un admin de empresa solo puede dar de alta profesionales y responsables de proyecto: los roles de administrador los asigna el admin del grupo';
   }
   return null;
 }

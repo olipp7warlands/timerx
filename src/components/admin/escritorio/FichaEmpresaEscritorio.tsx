@@ -102,10 +102,10 @@ export function FichaEmpresaEscritorio({
     }
     const empleadosActivos = empleadosDeEmpresa.filter((u) => u.activo);
     if (empleadosActivos.length > 0) {
-      toast(`No se puede desactivar: tiene ${empleadosActivos.length} empleado${empleadosActivos.length === 1 ? '' : 's'} activo${empleadosActivos.length === 1 ? '' : 's'}.`, 'error');
+      toast(`No se puede desactivar: tiene ${empleadosActivos.length} profesional${empleadosActivos.length === 1 ? '' : 'es'} en activo.`, 'error');
       return;
     }
-    if (!confirmar(`¿Desactivar ${empresa.nombre}? No tiene proyectos activos ni empleados activos.`)) return;
+    if (!confirmar(`¿Desactivar ${empresa.nombre}? No tiene proyectos activos ni profesionales en activo.`)) return;
     const { error } = await onDesactivar(empresa.id);
     if (error) toast(error, 'error');
     else toast(`${empresa.nombre} desactivada`);
@@ -158,7 +158,7 @@ export function FichaEmpresaEscritorio({
       <div className="mb-4 grid grid-cols-4 gap-3.5 max-[1100px]:grid-cols-2">
         <div className="card p-4">
           <p className="mono text-2xl font-extrabold">{empleadosDeEmpresa.length}</p>
-          <p className="micro mt-1">Empleados</p>
+          <p className="micro mt-1">Profesionales</p>
         </div>
         <div className="card p-4">
           <p className="mono text-2xl font-extrabold">
@@ -243,7 +243,7 @@ export function FichaEmpresaEscritorio({
 
         <div className="card">
           <div className="card-head">
-            <h2 className="text-sm font-extrabold">Empleados</h2>
+            <h2 className="text-sm font-extrabold">Profesionales</h2>
             {puedeCrearAqui && (
               <button type="button" className="btn btn-sm" onClick={() => onIrAInvitarUsuario(empresa.id)}>
                 ＋ Invitar usuario ›
@@ -253,7 +253,7 @@ export function FichaEmpresaEscritorio({
           <div className="px-1.5 pb-2">
             {empleadosDeEmpresa.length === 0 ? (
               <div className="px-3 pb-1 pt-3" data-testid="empresa-sin-empleados">
-                <p className="text-sm text-ink-tertiary">{puedeCrearAqui ? 'Sin empleados — invita al primero.' : 'Esta empresa aún no tiene empleados.'}</p>
+                <p className="text-sm text-ink-tertiary">{puedeCrearAqui ? 'Sin profesionales — invita a la primera persona.' : 'Esta empresa aún no tiene profesionales.'}</p>
                 {puedeCrearAqui && (
                   <button type="button" className="btn btn-primary btn-sm mt-3" onClick={() => onIrAInvitarUsuario(empresa.id)}>
                     ＋ Invitar al primer usuario ›
@@ -266,7 +266,7 @@ export function FichaEmpresaEscritorio({
                 <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
                   <th className="border-b border-border px-2.5 py-2">Nombre</th>
                   <th className="border-b border-border px-2.5 py-2">Departamento</th>
-                  <th className="border-b border-border px-2.5 py-2">Categoría</th>
+                  <th className="border-b border-border px-2.5 py-2">Especialidad</th>
                   <th className="border-b border-border px-2.5 py-2">Rol</th>
                 </tr>
               </thead>
@@ -353,7 +353,7 @@ export function FichaEmpresaEscritorio({
                     </button>
                   </div>
                 )}
-                <p className="foot mt-2.5 text-xs text-ink-tertiary">Desactivar exige no tener proyectos activos ni empleados activos.</p>
+                <p className="foot mt-2.5 text-xs text-ink-tertiary">Desactivar exige no tener proyectos activos ni profesionales en activo.</p>
               </>
             ) : (
               <p className="text-sm text-ink-tertiary">Editar y desactivar empresas es solo para admin de grupo.</p>

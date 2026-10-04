@@ -69,7 +69,7 @@ export function AusenciasEscritorio({ info }: { info: AdminInfo }) {
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
-                <th className="border-b border-border px-2.5 py-2">Empleado</th>
+                <th className="border-b border-border px-2.5 py-2">Profesional</th>
                 <th className="border-b border-border px-2.5 py-2">Tipo</th>
                 <th className="border-b border-border px-2.5 py-2">Fechas</th>
                 <th className="border-b border-border px-2.5 py-2">Estado</th>
@@ -103,7 +103,7 @@ export function AusenciasEscritorio({ info }: { info: AdminInfo }) {
           </table>
         )}
         <p className="foot px-3 pb-2.5 pt-3 text-xs text-ink-tertiary">
-          Al aprobarse, los días quedan bloqueados en el registro del empleado y cuentan como ausencia en el informe FTE.
+          Al aprobarse, los días quedan bloqueados en el registro del profesional y cuentan como ausencia en el informe FTE.
         </p>
       </div>
     </div>

@@ -30,7 +30,7 @@ export function CategoriasEscritorio({ info }: { info: AdminInfo }) {
     const { error } = await crearCategoria(nombreCat, deptCatId || null);
     if (error) toast(error, 'error');
     else {
-      toast(`Categoría "${nombreCat}" creada`);
+      toast(`Especialidad "${nombreCat}" creada`);
       setNombreCat('');
       setDeptCatId('');
     }
@@ -52,7 +52,7 @@ export function CategoriasEscritorio({ info }: { info: AdminInfo }) {
         <div className="stack space-y-4">
           <div className="card">
             <div className="card-head">
-              <h2 className="text-sm font-extrabold">Crear categoría</h2>
+              <h2 className="text-sm font-extrabold">Crear especialidad</h2>
             </div>
             <div className="card-body">
               <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Nombre</label>
@@ -60,14 +60,14 @@ export function CategoriasEscritorio({ info }: { info: AdminInfo }) {
               <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Departamento</label>
               <select className="input" value={deptCatId} onChange={(e) => setDeptCatId(e.target.value)}>
                 <option value="">Global (todos los departamentos)</option>
-                {departamentos.map((d) => (
+                {departamentos.filter((d) => d.activo).map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.nombre}
                   </option>
                 ))}
               </select>
               <button type="button" className="btn full" onClick={onCrearCategoria}>
-                Crear categoría
+                Crear especialidad
               </button>
             </div>
           </div>
@@ -76,9 +76,9 @@ export function CategoriasEscritorio({ info }: { info: AdminInfo }) {
               <h2 className="text-sm font-extrabold">Crear subcategoría</h2>
             </div>
             <div className="card-body">
-              <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Categoría</label>
+              <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Especialidad</label>
               <select className="input" value={catId} onChange={(e) => setCatId(e.target.value)}>
-                <option value="">Selecciona categoría</option>
+                <option value="">Selecciona especialidad</option>
                 {categorias.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.nombre}
@@ -100,7 +100,7 @@ export function CategoriasEscritorio({ info }: { info: AdminInfo }) {
               <ImportadorBloque
                 tipo="categorias"
                 titulo="Catálogo de tareas"
-                descripcion="Altas masivas desde Excel, una fila por tarea. Crea categorías y tareas nuevas (una tarea existente es un error; no reubica categorías). Todo o nada."
+                descripcion="Altas masivas desde Excel, una fila por tarea. Crea especialidades y tareas nuevas (una tarea existente es un error; no reubica especialidades). Todo o nada."
                 exportHref="/api/export/categorias"
                 exportEtiqueta="Exportar catálogo"
                 onImportado={recargar}
@@ -136,7 +136,7 @@ export function CategoriasEscritorio({ info }: { info: AdminInfo }) {
           <p className="foot mt-3 text-xs text-ink-tertiary">Desactivar una subcategoría la oculta de los selectores sin tocar el histórico de imputaciones.</p>
         </div>
       </div>
-      {!esAdminGrupo && <p className="text-xs text-ink-tertiary md:col-span-2">El alta de categorías es solo para admin de grupo.</p>}
+      {!esAdminGrupo && <p className="text-xs text-ink-tertiary md:col-span-2">El alta de especialidades es solo para admin de grupo.</p>}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { MenuUsuarioMovil } from '@/components/ui/MenuUsuario';
 import { IconMenu, IconReloj } from '@/components/ui/icons';
-import { GRUPOS_SECCIONES, SECCIONES_MOVIL_FUNCIONALES } from '../secciones';
+import { gruposVisibles, SECCIONES_MOVIL_FUNCIONALES } from '../secciones';
 import { useNavAdmin } from '../NavAdmin';
 import type { AdminInfo, SeccionAdmin } from '../types';
 import { InicioMovil } from './InicioMovil';
@@ -23,7 +23,8 @@ const ETIQUETAS: Record<SeccionAdmin, string> = {
   ausencias: 'Ausencias',
   empresas: 'Empresas',
   proyectos: 'Proyectos',
-  categorias: 'Categorías',
+  departamentos: 'Departamentos',
+  especialidades: 'Especialidades',
   calendario: 'Calendario',
   mapa: 'Mapa',
   control: 'Control',
@@ -83,7 +84,7 @@ export function ShellMovilAdmin({ info }: { info: AdminInfo }) {
           </span>
           Horas Grupo
         </div>
-        {GRUPOS_SECCIONES.map((g) => (
+        {gruposVisibles(info.rol).map((g) => (
           <div key={g.etiqueta}>
             <p className="micro px-3 pb-1 pt-3 first:pt-0">{g.etiqueta}</p>
             {g.items.map((item) => (

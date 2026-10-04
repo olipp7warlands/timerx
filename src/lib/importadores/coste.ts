@@ -26,7 +26,7 @@ export const importadorCoste = definir<FilaCoste>({
   plantilla: {
     hoja: 'Coste por hora',
     columnas: [
-      { cabecera: 'email', obligatoria: true, descripcion: 'Email del empleado (identificador único; nunca el nombre). Debe existir ya.', ejemplo: 'ana.ruiz@empresa.com' },
+      { cabecera: 'email', obligatoria: true, descripcion: 'Email del profesional (identificador único; nunca el nombre). Debe existir ya.', ejemplo: 'ana.ruiz@empresa.com' },
       { cabecera: 'coste_hora', obligatoria: true, descripcion: 'Coste interno de una hora de esa persona, en euros. Número mayor o igual que 0; coma o punto decimal.', ejemplo: '27,50' },
       {
         cabecera: 'desde',

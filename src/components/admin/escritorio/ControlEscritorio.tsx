@@ -80,7 +80,7 @@ export function ControlEscritorio({ info }: { info: AdminInfo }) {
 
   async function guardarImputacion() {
     if (!empleadoIdEfectivo || !proyectoIdEfectivo || !subcategoriaEfectiva || !form.fecha || !form.horas) {
-      toast('Completa empleado, proyecto, subcategoría, fecha y horas', 'error');
+      toast('Completa profesional, proyecto, subcategoría, fecha y horas', 'error');
       return;
     }
     if (descripcionObligatoria && !form.descripcion.trim()) {
@@ -124,10 +124,10 @@ export function ControlEscritorio({ info }: { info: AdminInfo }) {
             <h2 className="text-sm font-extrabold">Imputación directa</h2>
           </div>
           <div className="card-body space-y-1">
-            <p className="text-xs text-ink-tertiary">{info.rol === 'admin_grupo' ? 'Registra horas de cualquier empleado en una fecha concreta. Entra como aprobada.' : 'Registra horas de empleados de tu empresa en proyectos de tu empresa. Entra como aprobada; el resto de casos van por el flujo normal (el empleado computa y aprueba la empresa destino).'}</p>
-            <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Empleado</label>
+            <p className="text-xs text-ink-tertiary">{info.rol === 'admin_grupo' ? 'Registra horas de cualquier profesional en una fecha concreta. Entra como aprobada.' : 'Registra horas de profesionales de tu empresa en proyectos de tu empresa. Entra como aprobada; el resto de casos van por el flujo normal (el profesional computa y aprueba la empresa destino).'}</p>
+            <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Profesional</label>
             <select className="input" value={empleadoIdEfectivo} onChange={(e) => setForm((f) => ({ ...f, empleadoId: e.target.value }))}>
-              <option value="">Selecciona empleado</option>
+              <option value="">Selecciona profesional</option>
               {usuarios.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.nombre}
@@ -136,7 +136,7 @@ export function ControlEscritorio({ info }: { info: AdminInfo }) {
             </select>
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Proyecto</label>
             {empleadoIdEfectivo && proyectosDisponibles.length === 0 ? (
-              <p className="text-xs text-ink-tertiary">Este empleado no tiene proyectos asignados para esta fecha.</p>
+              <p className="text-xs text-ink-tertiary">Este profesional no tiene proyectos asignados para esta fecha.</p>
             ) : (
               <select className="input" value={proyectoIdEfectivo} onChange={(e) => setForm((f) => ({ ...f, proyectoId: e.target.value }))}>
                 <option value="">Selecciona proyecto</option>
@@ -189,7 +189,7 @@ export function ControlEscritorio({ info }: { info: AdminInfo }) {
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
-                  <th className="border-b border-border px-2.5 py-2">Empleado</th>
+                  <th className="border-b border-border px-2.5 py-2">Profesional</th>
                   <th className="border-b border-border px-2.5 py-2">Fecha</th>
                   <th className="border-b border-border px-2.5 py-2 text-right">Requerido</th>
                   <th className="border-b border-border px-2.5 py-2 text-right">Imputado</th>

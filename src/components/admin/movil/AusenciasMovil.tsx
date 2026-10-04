@@ -59,7 +59,7 @@ export function AusenciasMovil() {
           )}
         </div>
       ))}
-      <p className="micro mt-1.5">Al aprobar, los días se bloquean en el registro del empleado y descuentan horas requeridas.</p>
+      <p className="micro mt-1.5">Al aprobar, los días se bloquean en el registro del profesional y descuentan horas requeridas.</p>
     </div>
   );
 }

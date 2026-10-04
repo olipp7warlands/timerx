@@ -17,6 +17,7 @@ import { navegar } from '@/lib/nav/navegar';
 import { parseRutaEmpleado } from '@/lib/nav/rutas';
 import { ToastProvider, useToast } from './compartido/Toast';
 import { SoporteNovedadProvider } from '@/hooks/useNovedadSoporte';
+import { BannerVersion } from '@/components/ui/BannerVersion';
 import { ShellMovil } from './movil/ShellMovil';
 import { ShellEscritorio } from './escritorio/ShellEscritorio';
 import type { RolUsuario } from '@/lib/auth/roles';
@@ -282,6 +283,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email
 export function EmpleadoApp(props: Props) {
   return (
     <ToastProvider>
+      <BannerVersion />
       <SoporteNovedadProvider>
         <EmpleadoAppInterno {...props} />
       </SoporteNovedadProvider>

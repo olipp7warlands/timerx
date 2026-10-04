@@ -77,7 +77,8 @@ export async function procesar(def: Importador, archivo: File | null, ejecutar: 
 
   const obligatorias = def.plantilla.columnas.filter((c) => c.obligatoria).map((c) => c.cabecera);
   const opcionales = [...def.plantilla.columnas.filter((c) => !c.obligatoria).map((c) => c.cabecera), ...(def.ignoradas ?? [])];
-  const leido = await leerXlsx(Buffer.from(await archivo.arrayBuffer()), obligatorias, opcionales);
+  const alias = Object.fromEntries(def.plantilla.columnas.flatMap((c) => (c.alias ?? []).map((a) => [a, c.cabecera])));
+  const leido = await leerXlsx(Buffer.from(await archivo.arrayBuffer()), obligatorias, opcionales, alias);
   if (!leido.ok) return { ok: false, error: leido.error };
   if (leido.filas.length === 0) return { ok: false, error: 'El archivo no contiene ninguna fila de datos (debajo de la cabecera).' };
 

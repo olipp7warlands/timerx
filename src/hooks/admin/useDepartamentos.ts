@@ -8,11 +8,15 @@ export interface Departamento {
   nombre: string;
   responsableId: string | null;
   responsableNombre: string | null;
+  activo: boolean;
 }
 
-/** Opciones de un select de departamento de la administración (todos los departamentos + «Sin departamento»): única fuente para ficha, inline y alta. */
-export function opcionesDepartamento(departamentos: Departamento[]): { valor: string; etiqueta: string }[] {
-  return [{ valor: '', etiqueta: 'Sin departamento' }, ...departamentos.map((d) => ({ valor: d.id, etiqueta: d.nombre }))];
+/**
+ * Opciones de un select de departamento de la administración (los ACTIVOS + «Sin departamento»): única fuente para ficha, inline y alta.
+ * `incluirId` mantiene visible el departamento que la fila ya tiene aunque esté inactivo (para que el select no se quede en blanco).
+ */
+export function opcionesDepartamento(departamentos: Departamento[], incluirId?: string | null): { valor: string; etiqueta: string }[] {
+  return [{ valor: '', etiqueta: 'Sin departamento' }, ...departamentos.filter((d) => d.activo || d.id === incluirId).map((d) => ({ valor: d.id, etiqueta: d.nombre }))];
 }
 
 /** departamento_select es abierto; departamento_admin no acota por empresa (no tiene empresa_id: se documenta, no se inventa filtro). */
@@ -23,13 +27,14 @@ export function useDepartamentos() {
   const recargar = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
-    const { data } = await supabase.from('departamento').select('id, nombre, responsable_id, responsable:responsable_id(nombre)').order('nombre');
+    const { data } = await supabase.from('departamento').select('id, nombre, activo, responsable_id, responsable:responsable_id(nombre)').order('nombre');
     setDepartamentos(
       (data ?? []).map((f: any) => ({
         id: f.id,
         nombre: f.nombre,
         responsableId: f.responsable_id,
         responsableNombre: f.responsable?.nombre ?? null,
+        activo: f.activo,
       }))
     );
     setLoading(false);

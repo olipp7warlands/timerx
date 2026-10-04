@@ -174,13 +174,13 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
     if (!confirmar(`¿Desactivar a ${usuario.nombre}? Dejará de contar en pendientes y recordatorios y no podrá iniciar sesión: su acceso se bloquea de inmediato, también si tiene una sesión abierta. Puedes reactivarla cuando quieras.`)) return;
     const { error } = await onDesactivar(usuario.id);
     if (error) toast(error, 'error');
-    else toast(`${usuario.nombre} desactivado`);
+    else toast(`Cuenta de ${usuario.nombre} desactivada`);
   }
 
   async function handleReactivar() {
     const { error } = await onReactivar(usuario.id);
     if (error) toast(error, 'error');
-    else toast(`${usuario.nombre} reactivado`);
+    else toast(`Cuenta de ${usuario.nombre} reactivada`);
   }
 
   const iniciales = usuario.nombre
@@ -205,7 +205,7 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
             <span className={`role inline-block rounded-full px-2 py-0.5 ${usuario.rol.includes('admin') ? 'bg-accent text-on-accent' : 'bg-subtle text-ink-secondary'}`}>
               {ETIQUETA_ROL[usuario.rol]}
             </span>{' '}
-            · {usuario.activo ? 'Activo' : 'Inactivo'}
+            · {usuario.activo ? 'Cuenta activa' : 'Cuenta desactivada'}
           </p>
           {/* Dato salarial: solo admin_grupo -- el componente ni se monta (ni consulta) para el resto de roles (además de la RLS de coste_empleado). */}
           {esAdminGrupo && <CosteEmpleado perfilId={usuario.id} />}
@@ -213,7 +213,7 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
       </div>
 
       {!enMiAmbito && (
-        <p className="mb-3.5 text-xs font-semibold text-ink-tertiary">Empleado de otra empresa del grupo — ves su actividad en tus proyectos, pero no puedes editar sus datos.</p>
+        <p className="mb-3.5 text-xs font-semibold text-ink-tertiary">Profesional de otra empresa del grupo — ves su actividad en tus proyectos, pero no puedes editar sus datos.</p>
       )}
 
       {loadingBalance ? (
@@ -311,7 +311,7 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
                 <div>
                   <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Departamento</label>
                   <select className="input" value={draft.departamentoId} onChange={(e) => setDraft((d) => ({ ...d, departamentoId: e.target.value }))}>
-                    {opcionesDepartamento(departamentos).map((o) => (
+                    {opcionesDepartamento(departamentos, draft.departamentoId).map((o) => (
                       <option key={o.valor} value={o.valor}>
                         {o.etiqueta}
                       </option>
@@ -319,7 +319,7 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Categoría</label>
+                  <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Especialidad</label>
                   <select className="input" value={draft.categoriaId} onChange={(e) => setDraft((d) => ({ ...d, categoriaId: e.target.value }))}>
                     {opcionesCategoria(categorias).map((o) => (
                       <option key={o.valor} value={o.valor}>
@@ -338,7 +338,7 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
                       aria-describedby={unicoAdminGrupo ? 'aviso-unico-admin' : undefined}
                       onChange={(e) => setDraft((d) => ({ ...d, rol: e.target.value as RolUsuario }))}
                     >
-                      <option value="empleado">Empleado</option>
+                      <option value="empleado">Profesional</option>
                       <option value="responsable_proyecto">Responsable de proyecto</option>
                       <option value="admin_empresa">Admin de empresa</option>
                       <option value="admin_grupo">Admin del grupo</option>
@@ -582,7 +582,7 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
               )}
             </tbody>
           </table>
-          <p className="foot px-3 pb-2.5 pt-3 text-xs text-ink-tertiary">Historial completo en la app del empleado o vía imputación directa.</p>
+          <p className="foot px-3 pb-2.5 pt-3 text-xs text-ink-tertiary">Historial completo en la app del profesional o vía imputación directa.</p>
         </div>
       </div>
     </div>

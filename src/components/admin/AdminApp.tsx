@@ -5,6 +5,7 @@ import { useIsDesktop } from '@/hooks/useIsDesktop';
 import { ToastProvider } from '@/components/empleado/compartido/Toast';
 import { SoporteNovedadProvider } from '@/hooks/useNovedadSoporte';
 import { NavAdminProvider } from './NavAdmin';
+import { BannerVersion } from '@/components/ui/BannerVersion';
 import { ShellEscritorioAdmin } from './escritorio/ShellEscritorioAdmin';
 import { ShellMovilAdmin } from './movil/ShellMovilAdmin';
 import type { AdminInfo } from './types';
@@ -29,6 +30,7 @@ function AdminAppInterno({ forzarLayout, ...info }: Props) {
 export function AdminApp(props: Props) {
   return (
     <ToastProvider>
+      <BannerVersion />
       {/* useSearchParams (hand-offs efímeros) exige Suspense en cualquier page que pudiera prerenderizarse. */}
       <Suspense fallback={<div className="min-h-screen bg-bg" />}>
         <NavAdminProvider aislado={!!props.forzarLayout}>

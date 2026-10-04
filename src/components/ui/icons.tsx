@@ -212,6 +212,19 @@ export function IconCategoria({ className, size = 16 }: IconProps) {
   );
 }
 
+/** Departamentos: organigrama (un nodo superior que cuelga en dos). */
+export function IconOrganigrama({ className, size = 16 }: IconProps) {
+  return (
+    <svg {...base(size, 1.8)} className={className}>
+      <rect x="9" y="3" width="6" height="5" rx="1" />
+      <rect x="2" y="16" width="6" height="5" rx="1" />
+      <rect x="16" y="16" width="6" height="5" rx="1" />
+      <path d="M12 8v4" />
+      <path d="M5 16v-4h14v4" />
+    </svg>
+  );
+}
+
 /** Control: portapapeles con check. */
 export function IconControl({ className, size = 16 }: IconProps) {
   return (

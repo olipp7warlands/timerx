@@ -26,8 +26,14 @@ export default async function AdminPage({
   if (perfil.activo === false) return <CuentaDesactivada nombre={perfil.nombre} />;
   if (!['admin_grupo', 'admin_empresa'].includes(perfil.rol)) redirect('/');
 
+  // Ruta antigua (Categorías pasó a Especialidades en v1.7): los enlaces guardados no mueren.
+  if (seccion[0] === 'categorias') redirect(seccion.length === 1 ? '/admin/especialidades' : BASE_ADMIN);
+
   // Sección desconocida, o sub-segmento en una sección sin fichas -> base del lado.
-  if (!parseRutaAdmin(seccion)) redirect(BASE_ADMIN);
+  const ruta = parseRutaAdmin(seccion);
+  if (!ruta) redirect(BASE_ADMIN);
+  // Departamentos es solo del admin del grupo (la RLS de la 024 es la barrera real; esto evita siquiera montar la sección).
+  if (ruta.seccion === 'departamentos' && perfil.rol !== 'admin_grupo') redirect(BASE_ADMIN);
 
   return (
     <AdminApp

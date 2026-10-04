@@ -63,7 +63,7 @@ export async function altaUsuario(
     if (errPerfil || filas?.length !== 1) {
       return {
         userId: data.user.id,
-        error: `Cuenta creada como empleado pero falló completar el perfil (rol/departamento/categoría): ${errPerfil?.message ?? 'perfil no encontrado'}`,
+        error: `Cuenta creada como profesional pero falló completar el perfil (rol/departamento/especialidad): ${errPerfil?.message ?? 'perfil no encontrado'}`,
       };
     }
   }

@@ -37,7 +37,7 @@ Detalle completo, con el rollback, en `docs/runbook-produccion.md` §12.
 
 No son urgentes ni exponen datos a nadie de fuera; quedan documentadas en `docs/seguridad-backlog.md`:
 
-- **M** — un admin_empresa puede, hoy, asignar a uno de sus proyectos un empleado que en realidad pertenece a otra empresa del grupo. Requiere una cuenta admin_empresa de confianza (no un atacante externo); el efecto es mezclar facturación intragrupo, no acceso indebido a datos que esa cuenta no pudiera ya ver.
+- **M** — un admin_empresa puede, hoy, asignar a uno de sus proyectos un profesional que en realidad pertenece a otra empresa del grupo. Requiere una cuenta admin_empresa de confianza (no un atacante externo); el efecto es mezclar facturación intragrupo, no acceso indebido a datos que esa cuenta no pudiera ya ver.
 - **N** — si algún día activas el email (§11 del runbook), hay un fallo que romperá el enlace mágico y la recuperación de contraseña por correo (calcula mal la URL de vuelta detrás de Railway). Hoy no afecta a nada porque el acceso es por contraseña. Hay que arreglarlo antes de activar el correo, no antes.
 
 ## Si algo falla

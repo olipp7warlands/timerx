@@ -19,13 +19,13 @@ export const importadorUsuarios = definir<FilaUsuario>({
       { cabecera: 'email', obligatoria: true, descripcion: 'Correo de acceso. Es el identificador único de la persona: no puede existir ya.', ejemplo: 'lucia.prieto@empresa.com' },
       { cabecera: 'empresa', obligatoria: true, descripcion: 'Empresa empleadora, con el nombre EXACTO de una empresa que ya existe en la herramienta.', ejemplo: 'Wowinx SL' },
       { cabecera: 'departamento', obligatoria: false, descripcion: 'Departamento, con el nombre exacto de uno existente. Vacío = sin departamento.', ejemplo: '3B3' },
-      { cabecera: 'categoria', obligatoria: false, descripcion: 'Categoría por defecto (tarifa y precarga), con el nombre exacto de una existente. Vacío = sin categoría.', ejemplo: 'Desarrollo' },
+      { cabecera: 'especialidad', alias: ['categoria'], obligatoria: false, descripcion: 'Especialidad por defecto (tarifa y precarga), con el nombre exacto de una existente. Vacío = sin especialidad.', ejemplo: 'Desarrollo' },
       {
         cabecera: 'rol',
         obligatoria: false,
-        descripcion: 'Rol de la persona. Vacío = empleado.',
-        admitidos: 'empleado · responsable_proyecto · admin_empresa · admin_grupo',
-        ejemplo: 'empleado',
+        descripcion: 'Rol de la persona. Vacío = profesional.',
+        admitidos: 'profesional · responsable_proyecto · admin_empresa · admin_grupo (las plantillas antiguas con «empleado» también se aceptan)',
+        ejemplo: 'profesional',
       },
     ],
     notas: [
@@ -82,16 +82,18 @@ export const importadorUsuarios = definir<FilaUsuario>({
       }
 
       let categoriaId: string | null = null;
-      if (v.categoria) {
-        const id = idxCategoria.get(claveTexto(v.categoria));
-        if (id === undefined) motivos.push(`categoría '${v.categoria}' no existe`);
-        else if (id === null) motivos.push(`categoría '${v.categoria}' es ambigua (hay varias con ese nombre)`);
+      if (v.especialidad) {
+        const id = idxCategoria.get(claveTexto(v.especialidad));
+        if (id === undefined) motivos.push(`especialidad '${v.especialidad}' no existe`);
+        else if (id === null) motivos.push(`especialidad '${v.especialidad}' es ambigua (hay varias con ese nombre)`);
         else categoriaId = id;
       }
 
-      const rolTexto = claveTexto(v.rol ?? '') || 'empleado';
+      // «profesional» es el nombre visible del rol `empleado` del esquema; «empleado» (plantillas antiguas) sigue valiendo.
+      const rolEscrito = claveTexto(v.rol ?? '') || 'profesional';
+      const rolTexto = rolEscrito === 'profesional' ? 'empleado' : rolEscrito;
       const rol = ROLES.find((r) => r === rolTexto);
-      if (!rol) motivos.push(`rol '${v.rol}' no válido (admitidos: ${ROLES.join(', ')})`);
+      if (!rol) motivos.push(`rol '${v.rol}' no válido (admitidos: ${ROLES.map((r) => (r === 'empleado' ? 'profesional' : r)).join(', ')})`);
 
       const error = errorDeFila(fila, motivos);
       if (error) errores.push(error);

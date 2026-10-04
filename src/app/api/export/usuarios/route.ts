@@ -24,8 +24,8 @@ export async function GET() {
     .order('nombre');
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const filas = ((data ?? []) as unknown as FilaPerfil[]).map((p) => [p.nombre, p.email, p.empresa?.nombre ?? '', p.departamento?.nombre ?? '', p.categoria?.nombre ?? '', p.rol, p.activo ? 'Sí' : 'No']);
-  const buffer = await generarExport('Usuarios', ['nombre', 'email', 'empresa', 'departamento', 'categoria', 'rol', 'activo'], filas);
+  const filas = ((data ?? []) as unknown as FilaPerfil[]).map((p) => [p.nombre, p.email, p.empresa?.nombre ?? '', p.departamento?.nombre ?? '', p.categoria?.nombre ?? '', p.rol === 'empleado' ? 'profesional' : p.rol, p.activo ? 'Sí' : 'No']);
+  const buffer = await generarExport('Usuarios', ['nombre', 'email', 'empresa', 'departamento', 'especialidad', 'rol', 'activo'], filas);
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {

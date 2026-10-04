@@ -50,7 +50,7 @@ export function TablaPendientesImputacion({ pendientes, loading, onAprobar, onRe
     <table className="w-full border-collapse text-sm">
       <thead>
         <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
-          {mostrarEmpleado && <th className="border-b border-border px-2.5 py-2">Empleado</th>}
+          {mostrarEmpleado && <th className="border-b border-border px-2.5 py-2">Profesional</th>}
           <th className="border-b border-border px-2.5 py-2">Proyecto</th>
           <th className="border-b border-border px-2.5 py-2">Fecha</th>
           <th className="border-b border-border px-2.5 py-2 text-right">Horas</th>

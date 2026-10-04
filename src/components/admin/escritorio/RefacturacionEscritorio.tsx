@@ -95,7 +95,7 @@ export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
       <div className="grid grid-cols-[minmax(0,1fr)_300px] items-start gap-4.5 max-[1000px]:grid-cols-1">
         <div className="card">
           <div className="card-head">
-            <h2 className="text-sm font-extrabold">Detalle por empresa y categoría</h2>
+            <h2 className="text-sm font-extrabold">Detalle por empresa y especialidad</h2>
           </div>
           <div className="px-1.5 pb-2">
             {loading ? (
@@ -106,7 +106,7 @@ export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
                   <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
                     <th className="border-b border-border px-2.5 py-2">Origen</th>
                     <th className="border-b border-border px-2.5 py-2">Destino</th>
-                    <th className="border-b border-border px-2.5 py-2">Categoría</th>
+                    <th className="border-b border-border px-2.5 py-2">Especialidad</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">Horas</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">€/h</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">Importe</th>
@@ -138,7 +138,7 @@ export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
               </table>
             )}
             <p className="foot px-3 pb-2.5 pt-3 text-xs text-ink-tertiary">
-              Las tarifas por empleado tienen prioridad sobre la de su categoría. El proyecto Interno queda fuera por no refacturable.
+              Las tarifas por profesional tienen prioridad sobre la de su especialidad. El proyecto Interno queda fuera por no refacturable.
             </p>
           </div>
         </div>

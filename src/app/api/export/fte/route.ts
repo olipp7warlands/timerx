@@ -18,8 +18,8 @@ interface FilaFte {
 }
 
 const NOTA_FORMULAS =
-  'FTE s/imputadas = Horas Proyecto / Horas Imputadas del empleado en el mes (reparto del trabajo real -- las filas de una persona suman 1,00). ' +
-  'FTE s/requeridas = Horas Proyecto / Requeridas Efectivas del empleado (neto de ausencias -- las filas de una persona suman su ratio imputadas/requeridas, puede superar 1,00 si trabajó de más). ' +
+  'FTE s/imputadas = Horas Proyecto / Horas Imputadas del profesional en el mes (reparto del trabajo real -- las filas de una persona suman 1,00). ' +
+  'FTE s/requeridas = Horas Proyecto / Requeridas Efectivas del profesional (neto de ausencias -- las filas de una persona suman su ratio imputadas/requeridas, puede superar 1,00 si trabajó de más). ' +
   'Celda vacía cuando Requeridas Efectivas es 0 (mes entero de ausencia): no hay división por cero.';
 
 export async function GET(request: NextRequest) {
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
 
   const ETIQUETAS: Record<string, string> = {
     empresa: 'Empresa',
-    empleado: 'Empleado',
+    empleado: 'Profesional',
     horasImputadas: 'Horas Imputadas',
     horasRequeridas: 'Horas Requeridas',
     diasVacaciones: 'Vacaciones (días)',

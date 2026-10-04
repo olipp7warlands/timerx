@@ -31,7 +31,7 @@ const PESTANAS = [
 export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
   const nav = useNavAdmin();
   const { usuarios, loading, recargar, actualizar, desactivar, reactivar } = useUsuarios();
-  const { departamentos, crear: crearDepartamento } = useDepartamentos();
+  const { departamentos } = useDepartamentos();
   const { empresas } = useEmpresas();
   const { categorias, crearCategoria } = useCategorias();
   const toast = useToast();
@@ -59,9 +59,8 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
   }
 
   const [enviando, setEnviando] = useState(false);
-  const [depNombre, setDepNombre] = useState('');
 
-  // Alta rápida de categoría (Lote 4): nace GLOBAL (departamento NULL); para acotarla, sección Categorías.
+  // Alta rápida de categoría (Lote 4): nace GLOBAL (departamento NULL); para acotarla, sección Especialidades.
   const [catRapida, setCatRapida] = useState<{ abierta: boolean; nombre: string; creada: boolean }>({ abierta: false, nombre: '', creada: false });
 
   // Edición inline (Lote 4): una sola celda abierta a la vez + ✓ efímero de la última guardada.
@@ -123,7 +122,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
     if (!nombre) return;
     const { error, id } = await crearCategoria(nombre);
     if (error || !id) {
-      toast(error ?? 'No se pudo crear la categoría', 'error');
+      toast(error ?? 'No se pudo crear la especialidad', 'error');
       return;
     }
     setForm((f) => ({ ...f, categoriaId: id }));
@@ -158,16 +157,6 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
     }
     setCeldaGuardada({ id: u.id, campo });
     setTimeout(() => setCeldaGuardada(null), 1200);
-  }
-
-  async function crearDep() {
-    if (!depNombre) return;
-    const { error } = await crearDepartamento(depNombre, null);
-    if (error) toast(error, 'error');
-    else {
-      toast(`Departamento "${depNombre}" creado`);
-      setDepNombre('');
-    }
   }
 
   if (nav.fichaId) {
@@ -255,14 +244,14 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                 <div>
                   <label className={etiquetaCampo}>Rol</label>
                   <select className="input" value={form.rol} onChange={(e) => setForm((f) => ({ ...f, rol: e.target.value }))}>
-                    <option value="empleado">Empleado</option>
+                    <option value="empleado">Profesional</option>
                     <option value="responsable_proyecto">Responsable</option>
                     {esAdminGrupo && <option value="admin_empresa">Admin de empresa</option>}
                     {esAdminGrupo && <option value="admin_grupo">Admin de grupo</option>}
                   </select>
                 </div>
                 <div>
-                  <label className={etiquetaCampo}>Categoría por defecto</label>
+                  <label className={etiquetaCampo}>Especialidad por defecto</label>
                   <select className="input" value={form.categoriaId} onChange={(e) => setForm((f) => ({ ...f, categoriaId: e.target.value }))}>
                     {opcionesCategoria(categorias).map((o) => (
                       <option key={o.valor} value={o.valor}>
@@ -273,14 +262,14 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                   {esAdminGrupo && (
                     <div className="mt-2 flex items-center gap-2">
                       <button type="button" className="btn btn-sm" onClick={() => setCatRapida((c) => ({ ...c, abierta: true }))}>
-                        {catRapida.creada ? 'Creada ✓' : '＋ Nueva categoría'}
+                        {catRapida.creada ? 'Creada ✓' : '＋ Nueva especialidad'}
                       </button>
                       {catRapida.abierta && (
                         <>
                           <input
                             className="input flex-1"
                             autoFocus
-                            placeholder="Nombre de la categoría"
+                            placeholder="Nombre de la especialidad"
                             value={catRapida.nombre}
                             onChange={(e) => setCatRapida((c) => ({ ...c, nombre: e.target.value }))}
                             onKeyDown={(e) => {
@@ -316,15 +305,11 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                 <button type="button" className="btn btn-primary" disabled={enviando} onClick={enviarInvitacion}>
                   {enviando ? 'Creando…' : 'Crear usuario'}
                 </button>
-                {/* Departamento es un catálogo GLOBAL (sin empresa_id): su escritura es solo admin_grupo (024, RLS `departamento_admin`). */}
+                {/* Los departamentos (catálogo GLOBAL, escritura solo admin_grupo: 024) se crean y editan en su sección. */}
                 {esAdminGrupo && (
-                  <div className="ml-auto flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-extrabold text-ink-tertiary">¿Falta un departamento?</span>
-                    <input className="input w-[180px]" aria-label="Nombre del departamento" value={depNombre} onChange={(e) => setDepNombre(e.target.value)} placeholder="Tecnología" />
-                    <button type="button" className="btn btn-sm" onClick={crearDep}>
-                      Crear departamento
-                    </button>
-                  </div>
+                  <button type="button" className="btn-text ml-auto text-xs" onClick={() => nav.ir('departamentos')}>
+                    ¿Falta un departamento? Ve a Departamentos
+                  </button>
                 )}
               </div>
               {altaCreada && (
@@ -353,7 +338,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                     <th className="border-b border-border px-2.5 py-2">Empresa</th>
                     <th className="border-b border-border px-2.5 py-2">Departamento</th>
                     <th className="border-b border-border px-2.5 py-2">Rol</th>
-                    <th className="border-b border-border px-2.5 py-2">Categoría</th>
+                    <th className="border-b border-border px-2.5 py-2">Especialidad</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">Acciones</th>
                   </tr>
                 </thead>
@@ -392,7 +377,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                         <CeldaEditable
                           editable={puedeEditar}
                           valor={u.departamentoId ?? ''}
-                          opciones={opcionesDepartamento(departamentos)}
+                          opciones={opcionesDepartamento(departamentos, u.departamentoId)}
                           abierta={abierta('departamento')}
                           guardada={guardada('departamento')}
                           onAbrir={() => setCelda({ id: u.id, campo: 'departamento' })}

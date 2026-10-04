@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { MenuUsuarioDesktop } from '@/components/ui/MenuUsuario';
 import { IconReloj, IconChevronLeft, IconChevronRight } from '@/components/ui/icons';
-import { GRUPOS_SECCIONES } from '../secciones';
+import { gruposVisibles } from '../secciones';
 import { useNavAdmin } from '../NavAdmin';
 import type { AdminInfo } from '../types';
 import { InicioEscritorio } from './InicioEscritorio';
@@ -14,6 +14,7 @@ import { AusenciasEscritorio } from './AusenciasEscritorio';
 import { EmpresasEscritorio } from './EmpresasEscritorio';
 import { ProyectosEscritorio } from './ProyectosEscritorio';
 import { CategoriasEscritorio } from './CategoriasEscritorio';
+import { DepartamentosEscritorio } from './DepartamentosEscritorio';
 import { CalendarioEscritorio } from './CalendarioEscritorio';
 import { MapaEscritorio } from './MapaEscritorio';
 import { ControlEscritorio } from './ControlEscritorio';
@@ -58,7 +59,7 @@ export function ShellEscritorioAdmin({ info }: Props) {
           </button>
         </div>
 
-        {GRUPOS_SECCIONES.map((g) => (
+        {gruposVisibles(info.rol).map((g) => (
           <div key={g.etiqueta}>
             {!mini && <p className="micro px-2 pb-1 pt-3 first:pt-0">{g.etiqueta}</p>}
             {g.items.map((item) => (
@@ -92,7 +93,7 @@ export function ShellEscritorioAdmin({ info }: Props) {
           <MenuUsuarioDesktop nombre={info.nombre} email={info.email} rol={info.rol} onIrSoporte={() => nav.ir('soporte')} />
           {!mini && (
             <Link href="/inicio" className="btn btn-sm flex-1 justify-center">
-              App empleado
+              App profesional
             </Link>
           )}
         </div>
@@ -104,7 +105,8 @@ export function ShellEscritorioAdmin({ info }: Props) {
         {seccion === 'ausencias' && <AusenciasEscritorio info={info} />}
         {seccion === 'empresas' && <EmpresasEscritorio info={info} />}
         {seccion === 'proyectos' && <ProyectosEscritorio info={info} />}
-        {seccion === 'categorias' && <CategoriasEscritorio info={info} />}
+        {seccion === 'departamentos' && <DepartamentosEscritorio info={info} />}
+        {seccion === 'especialidades' && <CategoriasEscritorio info={info} />}
         {seccion === 'calendario' && <CalendarioEscritorio info={info} />}
         {seccion === 'mapa' && <MapaEscritorio info={info} />}
         {seccion === 'control' && <ControlEscritorio info={info} />}

@@ -28,7 +28,7 @@ export interface OpcionSelect {
  * solo del selector de TAREA al imputar: `lib/horas/tareas.ts`). Única fuente: si dos vías ofrecen listas distintas, es un bug.
  */
 export function opcionesCategoria(categorias: Categoria[]): OpcionSelect[] {
-  return [{ valor: '', etiqueta: 'Sin categoría' }, ...categorias.map((c) => ({ valor: c.id, etiqueta: c.nombre }))];
+  return [{ valor: '', etiqueta: 'Sin especialidad' }, ...categorias.map((c) => ({ valor: c.id, etiqueta: c.nombre }))];
 }
 
 /** categoria_select/subcategoria_select son abiertas; la escritura es solo admin_grupo. */

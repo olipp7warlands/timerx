@@ -8,6 +8,8 @@ export interface ColumnaPlantilla {
   /** Valores admitidos (enums, formatos). */
   admitidos?: string;
   ejemplo?: string;
+  /** Cabeceras ANTIGUAS que se siguen aceptando (ya normalizadas: minúsculas y sin acentos). Una plantilla vieja descargada sigue importando. */
+  alias?: string[];
   /** Formatea la columna como fecha ISO en la hoja 1 para que Excel no la convierta a otro formato. */
   fecha?: boolean;
 }
@@ -100,7 +102,8 @@ function celdaATexto(valor: ExcelJS.CellValue): string {
 export async function leerXlsx(
   buffer: Buffer,
   obligatorias: string[],
-  opcionales: string[]
+  opcionales: string[],
+  alias: Record<string, string> = {}
 ): Promise<{ ok: true; filas: FilaLeida[] } | { ok: false; error: string }> {
   const wb = new ExcelJS.Workbook();
   try {
@@ -113,7 +116,8 @@ export async function leerXlsx(
 
   const cabeceras = new Map<number, string>();
   ws.getRow(1).eachCell({ includeEmpty: false }, (cell, col) => {
-    const t = normalizarCabecera(celdaATexto(cell.value));
+    const crudo = normalizarCabecera(celdaATexto(cell.value));
+    const t = alias[crudo] ?? crudo;
     if (t) cabeceras.set(col, t);
   });
 

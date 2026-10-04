@@ -56,12 +56,12 @@ export function TarifasEscritorio({ info }: { info: AdminInfo }) {
           <div className="card-body">
             <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Aplicar a</label>
             <select className="input" value={aplicarA} onChange={(e) => setAplicarA(e.target.value as 'categoria' | 'empleado')}>
-              <option value="categoria">Categoría</option>
-              <option value="empleado">Empleado concreto</option>
+              <option value="categoria">Especialidad</option>
+              <option value="empleado">Profesional (individual)</option>
             </select>
             {aplicarA === 'categoria' ? (
               <select className="input mt-2" value={form.categoriaId} onChange={(e) => setForm((f) => ({ ...f, categoriaId: e.target.value }))}>
-                <option value="">Selecciona categoría</option>
+                <option value="">Selecciona especialidad</option>
                 {categorias.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.nombre}
@@ -70,7 +70,7 @@ export function TarifasEscritorio({ info }: { info: AdminInfo }) {
               </select>
             ) : (
               <select className="input mt-2" value={form.empleadoId} onChange={(e) => setForm((f) => ({ ...f, empleadoId: e.target.value }))}>
-                <option value="">Selecciona empleado</option>
+                <option value="">Selecciona profesional</option>
                 {usuarios.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.nombre}
@@ -124,10 +124,10 @@ export function TarifasEscritorio({ info }: { info: AdminInfo }) {
                           <span className="font-extrabold">{t.empleadoNombre}</span>
                         ) : (
                           <span className="font-extrabold text-ink-tertiary" title="Tarifa personal fuera de tu ámbito">
-                            Empleado de otra empresa
+                            Profesional de otra empresa
                           </span>
                         )}
-                        <span className="block text-[11px] text-ink-tertiary">prioridad sobre su categoría</span>
+                        <span className="block text-[11px] text-ink-tertiary">prioridad sobre su especialidad</span>
                       </>
                     ) : (
                       <>

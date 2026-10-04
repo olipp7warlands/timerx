@@ -20,24 +20,24 @@ interface FilaCategoria {
 export const importadorCategorias = definir<FilaCategoria>({
   id: 'categorias',
   plantilla: {
-    hoja: 'Categorías',
+    hoja: 'Especialidades',
     columnas: [
-      { cabecera: 'categoria', obligatoria: true, descripcion: 'Categoría a la que pertenece la tarea. Si no existe, se crea; si existe, la tarea se añade a ella.', ejemplo: 'Desarrollo' },
+      { cabecera: 'especialidad', alias: ['categoria'], obligatoria: true, descripcion: 'Especialidad a la que pertenece la tarea. Si no existe, se crea; si existe, la tarea se añade a ella.', ejemplo: 'Desarrollo' },
       {
         cabecera: 'departamento',
         obligatoria: false,
-        descripcion: 'Departamento de la categoría, con el nombre exacto de uno existente. VACÍO = categoría global (transversal). En una categoría que ya existe debe COINCIDIR con el suyo.',
+        descripcion: 'Departamento de la especialidad, con el nombre exacto de uno existente. VACÍO = especialidad global (transversal). En una especialidad que ya existe debe COINCIDIR con el suyo.',
         ejemplo: '3B3',
       },
-      { cabecera: 'tarea', obligatoria: true, descripcion: 'Nombre de la tarea (subcategoría). No puede existir ya en esa categoría (sin distinguir mayúsculas).', ejemplo: 'Backend' },
+      { cabecera: 'tarea', obligatoria: true, descripcion: 'Nombre de la tarea (subcategoría). No puede existir ya en esa especialidad (sin distinguir mayúsculas).', ejemplo: 'Backend' },
     ],
     notas: [
-      'UNA FILA POR TAREA: para una categoría con tres tareas, escribe tres filas con el mismo nombre de categoría (y el mismo departamento).',
-      'ALTA SOLAMENTE: crea categorías y tareas nuevas. Una tarea que ya existe en su categoría es un error de fila; no hay edición ni borrado masivos.',
-      'EL IMPORTADOR NO REUBICA: si la categoría ya existe con OTRO departamento distinto del declarado en la fila (o global y la fila indica uno, o al revés), es un error. El departamento de una categoría existente se cambia en su sección, no aquí.',
-      'Una misma categoría nueva debe declarar el MISMO departamento en todas sus filas.',
+      'UNA FILA POR TAREA: para una especialidad con tres tareas, escribe tres filas con el mismo nombre de especialidad (y el mismo departamento).',
+      'ALTA SOLAMENTE: crea especialidades y tareas nuevas. Una tarea que ya existe en su especialidad es un error de fila; no hay edición ni borrado masivos.',
+      'EL IMPORTADOR NO REUBICA: si la especialidad ya existe con OTRO departamento distinto del declarado en la fila (o global y la fila indica uno, o al revés), es un error. El departamento de una especialidad existente se cambia en su sección, no aquí.',
+      'Una misma especialidad nueva debe declarar el MISMO departamento en todas sus filas.',
       'TODO O NADA: si el análisis detecta un solo error no se importa ninguna fila. El informe indica la fila y el motivo de cada error; corrígelos en el archivo y vuelve a subirlo.',
-      'El archivo exportado (todo el catálogo: una fila por tarea) se puede reimportar tal cual: como todas esas tareas ya existen dará errores de duplicado y ninguna alta. Una categoría sin ninguna tarea no aparece en el export (no tiene fila).',
+      'El archivo exportado (todo el catálogo: una fila por tarea) se puede reimportar tal cual: como todas esas tareas ya existen dará errores de duplicado y ninguna alta. Una especialidad sin ninguna tarea no aparece en el export (no tiene fila).',
       'Solo el admin del grupo puede importar y exportar el catálogo.',
     ],
   },
@@ -65,9 +65,9 @@ export const importadorCategorias = definir<FilaCategoria>({
 
     for (const { fila, valores: v } of filas) {
       const motivos: string[] = [];
-      const categoria = (v.categoria ?? '').trim();
+      const categoria = (v.especialidad ?? '').trim();
       const tarea = (v.tarea ?? '').trim();
-      if (!categoria) motivos.push('falta la categoría');
+      if (!categoria) motivos.push('falta la especialidad');
       if (!tarea) motivos.push('falta la tarea');
 
       let departamentoId: string | null = null;
@@ -91,19 +91,19 @@ export const importadorCategorias = definir<FilaCategoria>({
           categoriaId = ex.id;
           if (departamentoOk && ex.departamentoId !== departamentoId) {
             motivos.push(
-              `la categoría '${ex.nombre}' ya existe y es ${etiquetaDep(ex.departamentoId)}, pero la fila declara ${etiquetaDep(departamentoId)}: el importador no reubica categorías (cámbialo en Categorías)`
+              `la especialidad '${ex.nombre}' ya existe y es ${etiquetaDep(ex.departamentoId)}, pero la fila declara ${etiquetaDep(departamentoId)}: el importador no reubica especialidades (cámbialo en Especialidades)`
             );
           }
-          if (tarea && tareasExistentes.has(`${ex.id}|${claveTexto(tarea)}`)) motivos.push(`la tarea '${tarea}' ya existe en la categoría '${ex.nombre}' (este importador solo da de alta, no actualiza)`);
+          if (tarea && tareasExistentes.has(`${ex.id}|${claveTexto(tarea)}`)) motivos.push(`la tarea '${tarea}' ya existe en la especialidad '${ex.nombre}' (este importador solo da de alta, no actualiza)`);
         } else if (departamentoOk) {
           const previa = nuevas.get(k);
           if (previa && previa.departamentoId !== departamentoId) {
-            motivos.push(`la categoría nueva '${categoria}' declara ${etiquetaDep(departamentoId)}, pero en la fila ${previa.fila} declara ${etiquetaDep(previa.departamentoId)}`);
+            motivos.push(`la especialidad nueva '${categoria}' declara ${etiquetaDep(departamentoId)}, pero en la fila ${previa.fila} declara ${etiquetaDep(previa.departamentoId)}`);
           } else if (!previa) nuevas.set(k, { departamentoId, fila });
         }
         if (tarea) {
           const claveTarea = `${k}|${claveTexto(tarea)}`;
-          if (tareasEnArchivo.has(claveTarea)) motivos.push(`la tarea '${tarea}' está repetida en la categoría '${categoria}' dentro del archivo (también en la fila ${tareasEnArchivo.get(claveTarea)})`);
+          if (tareasEnArchivo.has(claveTarea)) motivos.push(`la tarea '${tarea}' está repetida en la especialidad '${categoria}' dentro del archivo (también en la fila ${tareasEnArchivo.get(claveTarea)})`);
           else tareasEnArchivo.set(claveTarea, fila);
         }
       }
@@ -126,7 +126,7 @@ export const importadorCategorias = definir<FilaCategoria>({
     let creadas: string[] = [];
     if (nuevas.size > 0) {
       const { data, error } = await supabase.from('categoria').insert([...nuevas.values()]).select('id, nombre');
-      if (error) return { error: `No se pudieron crear las categorías: ${error.message}. No se ha importado ninguna fila.` };
+      if (error) return { error: `No se pudieron crear las especialidades: ${error.message}. No se ha importado ninguna fila.` };
       creadas = (data ?? []).map((c) => c.id);
       for (const c of data ?? []) idPorClave.set(claveTexto(c.nombre), c.id);
     }
@@ -136,10 +136,10 @@ export const importadorCategorias = definir<FilaCategoria>({
       validas.map((f) => ({ categoria_id: f.categoriaId ?? idPorClave.get(claveTexto(f.categoria))!, nombre: f.tarea }))
     );
     if (!error) return { error: null };
-    let revertido = 'El lote se ha revertido: no se ha creado ninguna categoría ni tarea.';
+    let revertido = 'El lote se ha revertido: no se ha creado ninguna especialidad ni tarea.';
     if (creadas.length > 0) {
       const { error: errBorrado } = await supabase.from('categoria').delete().in('id', creadas);
-      if (errBorrado) revertido = `ATENCIÓN: no se pudieron revertir ${creadas.length} categoría(s) creadas (ids: ${creadas.join(', ')}); bórralas a mano desde Categorías.`;
+      if (errBorrado) revertido = `ATENCIÓN: no se pudieron revertir ${creadas.length} especialidad(s) creadas (ids: ${creadas.join(', ')}); bórralas a mano desde Especialidades.`;
     }
     return { error: `No se pudieron crear las tareas: ${error.message}. ${revertido}` };
   },

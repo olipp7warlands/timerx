@@ -55,7 +55,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
   const idsConHoras = new Set(personasConHoras.map((p) => p.perfilId));
   const personasSinHoras: PersonaHoras[] = vigentes
     .filter((a) => !idsConHoras.has(a.empleadoId))
-    .map((a) => ({ perfilId: a.empleadoId, nombre: a.nombre, departamento: a.departamento, categoriaNombre: a.categoriaNombre ?? 'Sin categoría', horas: 0 }));
+    .map((a) => ({ perfilId: a.empleadoId, nombre: a.nombre, departamento: a.departamento, categoriaNombre: a.categoriaNombre ?? 'Sin especialidad', horas: 0 }));
   const filasPersonas = [...personasConHoras, ...personasSinHoras];
   const horasMes = ficha?.horasMes ?? 0;
   const hastaDe = (perfilId: string) => asignaciones.find((a) => a.empleadoId === perfilId)?.hasta ?? null;
@@ -124,7 +124,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
         <>
           {horasMes === 0 && (
             <p className="mb-4 text-sm text-ink-tertiary" data-testid="proyecto-sin-actividad">
-              Sin actividad aprobada en {nombreMes.toLowerCase()}: las horas, categorías y departamentos aparecerán con las primeras imputaciones. Mientras tanto, asigna aquí a las personas del proyecto.
+              Sin actividad aprobada en {nombreMes.toLowerCase()}: las horas, especialidades y departamentos aparecerán con las primeras imputaciones. Mientras tanto, asigna aquí a las personas del proyecto.
             </p>
           )}
           {ficha && horasMes > 0 && (
@@ -155,7 +155,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
           <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3.5">
             <div className="card">
               <div className="card-head">
-                <h2 className="text-sm font-extrabold">Horas por categoría</h2>
+                <h2 className="text-sm font-extrabold">Horas por especialidad</h2>
               </div>
               <div className="card-body">
                 <Donut
@@ -192,7 +192,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
                   <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
                     <th className="border-b border-border px-2.5 py-2">Nombre</th>
                     <th className="border-b border-border px-2.5 py-2">Departamento</th>
-                    <th className="border-b border-border px-2.5 py-2">Categoría</th>
+                    <th className="border-b border-border px-2.5 py-2">Especialidad</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">Horas</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">% del proyecto</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">Acciones</th>

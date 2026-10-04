@@ -92,7 +92,7 @@ export function useFichaProyecto(proyectoId: string | null, anio: number, mes: n
         perfilId: fila.empleado_id,
         nombre: fila.empleado?.nombre ?? '',
         departamento: fila.empleado?.departamento?.nombre ?? null,
-        categoriaNombre: cat?.nombre ?? 'Sin categoría',
+        categoriaNombre: cat?.nombre ?? 'Sin especialidad',
         horas: 0,
       };
       persona.horas += horas;

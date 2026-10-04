@@ -29,7 +29,7 @@ export const importadorVacaciones = definir<FilaAusencia>({
   plantilla: {
     hoja: 'Vacaciones',
     columnas: [
-      { cabecera: 'email', obligatoria: true, descripcion: 'Email del empleado (identificador único; nunca el nombre). Debe existir ya.', ejemplo: 'leo.silva@empresa.com' },
+      { cabecera: 'email', obligatoria: true, descripcion: 'Email del profesional (identificador único; nunca el nombre). Debe existir ya.', ejemplo: 'leo.silva@empresa.com' },
       {
         cabecera: 'tipo',
         obligatoria: false,
@@ -42,9 +42,9 @@ export const importadorVacaciones = definir<FilaAusencia>({
     ],
     notas: [
       'SON HECHOS CONSUMADOS, NO SOLICITUDES: cada fila nace con estado «aprobada» y el admin que importa figura como aprobador. Descuenta horas requeridas exactamente igual que una ausencia aprobada a mano, y bloquea la imputación esos días.',
-      'Los borradores de imputación del empleado dentro de esas fechas se eliminan (igual que al aprobar una ausencia a mano).',
-      'NUNCA DUPLICA NI PISA: si el empleado ya tiene una ausencia pendiente o aprobada que solape esas fechas, o dos filas del archivo se solapan entre sí, es un error de fila. Resolver solapes es manual.',
-      'DÍAS CON HORAS YA REGISTRADAS DAN ERROR: si el empleado ya tiene horas computadas, aprobadas o cerradas dentro del rango, la fila falla — resuélvelo antes en la app.',
+      'Los borradores de imputación del profesional dentro de esas fechas se eliminan (igual que al aprobar una ausencia a mano).',
+      'NUNCA DUPLICA NI PISA: si el profesional ya tiene una ausencia pendiente o aprobada que solape esas fechas, o dos filas del archivo se solapan entre sí, es un error de fila. Resolver solapes es manual.',
+      'DÍAS CON HORAS YA REGISTRADAS DAN ERROR: si el profesional ya tiene horas computadas, aprobadas o cerradas dentro del rango, la fila falla — resuélvelo antes en la app.',
       'Rango máximo por fila: 366 días (protege de errores de año al teclear la fecha).',
       'TODO O NADA: si el análisis detecta un solo error no se importa ninguna fila. El informe indica la fila y el motivo de cada error.',
     ],
@@ -104,7 +104,7 @@ export const importadorVacaciones = definir<FilaAusencia>({
             );
           }
           const previa = (aceptadas.get(perfilId) ?? []).find((a) => solapa(ini, fin, a.ini, a.fin));
-          if (previa) motivos.push(`solapa con la fila ${previa.fila} del propio archivo (${formatoFecha(previa.ini)}–${formatoFecha(previa.fin)}) del mismo empleado`);
+          if (previa) motivos.push(`solapa con la fila ${previa.fila} del propio archivo (${formatoFecha(previa.ini)}–${formatoFecha(previa.fin)}) del mismo profesional`);
           const dias = (imputaciones.data ?? []).filter((i) => i.empleado_id === perfilId && i.fecha >= ini && i.fecha <= fin).length;
           if (dias) motivos.push(`'${email}' ya tiene ${dias} imputación(es) computada(s), aprobada(s) o cerrada(s) dentro de ese rango`);
         }

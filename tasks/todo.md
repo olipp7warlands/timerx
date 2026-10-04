@@ -1,3 +1,16 @@
+# LOTE v1.7 (2026-10-04) — «Profesional», «Especialidad», sección Departamentos, banner de versión
+
+> main → demo → commit listo para promoción. SIN migración (esquema intacto: enum `rol_usuario` con valor `empleado`, tabla `categoria`, `empleado_proyecto`, `coste_empleado`, columnas y RPCs). Línea base: conteos `base17_conteos.txt` (scratchpad; imputacion 141, perfil 13) y huella ANCLA `b908bdf7` (71 claves, cruda `242545f6`).
+
+- [x] 1. «Empleado/trabajador» → «Profesional» (presentación): 103 textos en 26 archivos por AST + 9 retoques de género/plural; alias `profesional`≡`empleado` en `rol` del importador; `docs/dia-1.md`. Supervivientes citados en PLAN.md.
+- [x] 3. «Categoría» → «Especialidad» + `/admin/especialidades` con redirect; alias de cabecera `categoria`→`especialidad` (`ColumnaPlantilla.alias`/`leerXlsx`).
+- [x] 2. Sección Departamentos (`/admin/departamentos`, antes de Especialidades, solo admin_grupo, sin migración).
+- [x] 4. Banner «Hay una versión nueva — recarga» (`/api/version`) en los 4 shells.
+- [x] Verificación local (build v1.7 contra BD demo, sesiones reales): detector 0 palabras viejas (control: 112 en la demo previa); redirect y Marina sin Departamentos; ciclo Departamentos 13/13; importadores nueva+vieja 13/13; banner 20/20; ANCLA `b908bdf7` y conteos idénticos; tsc/build limpios, lint 78=78.
+- [ ] Commit, demo en verde, re-verificación en la demo desplegada, `comprobar-paridad` (PRE POR DELANTE esperable). Promoción: decisión del usuario.
+
+---
+
 # HOTFIX v1.6.1 — reset de contraseña colgado + línea base estable (2026-10-04)
 
 > **PROMOCIONADO a producción** (merge `8a6ae17`, deploy SUCCESS, `comprobar-paridad` EN PARIDAD). **Post-deploy en producción CERRADO (2026-10-04)**: el usuario hizo el reset desde su cuenta sobre `prueba.noa` (modal con la temporal + login con ella verificado); después se restauró la contraseña compartida del pack a `prueba.noa` por script (la contraseña llegó por argumento, no se guardó en ningún archivo) y su login quedó verificado. Pack INTACTO por conteos (sin leer filas): 5 cuentas `prueba.*`, imputaciones 10 / ausencias 2 / asignaciones 5 / tickets 2 = foto v1.5. Distintas de la foto del 29-sep en el resto de tablas (perfil 6→7, auth.users 6→7, empleado_proyecto +2, imputacion +2, ticket +1): actividad real del usuario (las 2 imputaciones = sus líneas del 30-sep); esta sesión no creó nada en producción (sin admin temporal). Demo a 141 imputaciones tras borrar la última línea de prueba de Haizea. **Siguiente tren (v1.7)**: banner «Hay una versión nueva — recarga» vía `/api/version`.
