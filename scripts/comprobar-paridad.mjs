@@ -53,9 +53,17 @@ function migracionesEn(sha) {
 
 /** Versiones aplicadas en la BD enlazada al worktree `dir` (`supabase migration list`). */
 function migracionesRemotas(dir) {
-  const salida = execFileSync('supabase', ['migration', 'list'], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  const opciones = { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] };
+  let salida;
+  try {
+    salida = execFileSync('supabase', ['migration', 'list'], opciones);
+  } catch (e) {
+    // En Windows el CLI puede ser un .exe sin extensión que solo resuelve Git Bash.
+    if (e.code !== 'ENOENT') throw e;
+    salida = execFileSync('bash', ['-c', 'supabase migration list'], opciones);
+  }
   const remotas = [];
-  for (const linea of salida.split('\n')) {
+  for (const linea of salida.split(/\r?\n/)) {
     const m = linea.match(/^\s*(\d+)?\s*\|\s*(\d+)?\s*\|/);
     if (m?.[2]) remotas.push(m[2]);
   }
