@@ -1,3 +1,14 @@
+# LOTE v1.6 (2026-10-04) — bug del balance (Mes ≠ héroe) + paridad verificable demo↔producción
+
+> main → demo → commit listo para promoción. Sin migraciones: las huellas de RPCs no deben moverse (SQL intacto).
+> Estado v1.5 zanjado: `origin/produccion` (7898f14) contiene `c714546`; `rev-list origin/produccion..main` = 0.
+
+- [x] 1. Causa raíz. Criterios YA alineados (héroe `sumaHoras` excluye rechazadas = `balance_mes`; comprobado en demo, Andrés y Leo, sep: suma == RPC). Divergencia = **«Mes» obsoleto**: `useBalanceMes` solo pedía el balance al montar y `EmpleadoApp` no lo refrescaba tras insertar, mientras el héroe leía `porDia` (que sí se recarga). Fix solo app (`useBalanceMes(anio, mes, horasMes)` + `horasMes` en `EmpleadoApp`). **SIN CONFIRMAR con las líneas reales de producción** (lectura denegada por el clasificador; pendiente de que el usuario ejecute la consulta).
+- [x] 2a. `/api/version` (commit, rama, build). [x] 2b. `scripts/comprobar-paridad.mjs`. [x] 2c. Runbook §12 pasos 0 y 6.
+- [x] Build/tsc OK, lint 78 = base 78. [ ] Commit, demo en verde, ejecutar paridad tras el deploy de demo.
+
+---
+
 # LOTE v1.5 (2026-09-25) — categoría en ficha + pestañas con iconos en Empresas y Proyectos
 
 - [x] 1. Causa raíz de «categoría no seleccionable»: hipótesis (hook filtrado) REFUTADA; no reproducible ni en la UI equivalente ni en BD; auditoría de selects citada y `opcionesCategoria/opcionesDepartamento` como única fuente.
