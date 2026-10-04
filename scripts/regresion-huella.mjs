@@ -7,7 +7,7 @@
 //  · VIVA   (sep/oct 2026): informativa. Se mueve sola con el reloj (`estado_dias_mes` pasa días de `futuro` a `incompleto`) y con
 //           cualquier prueba en demo; compararla clave a clave, no por hash.
 // Sesiones REALES (magic link → verifyOtp) de Cristian (admin_grupo) y Marina (admin_empresa) + service_role. La huella canónica
-// ordena los arrays (insensible al orden físico de las filas); la cruda no.
+// ordena los arrays (insensible al orden físico de las filas); la cruda no. La ENMASCARADA ignora el nombre del departamento (v2.0 renombra departamentos): debe ser idéntica antes/después.
 import { createClient } from '@supabase/supabase-js';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -47,6 +47,12 @@ function canon(v) {
   return v;
 }
 const sha = (x) => createHash('sha256').update(JSON.stringify(x)).digest('hex').slice(0, 8);
+/** Variante ENMASCARADA: el nombre del departamento (cadena que cambia al renombrar departamentos, v2.0) se sustituye por una constante; todo lo numérico y el resto quedan igual. */
+function enmascarar(v) {
+  if (Array.isArray(v)) return v.map(enmascarar);
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, k === 'departamento' ? '·' : enmascarar(x)]));
+  return v;
+}
 const etiqueta = process.argv[2] ?? 'huella';
 
 for (const [nombre, v] of Object.entries(VARIANTES)) {
@@ -65,5 +71,5 @@ for (const [nombre, v] of Object.entries(VARIANTES)) {
   snap['svc.faltantes_recordatorio'] = (await admin.rpc('faltantes_recordatorio', { p_desde: v.faltantes[0], p_hasta: v.faltantes[1] })).data;
   const vacias = Object.entries(snap).filter(([, x]) => x == null).map(([k]) => k);
   writeFileSync(`${etiqueta}-${nombre}.json`, JSON.stringify(snap, null, 1));
-  console.log(`${nombre.padEnd(5)} claves=${Object.keys(snap).length} cruda=${sha(snap)} canónica=${sha(canon(snap))}${nombre === 'ancla' ? '  ← HUELLA DE REGRESIÓN' : '  (informativa)'}${vacias.length ? `  ⚠ claves nulas: ${vacias.join(', ')}` : ''}`);
+  console.log(`${nombre.padEnd(5)} claves=${Object.keys(snap).length} cruda=${sha(snap)} canónica=${sha(canon(snap))} enmascarada=${sha(canon(enmascarar(snap)))}${nombre === 'ancla' ? '  ← HUELLA DE REGRESIÓN' : '  (informativa)'}${vacias.length ? `  ⚠ claves nulas: ${vacias.join(', ')}` : ''}`);
 }
