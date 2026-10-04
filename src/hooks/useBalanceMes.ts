@@ -14,8 +14,12 @@ export interface BalanceMes {
   balance: number;
 }
 
-/** balance_mes() (propia del empleado, existe aunque el mes esté vacío) + requeridasEfectivas(). */
-export function useBalanceMes(anio: number, mes: number) {
+/**
+ * balance_mes() (propia del empleado, existe aunque el mes esté vacío) + requeridasEfectivas().
+ * `horasMes` = horas imputadas del mes que la pantalla ya tiene cargadas (mismo criterio: sin rechazadas): cuando cambia, el balance se
+ * vuelve a pedir. Sin esto el «Mes» quedaba con el valor de antes de la última imputación mientras el héroe del día ya la contaba.
+ */
+export function useBalanceMes(anio: number, mes: number, horasMes?: number) {
   const [balance, setBalance] = useState<BalanceMes | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -54,7 +58,7 @@ export function useBalanceMes(anio: number, mes: number) {
 
   useEffect(() => {
     recargar();
-  }, [recargar]);
+  }, [recargar, horasMes]);
 
   return { balance, loading, recargar };
 }

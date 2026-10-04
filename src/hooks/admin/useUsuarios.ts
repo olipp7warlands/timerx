@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { RolUsuario } from '@/lib/auth/roles';
 import { desactivarUsuario, reactivarUsuario } from '@/app/admin/actions';
+import { llamarAccion } from '@/lib/acciones';
 
 const SIN_PERMISO_PERFIL = 'No tienes permiso para modificar este perfil';
 
@@ -100,7 +101,7 @@ export function useUsuarios() {
    */
   const desactivar = useCallback(
     async (id: string) => {
-      const r = await desactivarUsuario(id);
+      const r = await llamarAccion(() => desactivarUsuario(id), (error) => ({ error }));
       await recargar();
       return r;
     },
@@ -109,7 +110,7 @@ export function useUsuarios() {
 
   const reactivar = useCallback(
     async (id: string) => {
-      const r = await reactivarUsuario(id);
+      const r = await llamarAccion(() => reactivarUsuario(id), (error) => ({ error }));
       await recargar();
       return r;
     },

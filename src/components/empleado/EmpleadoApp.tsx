@@ -12,7 +12,7 @@ import { useCategoriasTareas } from '@/hooks/useCategoriasTareas';
 import { useBalanceMes } from '@/hooks/useBalanceMes';
 import { useMaxHorasDia } from '@/hooks/useMaxHorasDia';
 import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
-import { ausenciaEnFecha, fmt } from '@/lib/horas/calendario';
+import { ausenciaEnFecha, fmt, sumaHoras } from '@/lib/horas/calendario';
 import { navegar } from '@/lib/nav/navegar';
 import { parseRutaEmpleado } from '@/lib/nav/rutas';
 import { ToastProvider, useToast } from './compartido/Toast';
@@ -64,7 +64,8 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email
   // mientras carga, false (no asumir vacío antes de tiempo -- evita el parpadeo del aviso en cada montaje).
   const sinProyectos = !proyectosLoading && totalProyectos === 0;
   const { grupos, otras: otrasTareas } = useCategoriasTareas({ categoriaId, departamentoId });
-  const { balance } = useBalanceMes(anio, mes);
+  const horasMes = useMemo(() => sumaHoras(Object.values(porDia).flat()), [porDia]);
+  const { balance } = useBalanceMes(anio, mes, horasMes);
   const { maxHorasDia } = useMaxHorasDia();
   const descripcionObligatoria = useDescripcionObligatoria();
 

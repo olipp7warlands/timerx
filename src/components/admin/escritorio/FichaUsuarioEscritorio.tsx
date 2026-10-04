@@ -14,6 +14,7 @@ import { useAusenciasAdmin } from '@/hooks/admin/useAusenciasAdmin';
 import { useFichaUsuario } from '@/hooks/admin/useFichaUsuario';
 import { useBalanceMesEmpleado } from '@/hooks/admin/useBalanceMesEmpleado';
 import { enviarRecordatorioEmpleado, restablecerPasswordEmpleado } from '@/app/admin/actions';
+import { llamarAccion } from '@/lib/acciones';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { ModalCentrado } from '@/components/empleado/compartido/ModalCentrado';
 import { TablaPendientesImputacion } from '../compartido/TablaPendientesImputacion';
@@ -110,7 +111,7 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
 
   async function onRecordar() {
     setEnviandoRecordatorio(true);
-    const { error, procesados, omitidos } = await enviarRecordatorioEmpleado(usuario.id);
+    const { error, procesados, omitidos } = await llamarAccion(() => enviarRecordatorioEmpleado(usuario.id), (error) => ({ error, procesados: 0, omitidos: 0 }));
     setEnviandoRecordatorio(false);
     if (error) {
       toast(error, 'error');
@@ -121,7 +122,7 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
 
   async function onRestablecerPassword() {
     setRestableciendo(true);
-    const { error, password } = await restablecerPasswordEmpleado(usuario.id);
+    const { error, password } = await llamarAccion(() => restablecerPasswordEmpleado(usuario.id), (error) => ({ error, password: null }));
     setRestableciendo(false);
     if (error || !password) {
       toast(error ?? 'No se pudo restablecer la contraseña', 'error');
