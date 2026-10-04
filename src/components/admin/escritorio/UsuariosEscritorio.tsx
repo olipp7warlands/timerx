@@ -7,6 +7,7 @@ import { useEmpresas } from '@/hooks/admin/useEmpresas';
 import { opcionesCategoria, useCategorias } from '@/hooks/admin/useCategorias';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { invitarUsuario } from '@/app/admin/actions';
+import { llamarAccion } from '@/lib/acciones';
 import { confirmar } from '@/components/ui/confirmar';
 import { ETIQUETA_ROL, type RolUsuario } from '@/lib/auth/roles';
 import { generarPasswordTemporal } from '@/lib/usuarios/password';
@@ -93,7 +94,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
       return;
     }
     setEnviando(true);
-    const { error, modo } = await invitarUsuario({
+    const { error, modo } = await llamarAccion(() => invitarUsuario({
       email: form.email,
       nombre: form.nombre,
       empresaId: form.empresaId,
@@ -101,7 +102,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
       rol: form.rol as 'empleado' | 'responsable_proyecto' | 'admin_empresa' | 'admin_grupo',
       categoriaId: form.categoriaId || null,
       password: form.password || null,
-    });
+    }), (error) => ({ error, modo: undefined }));
     setEnviando(false);
     if (error) {
       toast(error, 'error');

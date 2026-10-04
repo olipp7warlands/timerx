@@ -15,6 +15,7 @@ import { Kpi } from '../compartido/Kpi';
 import { Donut } from '../compartido/Donut';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { enviarRecordatoriosManual } from '@/app/admin/actions';
+import { llamarAccion } from '@/lib/acciones';
 import { fmt, formatoDiaLargo, formatoMesAnio } from '@/lib/horas/calendario';
 import { IconHoy, IconCalendario } from '@/components/ui/icons';
 import type { AdminInfo, SeccionAdmin } from '../types';
@@ -31,7 +32,7 @@ export function InicioEscritorio({ info, onIrA }: { info: AdminInfo; onIrA: (s: 
 
   async function onRecordar() {
     setEnviandoRecordatorios(true);
-    const { error, procesados, omitidos } = await enviarRecordatoriosManual();
+    const { error, procesados, omitidos } = await llamarAccion(enviarRecordatoriosManual, (error) => ({ error, procesados: 0, omitidos: 0 }));
     setEnviandoRecordatorios(false);
     if (error) {
       toast(error, 'error');

@@ -11,6 +11,7 @@ import { useCategorias } from '@/hooks/admin/useCategorias';
 import { useAprobacionImputaciones } from '@/hooks/admin/useAprobacionImputaciones';
 import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import { enviarRecordatoriosManual } from '@/app/admin/actions';
+import { llamarAccion } from '@/lib/acciones';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { TablaPendientesImputacion } from '../compartido/TablaPendientesImputacion';
 import { useNavAdmin } from '../NavAdmin';
@@ -105,7 +106,7 @@ export function ControlEscritorio({ info }: { info: AdminInfo }) {
 
   async function onEnviarRecordatorios() {
     setEnviandoRecordatorios(true);
-    const { error, procesados, omitidos } = await enviarRecordatoriosManual();
+    const { error, procesados, omitidos } = await llamarAccion(enviarRecordatoriosManual, (error) => ({ error, procesados: 0, omitidos: 0 }));
     setEnviandoRecordatorios(false);
     if (error) {
       toast(error, 'error');

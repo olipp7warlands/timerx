@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { analizarImportacion, ejecutarImportacion } from '@/app/admin/importadores';
+import { llamarAccion } from '@/lib/acciones';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import type { InformeImportacion, TipoImportacion } from '@/lib/importadores/tipos';
 
@@ -37,14 +38,14 @@ export function ImportadorBloque({ tipo, titulo, descripcion, exportHref, export
   async function analizar() {
     if (!archivo) return;
     setTrabajando('analizando');
-    setInforme(await analizarImportacion(tipo, datos()));
+    setInforme(await llamarAccion(() => analizarImportacion(tipo, datos()), (error) => ({ ok: false as const, error })));
     setTrabajando(null);
   }
 
   async function importar() {
     if (!archivo) return;
     setTrabajando('importando');
-    const resultado = await ejecutarImportacion(tipo, datos());
+    const resultado = await llamarAccion(() => ejecutarImportacion(tipo, datos()), (error) => ({ ok: false as const, error }));
     setTrabajando(null);
     if (resultado.ok && resultado.importadas) {
       toast(`Importadas ${resultado.importadas} filas`);

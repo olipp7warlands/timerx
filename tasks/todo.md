@@ -1,3 +1,11 @@
+# HOTFIX v1.6.1 — reset de contraseña colgado + línea base estable (2026-10-04)
+
+- **Causa raíz**: el cliente llamaba a las server actions sin captura. Si la promesa se RECHAZA (red cortada, 5xx, proxy) el `await` aborta antes de `setX(false)`: botón en «Restableciendo…» para siempre, sin modal ni toast (`pageerror` sin capturar). Reproducido con control (abort y 500, código previo) y corregido. Origen del patrón: `ed53a3f` (2026-09-18, Lote 1). NINGÚN commit rompió la acción: el servidor devuelve 200 + temporal con Cristian sobre cuenta nueva y sobre Leo (restaurado a `Horas2026!`, login verificado), y la pestaña rancia con server action tras cambio de build también funciona (hipótesis refutada). El detonante concreto de ayer no es recuperable: la demo no se desplegó entre el 25-sep y hoy 17:18Z y Railway no conserva logs de despliegues retirados; lo más probable, un fallo transitorio de red/servidor.
+- **Fix**: `src/lib/acciones.ts` (`llamarAccion`: siempre resuelve) aplicado a los 9 puntos de llamada de las 7 server actions (reset, recordar ×3, invitar, desactivar/reactivar, analizar/ejecutar importación). Verificado en local: con la red cortada y con 500 sale el aviso y el botón se recupera; camino feliz intacto.
+- **Huella estable**: `scripts/regresion-huella.mjs`. ANCLA (jul/ago, cerrados): cruda `bc819d95`, canónica `65e09879`, 73 claves, idéntica en 2 ejecuciones. VIVA (sep/oct): informativa.
+
+---
+
 # LOTE v1.6 (2026-10-04) — bug del balance (Mes ≠ héroe) + paridad verificable demo↔producción
 
 > main → demo → commit listo para promoción. Sin migraciones: las huellas de RPCs no deben moverse (SQL intacto).
