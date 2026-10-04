@@ -5,7 +5,9 @@
 
 - [x] 1. Causa raíz. Criterios YA alineados (héroe `sumaHoras` excluye rechazadas = `balance_mes`; comprobado en demo, Andrés y Leo, sep: suma == RPC). Divergencia = **«Mes» obsoleto**: `useBalanceMes` solo pedía el balance al montar y `EmpleadoApp` no lo refrescaba tras insertar, mientras el héroe leía `porDia` (que sí se recarga). Fix solo app (`useBalanceMes(anio, mes, horasMes)` + `horasMes` en `EmpleadoApp`). **SIN CONFIRMAR con las líneas reales de producción** (lectura denegada por el clasificador; pendiente de que el usuario ejecute la consulta).
 - [x] 2a. `/api/version` (commit, rama, build). [x] 2b. `scripts/comprobar-paridad.mjs`. [x] 2c. Runbook §12 pasos 0 y 6.
-- [x] Build/tsc OK, lint 78 = base 78. [ ] Commit, demo en verde, ejecutar paridad tras el deploy de demo.
+- [x] Build/tsc OK, lint 78 = base 78. [x] Commits `221d361` + `31121a0` (fix del script: CLI sin extensión en Windows), demo en verde. Paridad: demo == main y 28/28 migraciones; prod NO medible hasta promocionar (aún sin `/api/version`: responde el catch-all, 307 a login).
+- [x] Regresión demo (2026-10-04, sesiones reales de Cristian y Marina + service_role, `snap2.mjs`): 69 de 73 claves idénticas a la foto de v1.5 (`016e5c34`); las 4 distintas son `estado_dias_mes_9/10` de ambos, solo días que pasan de `futuro` a `incompleto` por `current_date` (28-30 sep y 1-2 oct), no por datos ni código → canónica nueva `128a913d` (cruda `e40cdd33`) = línea base vigente. Conteos idénticos salvo `ticket_comentario` 5→6: comentario «Hola» del 30-09 (actividad real posterior a v1.5, no de esta sesión, que no escribió nada en demo).
+- [ ] Pendiente del usuario: (a) pegar el resultado de la consulta de sus líneas del 30-sep en producción (el texto recibido traía el marcador sin rellenar) → confirma o refuta la causa del punto 1; (b) verificación visual en demo: imputar una línea y ver «Mes» actualizarse sin recargar (sin navegador en la sesión); (c) promoción de v1.6 con `comprobar-paridad` antes y después.
 
 ---
 
