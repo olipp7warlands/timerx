@@ -3,7 +3,7 @@
 -- Nombres literales extraídos de mocks/panel_administracion.html y
 -- mocks/app_movil_empleado.html (regla del proyecto: los mocks no se reinterpretan).
 -- UUIDs fijos para poder referenciarlos desde scripts/seed-usuarios.mjs y
--- supabase/seed_datos.sql. Ejecutar DESPUÉS de las migraciones 001-003.
+-- supabase/seed_datos.sql. Ejecutar DESPUÉS de las migraciones (001-031).
 -- =============================================================================
 
 -- 1. Empresas ------------------------------------------------------------------
@@ -12,14 +12,26 @@ insert into empresa (id, nombre, cif) values
   ('00000000-0000-0000-0000-000000000002', 'Málaga CF SAD',  'A-99887766'),
   ('00000000-0000-0000-0000-000000000003', 'Legal Norte SL', 'B-55667788');
 
--- 2. Categorías (panel_administracion.html, sección Categorías > Catálogo) -----
-insert into categoria (id, nombre) values
-  ('00000000-0000-0000-0001-000000000001', 'Desarrollo'),
-  ('00000000-0000-0000-0001-000000000002', 'Diseño'),
-  ('00000000-0000-0000-0001-000000000003', 'Abogados'),
-  ('00000000-0000-0000-0001-000000000004', 'Gestión');
+-- 2. Departamentos y su categoría espejo (v2.0) ----------------------------------
+-- Modelo v2.0 (migraciones 030/031): Departamento -> Especialidad. `categoria` es el ESPEJO 1:1 de cada departamento (departamento_id NOT NULL UNIQUE).
+-- El trigger de la 030 crea el espejo de cada departamento nuevo con id aleatorio; aquí se siembran con ids FIJOS (referencias estables
+-- entre semilla, scripts y código), así que se desactiva durante la siembra con `app.v20_sin_espejo`.
+select set_config('app.v20_sin_espejo', 'on', false);
+insert into departamento (id, nombre, activo, color) values
+  ('00000000-0000-0000-0004-000000000001', 'Desarrollo', true, 'azul'),
+  ('00000000-0000-0000-0004-000000000003', 'Diseño', true, 'arena'),
+  ('00000000-0000-0000-0004-000000000002', 'Legal', true, 'malva'),
+  ('00000000-0000-0000-0004-000000000004', 'Administración y Finanzas', true, 'verde');
+insert into categoria (id, nombre, activa, departamento_id) values
+  ('00000000-0000-0000-0001-000000000001', 'Desarrollo', true, '00000000-0000-0000-0004-000000000001'),
+  ('00000000-0000-0000-0001-000000000002', 'Diseño', true, '00000000-0000-0000-0004-000000000003'),
+  ('00000000-0000-0000-0001-000000000003', 'Legal', true, '00000000-0000-0000-0004-000000000002'),
+  ('00000000-0000-0000-0001-000000000004', 'Administración y Finanzas', true, '00000000-0000-0000-0004-000000000004');
+select set_config('app.v20_sin_espejo', 'off', false);
+-- Todas las empresas con todos los departamentos (D4); el admin recorta después desde la ficha de empresa.
+insert into empresa_departamento (empresa_id, departamento_id) select e.id, d.id from empresa e cross join departamento d;
 
--- 3. Subcategorías ---------------------------------------------------------------
+-- 3. Subcategorías (= las ESPECIALIDADES imputables; cuelgan del espejo de su departamento) ---------------------------------------------------------------
 insert into subcategoria (id, categoria_id, nombre) values
   ('00000000-0000-0000-0002-000000000001', '00000000-0000-0000-0001-000000000001', 'Backend'),
   ('00000000-0000-0000-0002-000000000002', '00000000-0000-0000-0001-000000000001', 'Frontend'),
@@ -49,23 +61,6 @@ insert into proyecto (id, empresa_id, codigo, nombre) values
   ('00000000-0000-0000-0003-000000000005', '00000000-0000-0000-0000-000000000001', 'INTERNO',  'Interno'),
   ('00000000-0000-0000-0003-000000000006', '00000000-0000-0000-0000-000000000002', 'MCHEF',    'Masterchef'),
   ('00000000-0000-0000-0003-000000000007', '00000000-0000-0000-0000-000000000001', 'LAUNCHER', 'Launcher');
-
--- 5. Departamentos (responsable_id se completa en seed_datos.sql, tras crear perfiles) --
-insert into departamento (id, nombre) values
-  ('00000000-0000-0000-0004-000000000001', '3B3'),
-  ('00000000-0000-0000-0004-000000000002', 'Jurídico'),
-  ('00000000-0000-0000-0004-000000000003', 'Diseño');
-
--- 6. Categoría -> departamento (columna de la migración 015; va después de la
--- sección 5 porque es una FK a departamento). Desarrollo -> 3B3, Diseño -> Diseño
--- (fix 026: el backfill original de la 015 metía Diseño bajo 3B3, bug),
--- Abogados -> Jurídico, Gestión queda global (NULL).
-update categoria set departamento_id = '00000000-0000-0000-0004-000000000001'
-  where id = '00000000-0000-0000-0001-000000000001'; -- Desarrollo
-update categoria set departamento_id = '00000000-0000-0000-0004-000000000003'
-  where id = '00000000-0000-0000-0001-000000000002'; -- Diseño
-update categoria set departamento_id = '00000000-0000-0000-0004-000000000002'
-  where id = '00000000-0000-0000-0001-000000000003'; -- Abogados
 
 -- ajuste y festivo ya vienen sembrados por la propia migración 002.
 

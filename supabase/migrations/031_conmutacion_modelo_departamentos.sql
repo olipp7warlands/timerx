@@ -14,6 +14,8 @@
 --
 -- Reversa: `respaldo_v20` guarda lo que se cambia; `supabase/rollback/v2.0_down.sql` lo restaura (ensayada en demo).
 -- La migración se NIEGA a correr si el catálogo no tiene la forma esperada, y termina con una autocomprobación que revierte TODO si algo no cuadra.
+-- PROYECTO NUEVO (sin ningún departamento: las migraciones 001-029 no siembran catálogo, lo hacen las semillas): no hay nada que conmutar; la
+-- migración solo fija el invariante del espejo y las semillas crean ya el modelo nuevo (ver supabase/seed*.sql).
 -- =============================================================================
 
 create temp table v20_antes (clave text primary key, valor numeric) on commit drop;
@@ -30,6 +32,11 @@ declare
   v_declarados text[] := array['sara.martin@wowinx.com'];   -- perfiles incoherentes cuya normalización está APROBADA (D11, solo demo)
   v_extra text;
 begin
+  -- Proyecto nuevo: sin catálogo no hay nada que conmutar (las semillas crean el modelo nuevo directamente).
+  if not exists (select 1 from departamento) then
+    return;
+  end if;
+
   -- 1. GUARDAS DE FORMA: el catálogo debe ser exactamente el esperado (3 departamentos; 4 categorías, o 5 con Operaciones global).
   select id into v_dep_3b3 from departamento where nombre = '3B3';
   select id into v_dep_jur from departamento where nombre = 'Jurídico';
@@ -146,8 +153,9 @@ begin
   select string_agg(nombre, ', ') into v from departamento where color is null;
   if v is not null then raise exception '031: departamentos sin color: %', v; end if;
 
-  -- Gestión conserva sus tareas bajo el nuevo departamento
-  if (select count(*) from subcategoria s join categoria c on c.id = s.categoria_id join departamento d on d.id = c.departamento_id where d.nombre = 'Administración y Finanzas') < 3 then
+  -- Gestión conserva sus tareas bajo el nuevo departamento (solo si había catálogo que conmutar)
+  if exists (select 1 from departamento)
+     and (select count(*) from subcategoria s join categoria c on c.id = s.categoria_id join departamento d on d.id = c.departamento_id where d.nombre = 'Administración y Finanzas') < 3 then
     raise exception '031: Administración y Finanzas no conserva las tareas de Gestión';
   end if;
 

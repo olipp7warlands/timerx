@@ -13,6 +13,7 @@ import { useToast } from '@/components/empleado/compartido/Toast';
 import { confirmar } from '@/components/ui/confirmar';
 import { CLAVES_COLOR, ETIQUETA_COLOR, colorDeClave } from '@/lib/horas/colores-departamento';
 import { PREDEFINIDOS } from '@/lib/departamentos/predefinidos';
+import { ImportadorBloque } from '../compartido/ImportadorBloque';
 import type { AdminInfo } from '../types';
 
 const etiqueta = 'mb-1 block text-xs font-extrabold text-ink-tertiary';
@@ -59,7 +60,7 @@ function SelectorEmpresas({ empresas, value, onChange }: { empresas: EmpresaOpci
  */
 export function DepartamentosEscritorio({ info }: { info: AdminInfo }) {
   const toast = useToast();
-  const { departamentos, personas, empresas, loading, crear, actualizar, fijarEmpresas, crearEspecialidad, actualizarEspecialidad } = useDepartamentosAdmin();
+  const { departamentos, personas, empresas, loading, recargar, crear, actualizar, fijarEmpresas, crearEspecialidad, actualizarEspecialidad } = useDepartamentosAdmin();
   const [formAbierto, setFormAbierto] = useState(false);
   const [elegidos, setElegidos] = useState<string[]>([]);
   const [personalizado, setPersonalizado] = useState('');
@@ -213,6 +214,22 @@ export function DepartamentosEscritorio({ info }: { info: AdminInfo }) {
             Un departamento agrupa a las personas y a las especialidades que se imputan. El responsable aprueba ausencias y vigila las imputaciones faltantes de su equipo. Un departamento con
             especialidades activas o profesionales en activo no se puede desactivar: reubícalos antes.
           </p>
+        </div>
+      </div>
+
+      <div className="card" data-testid="importar-especialidades">
+        <div className="card-head">
+          <h2 className="text-sm font-extrabold">Importar / Exportar especialidades</h2>
+        </div>
+        <div className="card-body max-w-3xl">
+          <ImportadorBloque
+            tipo="categorias"
+            titulo="Especialidades"
+            descripcion="Altas masivas desde Excel, una fila por especialidad con su departamento. Los departamentos deben existir ya y estar activos. Todo o nada."
+            exportHref="/api/export/categorias"
+            exportEtiqueta="Exportar especialidades"
+            onImportado={recargar}
+          />
         </div>
       </div>
     </div>

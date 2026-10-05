@@ -224,7 +224,7 @@ async function borrarEnOrden({ ticketIds, imputacionIds, ausenciaIds, perfilIds 
 }
 
 async function conteosFinales() {
-  const T = { empresa: 3, departamento: 3, categoria: 4, subcategoria: 14, mapa_area: 6, mapa_item: 22, proyecto: 7, empresa_jornada: 21, festivo: 8, ajuste: 5, perfil: 1, empleado_proyecto: 0, proyecto_responsable: 0, imputacion: 0, ausencia: 0, periodo: 0, tarifa: 0, coste_empleado: 0, ticket: 0, ticket_comentario: 0, recordatorio_log: 0 };
+  const T = { empresa: 3, departamento: 4, categoria: 4, subcategoria: 14, mapa_area: 6, mapa_item: 22, proyecto: 7, empresa_jornada: 21, festivo: 8, ajuste: 5, perfil: 1, empleado_proyecto: 0, proyecto_responsable: 0, imputacion: 0, ausencia: 0, periodo: 0, tarifa: 0, coste_empleado: 0, ticket: 0, ticket_comentario: 0, recordatorio_log: 0 };
   console.log('\n=== Conteos finales (deben coincidir con el estado de entrega) ===');
   let malas = 0;
   for (const [t, e] of Object.entries(T)) {

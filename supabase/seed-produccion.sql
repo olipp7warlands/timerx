@@ -23,8 +23,8 @@ begin
   if exists (select 1 from empresa) or exists (select 1 from perfil) or exists (select 1 from proyecto) then
     raise exception 'seed-produccion: la base YA tiene datos (empresa/perfil/proyecto). Este seed es solo para un proyecto nuevo y vacio.';
   end if;
-  if (select count(*) from ajuste) <> 5 or (select count(*) from festivo) <> 8 then
-    raise exception 'seed-produccion: ajuste/festivo no tienen lo que siembran las migraciones (5 ajustes, 8 festivos): ¿estan aplicadas las 24 migraciones?';
+  if (select count(*) from ajuste) <> 6 or (select count(*) from festivo) <> 8 then
+    raise exception 'seed-produccion: ajuste/festivo no tienen lo que siembran las migraciones (6 ajustes, 8 festivos): ¿estan aplicadas las 31 migraciones?';
   end if;
 end $$;
 
@@ -53,24 +53,28 @@ insert into empresa (id, nombre, cif) values
   ('00000000-0000-0000-0000-000000000003', 'Legal Norte SL', null);
 
 -- -----------------------------------------------------------------------------
--- 3. DEPARTAMENTOS  (3)
+-- 3. DEPARTAMENTOS (4) + CATEGORIA ESPEJO 1:1 + EMPRESA_DEPARTAMENTO (v2.0)
 -- VEREDICTO: INCLUYE. `responsable_id` queda NULL: en la demo apunta a Cristian (una cuenta que en produccion no existe todavia).
 -- -----------------------------------------------------------------------------
-insert into departamento (id, nombre, activo) values
-  ('00000000-0000-0000-0004-000000000001', '3B3', true),
-  ('00000000-0000-0000-0004-000000000003', 'Diseño', true),
-  ('00000000-0000-0000-0004-000000000002', 'Jurídico', true);
-
--- -----------------------------------------------------------------------------
--- 4. CATEGORIAS  (4) con su departamento_id (migracion 015)   |   5. SUBCATEGORIAS / TAREAS  (14)
--- VEREDICTO: INCLUYE. Desarrollo -> 3B3, Diseno -> Diseno, Abogados -> Juridico, Gestion global. (Fix del bug de
---   estreno v1.1 / migracion 026: la demo tenia Diseno mal casada con 3B3, bug heredado del backfill original de la 015.)
--- -----------------------------------------------------------------------------
+-- Modelo v2.0 (migraciones 030/031): Departamento -> Especialidad. `categoria` es el ESPEJO 1:1 de cada departamento (departamento_id NOT NULL UNIQUE).
+-- El trigger de la 030 crea el espejo de cada departamento nuevo con id aleatorio; aquí se siembran con ids FIJOS (referencias estables
+-- entre semilla, scripts y código), así que se desactiva durante la siembra con `app.v20_sin_espejo`.
+select set_config('app.v20_sin_espejo', 'on', false);
+insert into departamento (id, nombre, activo, color) values
+  ('00000000-0000-0000-0004-000000000001', 'Desarrollo', true, 'azul'),
+  ('00000000-0000-0000-0004-000000000003', 'Diseño', true, 'arena'),
+  ('00000000-0000-0000-0004-000000000002', 'Legal', true, 'malva'),
+  ('00000000-0000-0000-0004-000000000004', 'Administración y Finanzas', true, 'verde');
 insert into categoria (id, nombre, activa, departamento_id) values
   ('00000000-0000-0000-0001-000000000001', 'Desarrollo', true, '00000000-0000-0000-0004-000000000001'),
   ('00000000-0000-0000-0001-000000000002', 'Diseño', true, '00000000-0000-0000-0004-000000000003'),
-  ('00000000-0000-0000-0001-000000000003', 'Abogados', true, '00000000-0000-0000-0004-000000000002'),
-  ('00000000-0000-0000-0001-000000000004', 'Gestión', true, null);
+  ('00000000-0000-0000-0001-000000000003', 'Legal', true, '00000000-0000-0000-0004-000000000002'),
+  ('00000000-0000-0000-0001-000000000004', 'Administración y Finanzas', true, '00000000-0000-0000-0004-000000000004');
+select set_config('app.v20_sin_espejo', 'off', false);
+-- Todas las empresas con todos los departamentos (D4); el admin recorta después desde la ficha de empresa.
+insert into empresa_departamento (empresa_id, departamento_id) select e.id, d.id from empresa e cross join departamento d;
+
+-- (los departamentos arriba SON las categorías de antes fusionadas: Desarrollo=3B3+Desarrollo, Legal=Jurídico+Abogados, Administración y Finanzas=Gestión)
 
 insert into subcategoria (id, categoria_id, nombre, activa) values
   ('00000000-0000-0000-0002-000000000001', '00000000-0000-0000-0001-000000000001', 'Backend', true),
@@ -178,15 +182,17 @@ begin
   select string_agg(t || ' = ' || n || ' (esperado ' || e || ')', '; ') into v_falla
   from (values
     ('empresa', (select count(*) from empresa), 3),
-    ('departamento', (select count(*) from departamento), 3),
+    ('departamento', (select count(*) from departamento), 4),
     ('categoria', (select count(*) from categoria), 4),
+    ('empresa_departamento', (select count(*) from empresa_departamento), 12),
+    ('perfil_departamento', (select count(*) from perfil_departamento), 0),
     ('subcategoria', (select count(*) from subcategoria), 14),
     ('mapa_area', (select count(*) from mapa_area), 6),
     ('mapa_item', (select count(*) from mapa_item), 22),
     ('proyecto', (select count(*) from proyecto), 7),
     ('empresa_jornada', (select count(*) from empresa_jornada), 21),
     ('festivo', (select count(*) from festivo), 8),
-    ('ajuste', (select count(*) from ajuste), 5),
+    ('ajuste', (select count(*) from ajuste), 6),
     ('perfil', (select count(*) from perfil), 0),
     ('empleado_proyecto', (select count(*) from empleado_proyecto), 0),
     ('proyecto_responsable', (select count(*) from proyecto_responsable), 0),
@@ -210,6 +216,14 @@ begin
      or (select count(*) from empresa_jornada where dia_semana in (1, 2, 3, 4) and horas = 8) <> 12
      or (select count(*) from empresa_jornada where dia_semana in (6, 7) and horas = 0) <> 6 then
     raise exception 'seed-produccion: la jornada semanal no es 8/8/8/8/5,5/0/0 en las tres empresas';
+  end if;
+
+  -- Modelo v2.0: espejo 1:1 con el mismo nombre y estado, todo departamento con color, ninguna categoría sin departamento
+  if exists (select 1 from departamento d left join categoria c on c.departamento_id = d.id where c.id is null or c.nombre <> d.nombre or c.activa <> d.activo or d.color is null) then
+    raise exception 'seed-produccion: el espejo categoria<->departamento no es 1:1 / faltan colores';
+  end if;
+  if (select count(*) from subcategoria s join categoria c on c.id = s.categoria_id join departamento d on d.id = c.departamento_id where d.nombre = 'Administración y Finanzas') <> 3 then
+    raise exception 'seed-produccion: Administración y Finanzas debía tener las 3 tareas de Gestión';
   end if;
 
   if (select valor from ajuste where clave = 'jornada_horas') <> '8'::jsonb then

@@ -138,7 +138,7 @@ export function ImputarMovil({ ctx, onAbrirHoja, onAbrirHistorial }: Props) {
           })}
           <button type="button" className="add-line flex items-center gap-2 text-xs font-extrabold" onClick={() => onAbrirHoja('proyecto', true)}>
             <span className="grid h-6 w-6 place-items-center rounded-full border border-dashed border-ink-primary">＋</span>
-            Imputar nueva tarea
+            Nueva imputación
           </button>
           <div className="flex gap-2">
             <button type="button" className="btn flex-1 justify-center" onClick={ctx.descartarStaged}>

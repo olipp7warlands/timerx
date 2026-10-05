@@ -45,7 +45,7 @@ function ImputacionTesterInterno({ empresaId }: { empresaId: string }) {
 
   async function onInsertar() {
     if (!proyectoActivo || !subcategoriaActiva) {
-      toast('Elige proyecto y tarea primero', 'error');
+      toast('Elige proyecto y especialidad primero', 'error');
       return;
     }
     const { error } = await insertar({ proyectoId: proyectoActivo, subcategoriaId: subcategoriaActiva, horas, fecha: fechaHoy });
@@ -55,7 +55,7 @@ function ImputacionTesterInterno({ empresaId }: { empresaId: string }) {
 
   async function onProbarLoteAtomico() {
     if (!proyectoActivo || !subcategoriaActiva || !maxHorasDia) {
-      toast('Faltan datos para la prueba (proyecto/tarea/tope)', 'error');
+      toast('Faltan datos para la prueba (proyecto/especialidad/tope)', 'error');
       return;
     }
     const antes = (porDia[fechaHoy] ?? []).length;
@@ -158,7 +158,7 @@ function ImputacionTesterInterno({ empresaId }: { empresaId: string }) {
               </select>
             </label>
             <label className="text-xs">
-              Tarea
+              Especialidad
               <select className="input" value={subcategoriaActiva} onChange={(e) => setSubcategoriaId(e.target.value)}>
                 {grupos.map((g) => (
                   <optgroup key={g.categoriaId} label={g.categoriaNombre}>

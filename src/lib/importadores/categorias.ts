@@ -1,146 +1,98 @@
 import { claveTexto, definir, errorDeFila, indexarPorNombre } from './nucleo';
 
-interface FilaCategoria {
+interface FilaEspecialidad {
   fila: number;
-  /** Nombre tal como viene en la fila (la primera aparición manda para categorías nuevas). */
-  categoria: string;
-  /** Categoría ya existente (id) o `null` si esta fila la crea. */
-  categoriaId: string | null;
-  departamentoId: string | null;
-  tarea: string;
+  /** Categoría ESPEJO del departamento (de ella cuelga la especialidad: `subcategoria.categoria_id`). */
+  espejoId: string;
+  especialidad: string;
 }
 
+/** Error claro para quien sube la plantilla ANTERIOR del catálogo (categoría · departamento · tarea). Ruptura declarada (v2.0, D8). */
+const PLANTILLA_ANTERIOR =
+  'Esta es la plantilla ANTERIOR del catálogo (categoría · departamento · tarea). Desde v2.0 la categoría es el propio departamento y la tarea se llama especialidad: descarga la plantilla nueva (departamento · especialidad) y vuelve a subir tus filas.';
+
 /**
- * Alta masiva del CATÁLOGO de categorías y tareas (sección Categorías › Importar / Exportar): UNA FILA POR TAREA. Las
- * categorías nuevas se crean con su departamento (como `useCategorias.crearCategoria`) y las tareas nuevas cuelgan de la
- * suya (`crearSubcategoria`). Son dos INSERT (categorías y luego tareas): el todo-o-nada es por COMPENSACIÓN, como en el
- * importador de usuarios: si falla el segundo, se borran las categorías creadas por este lote (aún sin tareas ni uso).
- * La RLS (`categoria_admin` / `subcategoria_admin`, solo admin_grupo) sigue actuando como segunda barrera.
+ * Alta masiva de ESPECIALIDADES (sección Departamentos › Importar / Exportar), v2.0: UNA FILA POR ESPECIALIDAD, con su departamento.
+ * Una especialidad es una `subcategoria` bajo la categoría ESPEJO de su departamento. Es UN solo INSERT: el todo-o-nada es el de Postgres
+ * (sin compensación). La RLS (`subcategoria_admin`, solo admin_grupo) sigue actuando como segunda barrera.
+ * Los departamentos NO se crean aquí (se dan de alta desde la sección, con su color y sus empresas): un departamento desconocido es un error.
  */
-export const importadorCategorias = definir<FilaCategoria>({
+export const importadorCategorias = definir<FilaEspecialidad>({
   id: 'categorias',
   plantilla: {
     hoja: 'Especialidades',
     columnas: [
-      { cabecera: 'especialidad', alias: ['categoria'], obligatoria: true, descripcion: 'Especialidad a la que pertenece la tarea. Si no existe, se crea; si existe, la tarea se añade a ella.', ejemplo: 'Desarrollo' },
+      { cabecera: 'departamento', obligatoria: true, descripcion: 'Departamento al que pertenece la especialidad, con el nombre exacto de uno existente y activo.', ejemplo: 'Desarrollo' },
       {
-        cabecera: 'departamento',
-        obligatoria: false,
-        descripcion: 'Departamento de la especialidad, con el nombre exacto de uno existente. VACÍO = especialidad global (transversal). En una especialidad que ya existe debe COINCIDIR con el suyo.',
-        ejemplo: '3B3',
+        cabecera: 'especialidad',
+        obligatoria: true,
+        descripcion: 'Nombre de la especialidad (lo que se imputa). No puede existir ya en ese departamento (sin distinguir mayúsculas).',
+        ejemplo: 'Backend',
       },
-      { cabecera: 'tarea', obligatoria: true, descripcion: 'Nombre de la tarea (subcategoría). No puede existir ya en esa especialidad (sin distinguir mayúsculas).', ejemplo: 'Backend' },
     ],
+    // Cabeceras de la plantilla anterior: se rechazan con un mensaje claro (no con el genérico «columna desconocida»).
+    antiguas: { categoria: PLANTILLA_ANTERIOR, tarea: PLANTILLA_ANTERIOR },
     notas: [
-      'UNA FILA POR TAREA: para una especialidad con tres tareas, escribe tres filas con el mismo nombre de especialidad (y el mismo departamento).',
-      'ALTA SOLAMENTE: crea especialidades y tareas nuevas. Una tarea que ya existe en su especialidad es un error de fila; no hay edición ni borrado masivos.',
-      'EL IMPORTADOR NO REUBICA: si la especialidad ya existe con OTRO departamento distinto del declarado en la fila (o global y la fila indica uno, o al revés), es un error. El departamento de una especialidad existente se cambia en su sección, no aquí.',
-      'Una misma especialidad nueva debe declarar el MISMO departamento en todas sus filas.',
+      'UNA FILA POR ESPECIALIDAD: para un departamento con tres especialidades, escribe tres filas con el mismo nombre de departamento.',
+      'ALTA SOLAMENTE: crea especialidades nuevas. Una que ya existe en su departamento es un error de fila; no hay edición ni borrado masivos.',
+      'LOS DEPARTAMENTOS NO SE CREAN AQUÍ: deben existir ya (se dan de alta en la sección Departamentos, con su color y sus empresas) y estar activos.',
       'TODO O NADA: si el análisis detecta un solo error no se importa ninguna fila. El informe indica la fila y el motivo de cada error; corrígelos en el archivo y vuelve a subirlo.',
-      'El archivo exportado (todo el catálogo: una fila por tarea) se puede reimportar tal cual: como todas esas tareas ya existen dará errores de duplicado y ninguna alta. Una especialidad sin ninguna tarea no aparece en el export (no tiene fila).',
+      'El archivo exportado (todo el catálogo: una fila por especialidad) se puede reimportar tal cual: como todas esas especialidades ya existen dará errores de duplicado y ninguna alta.',
+      'Si tienes un archivo con la plantilla ANTERIOR (categoría · departamento · tarea), no se importa: descarga esta plantilla nueva y pasa tus filas (la categoría es ahora el departamento).',
       'Solo el admin del grupo puede importar y exportar el catálogo.',
     ],
   },
 
   async analizar({ supabase }, filas) {
-    const [categorias, subcategorias, departamentos] = await Promise.all([
-      supabase.from('categoria').select('id, nombre, departamento_id'),
+    const [departamentos, categorias, subcategorias] = await Promise.all([
+      supabase.from('departamento').select('id, nombre, activo'),
+      supabase.from('categoria').select('id, departamento_id'),
       supabase.from('subcategoria').select('categoria_id, nombre'),
-      supabase.from('departamento').select('id, nombre'),
     ]);
     const idxDepartamento = indexarPorNombre(departamentos.data ?? []);
-    const nombreDepartamento = new Map((departamentos.data ?? []).map((d) => [d.id as string, d.nombre as string]));
-    const etiquetaDep = (id: string | null) => (id ? `el departamento '${nombreDepartamento.get(id) ?? id}'` : 'global (sin departamento)');
+    const activoPorId = new Map((departamentos.data ?? []).map((d) => [d.id as string, d.activo as boolean]));
+    const espejoPorDepartamento = new Map((categorias.data ?? []).map((c) => [c.departamento_id as string, c.id as string]));
+    const existentes = new Set((subcategorias.data ?? []).map((s) => `${s.categoria_id}|${claveTexto(s.nombre)}`));
+    const enArchivo = new Map<string, number>();
 
-    const existente = new Map<string, { id: string; nombre: string; departamentoId: string | null }>();
-    for (const c of categorias.data ?? []) existente.set(claveTexto(c.nombre), { id: c.id, nombre: c.nombre, departamentoId: c.departamento_id });
-    const tareasExistentes = new Set((subcategorias.data ?? []).map((s) => `${s.categoria_id}|${claveTexto(s.nombre)}`));
-
-    /** Categorías NUEVAS declaradas en el archivo: departamento de su primera fila (todas deben coincidir). */
-    const nuevas = new Map<string, { departamentoId: string | null; fila: number }>();
-    const tareasEnArchivo = new Map<string, number>();
-
-    const validas: FilaCategoria[] = [];
+    const validas: FilaEspecialidad[] = [];
     const errores = [];
 
     for (const { fila, valores: v } of filas) {
       const motivos: string[] = [];
-      const categoria = (v.especialidad ?? '').trim();
-      const tarea = (v.tarea ?? '').trim();
-      if (!categoria) motivos.push('falta la especialidad');
-      if (!tarea) motivos.push('falta la tarea');
+      const especialidad = (v.especialidad ?? '').trim();
+      if (!especialidad) motivos.push('falta la especialidad');
 
-      let departamentoId: string | null = null;
-      let departamentoOk = true;
-      if (v.departamento) {
+      let espejoId = '';
+      if (!v.departamento) motivos.push('falta el departamento');
+      else {
         const id = idxDepartamento.get(claveTexto(v.departamento));
-        if (id === undefined) {
-          motivos.push(`departamento '${v.departamento}' no existe`);
-          departamentoOk = false;
-        } else if (id === null) {
-          motivos.push(`departamento '${v.departamento}' es ambiguo (hay varios con ese nombre)`);
-          departamentoOk = false;
-        } else departamentoId = id;
+        if (id === undefined) motivos.push(`el departamento '${v.departamento}' no existe (créalo antes en la sección Departamentos)`);
+        else if (id === null) motivos.push(`el departamento '${v.departamento}' es ambiguo (hay varios con ese nombre)`);
+        else if (!activoPorId.get(id)) motivos.push(`el departamento '${v.departamento}' está inactivo`);
+        else {
+          const espejo = espejoPorDepartamento.get(id);
+          if (!espejo) motivos.push(`el departamento '${v.departamento}' no tiene su categoría espejo (avisa a soporte)`);
+          else espejoId = espejo;
+        }
       }
 
-      let categoriaId: string | null = null;
-      if (categoria) {
-        const k = claveTexto(categoria);
-        const ex = existente.get(k);
-        if (ex) {
-          categoriaId = ex.id;
-          if (departamentoOk && ex.departamentoId !== departamentoId) {
-            motivos.push(
-              `la especialidad '${ex.nombre}' ya existe y es ${etiquetaDep(ex.departamentoId)}, pero la fila declara ${etiquetaDep(departamentoId)}: el importador no reubica especialidades (cámbialo en Especialidades)`
-            );
-          }
-          if (tarea && tareasExistentes.has(`${ex.id}|${claveTexto(tarea)}`)) motivos.push(`la tarea '${tarea}' ya existe en la especialidad '${ex.nombre}' (este importador solo da de alta, no actualiza)`);
-        } else if (departamentoOk) {
-          const previa = nuevas.get(k);
-          if (previa && previa.departamentoId !== departamentoId) {
-            motivos.push(`la especialidad nueva '${categoria}' declara ${etiquetaDep(departamentoId)}, pero en la fila ${previa.fila} declara ${etiquetaDep(previa.departamentoId)}`);
-          } else if (!previa) nuevas.set(k, { departamentoId, fila });
-        }
-        if (tarea) {
-          const claveTarea = `${k}|${claveTexto(tarea)}`;
-          if (tareasEnArchivo.has(claveTarea)) motivos.push(`la tarea '${tarea}' está repetida en la especialidad '${categoria}' dentro del archivo (también en la fila ${tareasEnArchivo.get(claveTarea)})`);
-          else tareasEnArchivo.set(claveTarea, fila);
-        }
+      if (espejoId && especialidad) {
+        const clave = `${espejoId}|${claveTexto(especialidad)}`;
+        if (existentes.has(clave)) motivos.push(`la especialidad '${especialidad}' ya existe en el departamento '${v.departamento}'`);
+        else if (enArchivo.has(clave)) motivos.push(`la especialidad '${especialidad}' está repetida en el departamento '${v.departamento}' dentro del archivo (también en la fila ${enArchivo.get(clave)})`);
+        else enArchivo.set(clave, fila);
       }
 
       const error = errorDeFila(fila, motivos);
       if (error) errores.push(error);
-      else validas.push({ fila, categoria, categoriaId, departamentoId, tarea });
+      else validas.push({ fila, espejoId, especialidad });
     }
     return { validas, errores };
   },
 
   async ejecutar({ supabase }, validas) {
-    // 1) Categorías nuevas (una por nombre; la primera fila manda para mayúsculas y departamento).
-    const nuevas = new Map<string, { nombre: string; departamento_id: string | null }>();
-    for (const f of validas) {
-      const k = claveTexto(f.categoria);
-      if (!f.categoriaId && !nuevas.has(k)) nuevas.set(k, { nombre: f.categoria, departamento_id: f.departamentoId });
-    }
-    const idPorClave = new Map<string, string>();
-    let creadas: string[] = [];
-    if (nuevas.size > 0) {
-      const { data, error } = await supabase.from('categoria').insert([...nuevas.values()]).select('id, nombre');
-      if (error) return { error: `No se pudieron crear las especialidades: ${error.message}. No se ha importado ninguna fila.` };
-      creadas = (data ?? []).map((c) => c.id);
-      for (const c of data ?? []) idPorClave.set(claveTexto(c.nombre), c.id);
-    }
-
-    // 2) Tareas. Si falla, se compensa borrando las categorías que acaba de crear este lote.
-    const { error } = await supabase.from('subcategoria').insert(
-      validas.map((f) => ({ categoria_id: f.categoriaId ?? idPorClave.get(claveTexto(f.categoria))!, nombre: f.tarea }))
-    );
-    if (!error) return { error: null };
-    let revertido = 'El lote se ha revertido: no se ha creado ninguna especialidad ni tarea.';
-    if (creadas.length > 0) {
-      const { error: errBorrado } = await supabase.from('categoria').delete().in('id', creadas);
-      if (errBorrado) revertido = `ATENCIÓN: no se pudieron revertir ${creadas.length} especialidad(s) creadas (ids: ${creadas.join(', ')}); bórralas a mano desde Especialidades.`;
-    }
-    return { error: `No se pudieron crear las tareas: ${error.message}. ${revertido}` };
+    const { error } = await supabase.from('subcategoria').insert(validas.map((f) => ({ categoria_id: f.espejoId, nombre: f.especialidad })));
+    return { error: error ? `No se pudieron crear las especialidades: ${error.message}. No se ha importado ninguna fila.` : null };
   },
 });

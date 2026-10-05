@@ -156,7 +156,7 @@ export function ControlEscritorio({ info }: { info: AdminInfo }) {
               value={subcategoriaEfectiva}
               onChange={(id) => setForm((f) => ({ ...f, subcategoriaId: id }))}
               ariaLabel="Especialidad"
-              placeholder="Selecciona tarea"
+              placeholder="Selecciona especialidad"
             />
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Fecha</label>
             <input className="input mono" type="date" value={form.fecha} onChange={(e) => setForm((f) => ({ ...f, fecha: e.target.value }))} />

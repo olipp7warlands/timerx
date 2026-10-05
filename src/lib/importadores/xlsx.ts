@@ -19,6 +19,8 @@ export interface DefinicionPlantilla {
   columnas: ColumnaPlantilla[];
   /** Párrafos libres al pie de la hoja "Instrucciones" (reglas del importador). */
   notas: string[];
+  /** Cabeceras de una plantilla ANTERIOR que ya no se admiten (ya normalizadas) -> mensaje claro (ruptura declarada), en vez del genérico «columna desconocida». */
+  antiguas?: Record<string, string>;
 }
 
 const MAX_FILAS = 2000;
@@ -103,7 +105,8 @@ export async function leerXlsx(
   buffer: Buffer,
   obligatorias: string[],
   opcionales: string[],
-  alias: Record<string, string> = {}
+  alias: Record<string, string> = {},
+  antiguas: Record<string, string> = {}
 ): Promise<{ ok: true; filas: FilaLeida[] } | { ok: false; error: string }> {
   const wb = new ExcelJS.Workbook();
   try {
@@ -124,6 +127,7 @@ export async function leerXlsx(
   const permitidas = new Set([...obligatorias, ...opcionales]);
   const vistas = new Set<string>();
   for (const c of cabeceras.values()) {
+    if (antiguas[c] && !permitidas.has(c)) return { ok: false, error: antiguas[c] };
     if (!permitidas.has(c)) return { ok: false, error: `Columna desconocida en la cabecera: «${c}». Columnas admitidas: ${[...permitidas].join(', ')}.` };
     if (vistas.has(c)) return { ok: false, error: `Columna duplicada en la cabecera: «${c}».` };
     vistas.add(c);

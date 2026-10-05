@@ -6,27 +6,27 @@
 -- supabase/seed.sql.
 -- =============================================================================
 
--- 1. Completar perfil (categoría por defecto y departamento) -------------------
-update perfil set categoria_id = '00000000-0000-0000-0001-000000000001', departamento_id = '00000000-0000-0000-0004-000000000001' where id = '10000000-0000-0000-0000-000000000001'; -- Cristian Haro / Desarrollo / 3B3
-update perfil set categoria_id = '00000000-0000-0000-0001-000000000001', departamento_id = '00000000-0000-0000-0004-000000000001' where id = '10000000-0000-0000-0000-000000000002'; -- Verónica Salguero / Desarrollo / 3B3
-update perfil set categoria_id = '00000000-0000-0000-0001-000000000001', departamento_id = '00000000-0000-0000-0004-000000000001' where id = '10000000-0000-0000-0000-000000000003'; -- Andrés Fuentes / Desarrollo / 3B3
-update perfil set categoria_id = '00000000-0000-0000-0001-000000000001', departamento_id = '00000000-0000-0000-0004-000000000001' where id = '10000000-0000-0000-0000-000000000004'; -- Leo Silva / Desarrollo / 3B3
-update perfil set categoria_id = '00000000-0000-0000-0001-000000000002', departamento_id = '00000000-0000-0000-0004-000000000001' where id = '10000000-0000-0000-0000-000000000005'; -- Sara Martín / Diseño / 3B3
-update perfil set categoria_id = '00000000-0000-0000-0001-000000000003', departamento_id = '00000000-0000-0000-0004-000000000002' where id = '10000000-0000-0000-0000-000000000006'; -- Ana Ruiz / Abogados / Jurídico
-update perfil set categoria_id = '00000000-0000-0000-0001-000000000001', departamento_id = '00000000-0000-0000-0004-000000000001' where id = '10000000-0000-0000-0000-000000000007'; -- Cosme Hernandez / Desarrollo / 3B3
-update perfil set categoria_id = '00000000-0000-0000-0001-000000000001', departamento_id = '00000000-0000-0000-0004-000000000001' where id = '10000000-0000-0000-0000-000000000008'; -- Daniel Ramírez / Desarrollo / 3B3
-update perfil set categoria_id = '00000000-0000-0000-0001-000000000003', departamento_id = '00000000-0000-0000-0004-000000000002' where id = '10000000-0000-0000-0000-000000000009'; -- Marta Gil / Abogados / Jurídico
--- Enrique Robles (admin_empresa, Málaga CF): sin categoría/departamento de grupo.
+-- 1. Completar perfil (departamento). La categoría del perfil ya no se siembra: desde v2.0 el profesional pertenece a un departamento -----
+update perfil set departamento_id = '00000000-0000-0000-0004-000000000001' where id = '10000000-0000-0000-0000-000000000001'; -- Cristian Haro / Desarrollo
+update perfil set departamento_id = '00000000-0000-0000-0004-000000000001' where id = '10000000-0000-0000-0000-000000000002'; -- Verónica Salguero / Desarrollo
+update perfil set departamento_id = '00000000-0000-0000-0004-000000000001' where id = '10000000-0000-0000-0000-000000000003'; -- Andrés Fuentes / Desarrollo
+update perfil set departamento_id = '00000000-0000-0000-0004-000000000001' where id = '10000000-0000-0000-0000-000000000004'; -- Leo Silva / Desarrollo
+update perfil set departamento_id = '00000000-0000-0000-0004-000000000003' where id = '10000000-0000-0000-0000-000000000005'; -- Sara Martín / Diseño
+update perfil set departamento_id = '00000000-0000-0000-0004-000000000002' where id = '10000000-0000-0000-0000-000000000006'; -- Ana Ruiz / Legal
+update perfil set departamento_id = '00000000-0000-0000-0004-000000000001' where id = '10000000-0000-0000-0000-000000000007'; -- Cosme Hernandez / Desarrollo
+update perfil set departamento_id = '00000000-0000-0000-0004-000000000001' where id = '10000000-0000-0000-0000-000000000008'; -- Daniel Ramírez / Desarrollo
+update perfil set departamento_id = '00000000-0000-0000-0004-000000000002' where id = '10000000-0000-0000-0000-000000000009'; -- Marta Gil / Legal
+-- Enrique Robles (admin_empresa, Málaga CF): sin departamento de grupo.
 
 -- 2. Responsable de departamento -------------------------------------------------
-update departamento set responsable_id = '10000000-0000-0000-0000-000000000001' where nombre = '3B3'; -- Cristian Haro
+update departamento set responsable_id = '10000000-0000-0000-0000-000000000001' where id = '00000000-0000-0000-0004-000000000001'; -- Cristian Haro (Desarrollo)
 
--- 3. Tarifas (PLAN.md sección 6 + tabla "Detalle por empresa y categoría" del mock) --
+-- 3. Tarifas (PLAN.md sección 6 + tabla "Detalle por empresa y categoría" del mock; la clave de la tarifa es el espejo del departamento) --
 insert into tarifa (categoria_id, empresa_origen_id, coste_hora, vigente_desde) values
   ('00000000-0000-0000-0001-000000000001', null, 60.00, '2026-01-01'), -- Desarrollo
   ('00000000-0000-0000-0001-000000000002', null, 55.00, '2026-01-01'), -- Diseño
-  ('00000000-0000-0000-0001-000000000003', '00000000-0000-0000-0000-000000000003', 95.00, '2026-01-01'), -- Abogados (origen Legal Norte)
-  ('00000000-0000-0000-0001-000000000004', '00000000-0000-0000-0000-000000000003', 57.50, '2026-01-01'); -- Gestión (origen Legal Norte)
+  ('00000000-0000-0000-0001-000000000003', '00000000-0000-0000-0000-000000000003', 95.00, '2026-01-01'), -- Legal (origen Legal Norte)
+  ('00000000-0000-0000-0001-000000000004', '00000000-0000-0000-0000-000000000003', 57.50, '2026-01-01'); -- Administración y Finanzas (origen Legal Norte)
 insert into tarifa (empleado_id, coste_hora, vigente_desde) values
   ('10000000-0000-0000-0000-000000000006', 110.00, '2026-01-01'); -- Ana Ruiz: prioridad sobre su categoría
 
