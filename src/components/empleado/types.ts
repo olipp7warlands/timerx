@@ -2,7 +2,7 @@ import type { DiaMes } from '@/lib/horas/calendario';
 import type { ImputacionLinea, NuevaLinea } from '@/hooks/useImputacionesMes';
 import type { Ausencia } from '@/hooks/useAusenciasMes';
 import type { ProyectoAsignado } from '@/hooks/useProyectosAsignados';
-import type { GrupoTareas } from '@/hooks/useCategoriasTareas';
+import type { GrupoTareas } from '@/hooks/useEspecialidadesVisibles';
 import type { BalanceMes } from '@/hooks/useBalanceMes';
 import type { RolUsuario } from '@/lib/auth/roles';
 
@@ -50,10 +50,8 @@ export interface EmpleadoCtx {
   proyectosParaFechas: (fechas: string[]) => ProyectoAsignado[];
   /** true = el empleado no tiene NINGÚN proyecto asignado (no confundir con "ninguno cubre esta fecha", ver `proyectosParaFechas`). */
   sinProyectos: boolean;
-  /** Tareas que se ofrecen por defecto (categoría propia + transversales, o el filtro por departamento). */
+  /** Especialidades que la persona puede imputar, por departamento (empresa o conjunto fijado por su admin: `repartirTareas`). */
   grupos: GrupoTareas[];
-  /** Resto del catálogo, tras «Otras tareas…» (vacío si la persona no tiene categoría). */
-  otrasTareas: GrupoTareas[];
   balance: BalanceMes | null;
   maxHorasDia: number | null;
 

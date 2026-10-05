@@ -10,7 +10,7 @@ import { useDiasMes } from '@/hooks/useDiasMes';
 import { useImputacionesMes } from '@/hooks/useImputacionesMes';
 import { useAusenciasMes } from '@/hooks/useAusenciasMes';
 import { useProyectosAsignados } from '@/hooks/useProyectosAsignados';
-import { useCategoriasTareas } from '@/hooks/useCategoriasTareas';
+import { useEspecialidadesVisibles } from '@/hooks/useEspecialidadesVisibles';
 import { useMaxHorasDia } from '@/hooks/useMaxHorasDia';
 import { fmt, rangoDias } from '@/lib/horas/calendario';
 
@@ -30,7 +30,7 @@ function ImputacionTesterInterno({ empresaId }: { empresaId: string }) {
   const { ausencias, solicitar } = useAusenciasMes(anio, mes);
   const { paraFechas } = useProyectosAsignados();
   const proyectos = paraFechas([fechaHoy]);
-  const { grupos } = useCategoriasTareas();
+  const { grupos } = useEspecialidadesVisibles();
   const { maxHorasDia } = useMaxHorasDia();
 
   const [proyectoId, setProyectoId] = useState('');

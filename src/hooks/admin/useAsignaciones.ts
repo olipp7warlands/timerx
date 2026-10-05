@@ -39,7 +39,6 @@ export interface AsignacionProyectoPersona {
   empleadoId: string;
   nombre: string;
   departamento: string | null;
-  categoriaNombre: string | null;
   desde: string;
   hasta: string | null;
 }
@@ -59,14 +58,13 @@ export function useAsignacionesProyecto(proyectoId: string | null) {
     const supabase = createClient();
     const { data } = await supabase
       .from('empleado_proyecto')
-      .select('empleado_id, desde, hasta, empleado:empleado_id(nombre, departamento:departamento_id(nombre), categoria:categoria_id(nombre))')
+      .select('empleado_id, desde, hasta, empleado:empleado_id(nombre, departamento:departamento_id(nombre))')
       .eq('proyecto_id', proyectoId);
     setAsignaciones(
       (data ?? []).map((a: any) => ({
         empleadoId: a.empleado_id,
         nombre: a.empleado?.nombre ?? '',
         departamento: a.empleado?.departamento?.nombre ?? null,
-        categoriaNombre: a.empleado?.categoria?.nombre ?? null,
         desde: a.desde,
         hasta: a.hasta,
       }))

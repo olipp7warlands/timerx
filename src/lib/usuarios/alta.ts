@@ -6,7 +6,6 @@ export interface AltaUsuarioInput {
   empresaId: string;
   departamentoId?: string | null;
   rol: 'empleado' | 'responsable_proyecto' | 'admin_empresa' | 'admin_grupo';
-  categoriaId?: string | null;
   /** Contraseña inicial (solo modo `con-password`). */
   password?: string | null;
 }
@@ -56,14 +55,13 @@ export async function altaUsuario(
   const cambios = {
     ...(input.rol !== 'empleado' && { rol: input.rol }),
     ...(input.departamentoId && { departamento_id: input.departamentoId }),
-    ...(input.categoriaId && { categoria_id: input.categoriaId }),
   };
   if (Object.keys(cambios).length > 0) {
     const { data: filas, error: errPerfil } = await admin.from('perfil').update(cambios).eq('id', data.user.id).select('id');
     if (errPerfil || filas?.length !== 1) {
       return {
         userId: data.user.id,
-        error: `Cuenta creada como profesional pero falló completar el perfil (rol/departamento/especialidad): ${errPerfil?.message ?? 'perfil no encontrado'}`,
+        error: `Cuenta creada como profesional pero falló completar el perfil (rol/departamento): ${errPerfil?.message ?? 'perfil no encontrado'}`,
       };
     }
   }

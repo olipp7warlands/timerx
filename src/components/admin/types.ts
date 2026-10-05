@@ -5,7 +5,6 @@ export type SeccionAdmin =
   | 'empresas'
   | 'proyectos'
   | 'departamentos'
-  | 'especialidades'
   | 'calendario'
   | 'mapa'
   | 'control'

@@ -17,7 +17,7 @@ export type PasoInicial = 'tipo' | 'proyecto';
 const TITULO: Record<Paso, string> = {
   tipo: '¿Qué quieres imputar?',
   proyecto: '¿Qué proyecto?',
-  tarea: '¿Qué tarea?',
+  tarea: '¿Qué especialidad?',
   horas: '¿Cuántas horas?',
   austipo: '¿Qué tipo de ausencia?',
   ausdias: '¿Qué días?',
@@ -87,11 +87,9 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
   const [multiDias, setMultiDias] = useState<Set<string>>(new Set());
   const [mostrarCalMulti, setMostrarCalMulti] = useState(false);
   const [rangoAus, setRangoAus] = useState<RangoFechas>({ inicio: null, fin: null });
-  const [otrasAbiertas, setOtrasAbiertas] = useState(false);
 
   useEffect(() => {
     if (abierto) {
-      setOtrasAbiertas(false);
       dispatch({ tipo: 'RESET', paso: pasoInicial });
       setMultiDias(new Set([ctx.selDay]));
       setMostrarCalMulti(false);
@@ -214,20 +212,7 @@ export function NuevaImputacionSheet({ ctx, abierto, pasoInicial, destinoStaged,
       {state.actual === 'tarea' && (
         <div className="space-y-4">
           {ctx.grupos.map((g) => grupoTareas(g))}
-          {ctx.otrasTareas.length > 0 && (
-            <>
-              <button
-                type="button"
-                className="flex w-full items-center justify-between rounded-2xl border border-dashed border-border-strong p-3 text-left text-sm font-extrabold text-ink-tertiary"
-                aria-expanded={otrasAbiertas}
-                onClick={() => setOtrasAbiertas((v) => !v)}
-              >
-                Otras tareas
-                <span aria-hidden="true">{otrasAbiertas ? '⌄' : '›'}</span>
-              </button>
-              {otrasAbiertas && ctx.otrasTareas.map((g) => grupoTareas(g))}
-            </>
-          )}
+          {ctx.grupos.length === 0 && <p className="text-sm text-ink-tertiary">No hay especialidades disponibles. Pídele a tu admin que configure los departamentos de tu empresa.</p>}
         </div>
       )}
 

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useUsuarios, type ActualizarUsuarioInput, type UsuarioAdmin } from '@/hooks/admin/useUsuarios';
 import { opcionesDepartamento, useDepartamentos } from '@/hooks/admin/useDepartamentos';
 import { useEmpresas } from '@/hooks/admin/useEmpresas';
-import { opcionesCategoria, useCategorias } from '@/hooks/admin/useCategorias';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import { invitarUsuario } from '@/app/admin/actions';
 import { llamarAccion } from '@/lib/acciones';
@@ -33,7 +32,6 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
   const { usuarios, loading, recargar, actualizar, desactivar, reactivar } = useUsuarios();
   const { departamentos } = useDepartamentos();
   const { empresas } = useEmpresas();
-  const { categorias, crearCategoria } = useCategorias();
   const toast = useToast();
 
   const esAdminGrupo = info.rol === 'admin_grupo';
@@ -43,7 +41,7 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
   // Además abre el formulario (colapsado por defecto) y fuerza la pestaña «Usuarios», que es donde vive.
   const invitarEmpresaId = nav.consulta.get('invitar');
   const [formAbierto, setFormAbierto] = useState(!!invitarEmpresaId);
-  const [form, setForm] = useState({ email: '', nombre: '', empresaId: invitarEmpresaId ?? info.empresaId, departamentoId: '', rol: 'empleado', categoriaId: '', password: '' });
+  const [form, setForm] = useState({ email: '', nombre: '', empresaId: invitarEmpresaId ?? info.empresaId, departamentoId: '', rol: 'empleado', password: '' });
   /** Alta recién hecha con contraseña inicial: se muestra UNA vez para que el admin la copie y la entregue en mano. */
   const [altaCreada, setAltaCreada] = useState<{ email: string; password: string } | null>(null);
   const { limpiarConsulta } = nav;
@@ -60,11 +58,8 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
 
   const [enviando, setEnviando] = useState(false);
 
-  // Alta rápida de categoría (Lote 4): nace GLOBAL (departamento NULL); para acotarla, sección Especialidades.
-  const [catRapida, setCatRapida] = useState<{ abierta: boolean; nombre: string; creada: boolean }>({ abierta: false, nombre: '', creada: false });
-
   // Edición inline (Lote 4): una sola celda abierta a la vez + ✓ efímero de la última guardada.
-  type CampoInline = 'departamento' | 'rol' | 'categoria';
+  type CampoInline = 'departamento' | 'rol';
   const [celda, setCelda] = useState<{ id: string; campo: CampoInline } | null>(null);
   const [celdaGuardada, setCeldaGuardada] = useState<{ id: string; campo: CampoInline } | null>(null);
 
@@ -99,7 +94,6 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
       empresaId: form.empresaId,
       departamentoId: form.departamentoId || null,
       rol: form.rol as 'empleado' | 'responsable_proyecto' | 'admin_empresa' | 'admin_grupo',
-      categoriaId: form.categoriaId || null,
       password: form.password || null,
     }), (error) => ({ error, modo: undefined }));
     setEnviando(false);
@@ -113,21 +107,8 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
     } else {
       toast(modo === 'invitar' ? `Invitación enviada a ${form.email}` : `Cuenta creada para ${form.email} (sin contraseña ni correo): dale acceso con «Restablecer contraseña» en su ficha`);
     }
-    setForm({ email: '', nombre: '', empresaId: info.empresaId, departamentoId: '', rol: 'empleado', categoriaId: '', password: '' });
+    setForm({ email: '', nombre: '', empresaId: info.empresaId, departamentoId: '', rol: 'empleado', password: '' });
     recargar();
-  }
-
-  async function crearCatRapida() {
-    const nombre = catRapida.nombre.trim();
-    if (!nombre) return;
-    const { error, id } = await crearCategoria(nombre);
-    if (error || !id) {
-      toast(error ?? 'No se pudo crear la especialidad', 'error');
-      return;
-    }
-    setForm((f) => ({ ...f, categoriaId: id }));
-    setCatRapida({ abierta: false, nombre: '', creada: true });
-    setTimeout(() => setCatRapida((c) => ({ ...c, creada: false })), 1400);
   }
 
   /**
@@ -142,9 +123,6 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
     if (campo === 'departamento') {
       if ((valor || null) === u.departamentoId) return;
       input.departamentoId = valor || null;
-    } else if (campo === 'categoria') {
-      if ((valor || null) === u.categoriaId) return;
-      input.categoriaId = valor || null;
     } else {
       if (valor === u.rol) return;
       if (!confirmar(`Vas a cambiar el rol de ${u.nombre} de «${ETIQUETA_ROL[u.rol]}» a «${ETIQUETA_ROL[valor as RolUsuario]}»: cambia lo que puede ver y aprobar. ¿Confirmas?`)) return;
@@ -250,40 +228,6 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                     {esAdminGrupo && <option value="admin_grupo">Admin de grupo</option>}
                   </select>
                 </div>
-                <div>
-                  <label className={etiquetaCampo}>Especialidad por defecto</label>
-                  <select className="input" value={form.categoriaId} onChange={(e) => setForm((f) => ({ ...f, categoriaId: e.target.value }))}>
-                    {opcionesCategoria(categorias).map((o) => (
-                      <option key={o.valor} value={o.valor}>
-                        {o.etiqueta}
-                      </option>
-                    ))}
-                  </select>
-                  {esAdminGrupo && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <button type="button" className="btn btn-sm" onClick={() => setCatRapida((c) => ({ ...c, abierta: true }))}>
-                        {catRapida.creada ? 'Creada ✓' : '＋ Nueva especialidad'}
-                      </button>
-                      {catRapida.abierta && (
-                        <>
-                          <input
-                            className="input flex-1"
-                            autoFocus
-                            placeholder="Nombre de la especialidad"
-                            value={catRapida.nombre}
-                            onChange={(e) => setCatRapida((c) => ({ ...c, nombre: e.target.value }))}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') crearCatRapida();
-                            }}
-                          />
-                          <button type="button" className="btn btn-primary btn-sm" onClick={crearCatRapida}>
-                            Crear
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
                 <div className="sm:col-span-2">
                   <label className={etiquetaCampo}>Contraseña inicial</label>
                   <div className="flex gap-2">
@@ -338,14 +282,13 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                     <th className="border-b border-border px-2.5 py-2">Empresa</th>
                     <th className="border-b border-border px-2.5 py-2">Departamento</th>
                     <th className="border-b border-border px-2.5 py-2">Rol</th>
-                    <th className="border-b border-border px-2.5 py-2">Especialidad</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtrados.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-2.5 py-4 text-sm text-ink-tertiary">
+                      <td colSpan={5} className="px-2.5 py-4 text-sm text-ink-tertiary">
                         {busqueda ? `Ningún usuario coincide con «${busqueda}».` : 'Aún no hay usuarios.'}
                         {!formAbierto && (
                           <>
@@ -399,18 +342,6 @@ export function UsuariosEscritorio({ info }: { info: AdminInfo }) {
                           <span className={`role inline-block rounded-full px-2.5 py-1 text-[11px] font-extrabold ${u.rol === 'admin_grupo' ? 'bg-accent text-on-accent' : 'bg-subtle text-ink-secondary'}`}>
                             {ETIQUETA_ROL[u.rol] ?? u.rol}
                           </span>
-                        </CeldaEditable>
-                        <CeldaEditable
-                          editable={puedeEditar}
-                          valor={u.categoriaId ?? ''}
-                          opciones={opcionesCategoria(categorias)}
-                          abierta={abierta('categoria')}
-                          guardada={guardada('categoria')}
-                          onAbrir={() => setCelda({ id: u.id, campo: 'categoria' })}
-                          onCancelar={() => setCelda(null)}
-                          onElegir={(v) => guardarCelda(u, 'categoria', v)}
-                        >
-                          {u.categoriaNombre ?? '—'}
                         </CeldaEditable>
                         <td className="border-b border-border px-2.5 py-2.5 text-right">
                           <button type="button" className="btn btn-sm" onClick={() => nav.ir('usuarios', { fichaId: u.id })}>

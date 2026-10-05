@@ -26,8 +26,8 @@ export default async function AdminPage({
   if (perfil.activo === false) return <CuentaDesactivada nombre={perfil.nombre} />;
   if (!['admin_grupo', 'admin_empresa'].includes(perfil.rol)) redirect('/');
 
-  // Ruta antigua (Categorías pasó a Especialidades en v1.7): los enlaces guardados no mueren.
-  if (seccion[0] === 'categorias') redirect(seccion.length === 1 ? '/admin/especialidades' : BASE_ADMIN);
+  // Rutas antiguas (Categorías → Especialidades en v1.7; Especialidades se funde en Departamentos en v2.0): los enlaces guardados no mueren.
+  if (seccion[0] === 'categorias' || seccion[0] === 'especialidades') redirect(seccion.length === 1 ? '/admin/departamentos' : BASE_ADMIN);
 
   // Sección desconocida, o sub-segmento en una sección sin fichas -> base del lado.
   const ruta = parseRutaAdmin(seccion);

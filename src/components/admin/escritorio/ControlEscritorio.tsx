@@ -8,6 +8,7 @@ import { useUsuarios } from '@/hooks/admin/useUsuarios';
 import { useProyectosAdmin } from '@/hooks/admin/useProyectosAdmin';
 import { useAsignacionesEmpleado } from '@/hooks/admin/useAsignacionesEmpleado';
 import { useCategorias } from '@/hooks/admin/useCategorias';
+import { useDepartamentosVisibles } from '@/hooks/admin/useDepartamentosVisibles';
 import { useAprobacionImputaciones } from '@/hooks/admin/useAprobacionImputaciones';
 import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import { enviarRecordatoriosManual } from '@/app/admin/actions';
@@ -53,21 +54,23 @@ export function ControlEscritorio({ info }: { info: AdminInfo }) {
   // Un `?empleado=` de fuera del ámbito (hand-off desde una ficha ajena) se trata como no seleccionado.
   const empleadoIdEfectivo = usuarios.some((u) => u.id === form.empleadoId) ? form.empleadoId : '';
   const empleadoSeleccionado = usuarios.find((u) => u.id === empleadoIdEfectivo);
-  // Tareas ofrecidas: la MISMA regla que ve el empleado (`repartirTareas`), aplicada a la persona DESTINO de la imputación:
-  // su categoría + transversales por defecto, «Otras tareas…» con el resto; sin categoría, el filtro por departamento.
+  // Especialidades ofrecidas: la MISMA regla que ve el profesional (`repartirTareas`), aplicada a la persona DESTINO de la imputación:
+  // los departamentos de su empresa o el conjunto exacto que se le haya fijado.
+  const visibles = useDepartamentosVisibles(empleadoSeleccionado?.id, empleadoSeleccionado?.empresaId);
   const catalogo = useMemo<CategoriaCatalogo[]>(
     () =>
-      categorias.map((c) => ({
+      categorias.filter((c) => c.activa && c.departamentoId).map((c) => ({
         categoriaId: c.id,
         categoriaNombre: c.nombre,
-        departamentoId: c.departamentoId,
+        departamentoId: c.departamentoId as string,
         subcategorias: c.subcategorias.filter((s) => s.activa).map((s) => ({ id: s.id, nombre: s.nombre })),
       })),
     [categorias]
   );
-  const { grupos: tareas, otras: otrasTareas } = repartirTareas(catalogo, { categoriaId: empleadoSeleccionado?.categoriaId, departamentoId: empleadoSeleccionado?.departamentoId });
-  // Si al cambiar de empleado la tarea elegida deja de estar disponible, se trata como no seleccionada.
-  const subcategoriaEfectiva = buscarTarea(tareas, otrasTareas, form.subcategoriaId) ? form.subcategoriaId : '';
+  // Sin persona elegida se ve todo el catálogo; con persona, solo sus departamentos (mientras cargan, nada).
+  const tareas = repartirTareas(catalogo, empleadoSeleccionado ? (visibles ?? new Set<string>()) : null, empleadoSeleccionado?.departamentoId ?? null);
+  // Si al cambiar de profesional la especialidad elegida deja de estar disponible, se trata como no seleccionada.
+  const subcategoriaEfectiva = buscarTarea(tareas, form.subcategoriaId) ? form.subcategoriaId : '';
   const idsVigentes = proyectoIdsParaFecha(form.fecha);
   const proyectosDisponibles = proyectos.filter((p) => idsVigentes.includes(p.id));
   // Si el empleado/fecha cambian y el proyecto elegido deja de ser válido, se trata como
@@ -80,7 +83,7 @@ export function ControlEscritorio({ info }: { info: AdminInfo }) {
 
   async function guardarImputacion() {
     if (!empleadoIdEfectivo || !proyectoIdEfectivo || !subcategoriaEfectiva || !form.fecha || !form.horas) {
-      toast('Completa profesional, proyecto, subcategoría, fecha y horas', 'error');
+      toast('Completa profesional, proyecto, especialidad, fecha y horas', 'error');
       return;
     }
     if (descripcionObligatoria && !form.descripcion.trim()) {
@@ -147,13 +150,12 @@ export function ControlEscritorio({ info }: { info: AdminInfo }) {
                 ))}
               </select>
             )}
-            <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Tarea</label>
+            <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Especialidad</label>
             <SelectorTarea
               grupos={tareas}
-              otras={otrasTareas}
               value={subcategoriaEfectiva}
               onChange={(id) => setForm((f) => ({ ...f, subcategoriaId: id }))}
-              ariaLabel="Tarea"
+              ariaLabel="Especialidad"
               placeholder="Selecciona tarea"
             />
             <label className="mb-1 mt-3 block text-xs font-extrabold text-ink-tertiary">Fecha</label>

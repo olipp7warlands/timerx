@@ -8,11 +8,12 @@ import { useDiasMes } from '@/hooks/useDiasMes';
 import { useImputacionesMes, type ImputacionLinea, type NuevaLinea } from '@/hooks/useImputacionesMes';
 import { useAusenciasMes } from '@/hooks/useAusenciasMes';
 import { useProyectosAsignados } from '@/hooks/useProyectosAsignados';
-import { useCategoriasTareas } from '@/hooks/useCategoriasTareas';
+import { useEspecialidadesVisibles } from '@/hooks/useEspecialidadesVisibles';
 import { useBalanceMes } from '@/hooks/useBalanceMes';
 import { useMaxHorasDia } from '@/hooks/useMaxHorasDia';
 import { useDescripcionObligatoria } from '@/hooks/useDescripcionObligatoria';
 import { ausenciaEnFecha, fmt, sumaHoras } from '@/lib/horas/calendario';
+import { buscarTarea } from '@/lib/horas/tareas';
 import { navegar } from '@/lib/nav/navegar';
 import { parseRutaEmpleado } from '@/lib/nav/rutas';
 import { ToastProvider, useToast } from './compartido/Toast';
@@ -30,14 +31,11 @@ interface Props {
   nombre: string;
   email: string;
   rol: RolUsuario;
-  departamentoId?: string | null;
-  /** Categoría de la persona (`perfil.categoria_id`): decide qué tareas ve por defecto (`repartirTareas`). */
-  categoriaId?: string | null;
   /** Solo para verificación visual (/debug/movil, /debug/escritorio): fuerza el layout sin depender del viewport real. */
   forzarLayout?: 'movil' | 'escritorio';
 }
 
-function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email, rol, departamentoId, categoriaId, forzarLayout }: Props) {
+function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email, rol, forzarLayout }: Props) {
   const isDesktopReal = useIsDesktop();
   const isDesktop = forzarLayout ? forzarLayout === 'escritorio' : isDesktopReal;
   const toast = useToast();
@@ -64,7 +62,7 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email
   // "Sin proyectos" es un total (¿tiene alguno, alguna vez?), distinto de "ninguno cubre esta fecha" (proyectosParaFechas):
   // mientras carga, false (no asumir vacío antes de tiempo -- evita el parpadeo del aviso en cada montaje).
   const sinProyectos = !proyectosLoading && totalProyectos === 0;
-  const { grupos, otras: otrasTareas } = useCategoriasTareas({ categoriaId, departamentoId });
+  const { grupos } = useEspecialidadesVisibles({ perfilId: usuarioId, empresaId });
   const horasMes = useMemo(() => sumaHoras(Object.values(porDia).flat()), [porDia]);
   const { balance } = useBalanceMes(anio, mes, horasMes);
   const { maxHorasDia } = useMaxHorasDia();
@@ -118,6 +116,11 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email
       fecha: selDay,
       descripcion: l.descripcion,
     }));
+    const noDisponibles = staged.lineas.filter((l) => !buscarTarea(grupos, l.subcategoriaId));
+    if (noDisponibles.length > 0) {
+      toast(`Ya no tienes disponible: ${[...new Set(noDisponibles.map((l) => l.subcategoriaNombre))].join(', ')}. Pídeselo a tu admin.`, 'error');
+      return;
+    }
     const total = staged.lineas.reduce((s, l) => s + l.horas, 0);
     const { error } = await insertarLote(lineas);
     if (error) {
@@ -152,6 +155,10 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email
     }
     if (!proyectosParaFechas([destino]).some((p) => p.id === linea.proyectoId)) {
       toast(`Ya no estás asignado a ${linea.proyectoNombre}`, 'error');
+      return;
+    }
+    if (!buscarTarea(grupos, linea.subcategoriaId)) {
+      toast(`Ya no tienes disponible ${linea.subcategoriaNombre}. Pídeselo a tu admin.`, 'error');
       return;
     }
     if (descripcionObligatoria && !linea.descripcion?.trim()) {
@@ -258,7 +265,6 @@ function EmpleadoAppInterno({ empresaId, empresaNombre, usuarioId, nombre, email
     proyectosParaFechas,
     sinProyectos,
     grupos,
-    otrasTareas,
     balance,
     maxHorasDia,
     reutilizarDia,

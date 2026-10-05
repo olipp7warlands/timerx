@@ -13,6 +13,7 @@ import { Donut } from '../compartido/Donut';
 import { Pestanas, propsPanelPestana } from '../compartido/Pestanas';
 import { IconEmpresa, IconImportar } from '@/components/ui/icons';
 import { ImportadorBloque } from '../compartido/ImportadorBloque';
+import { SelectorDepartamentos, useDepartamentosActivos } from '../compartido/DepartamentosDeEmpresa';
 import { SelectorTipologia, SIN_TIPOLOGIA, areaDeSelector } from '../compartido/SelectorTipologia';
 import { FichaEmpresaEscritorio } from './FichaEmpresaEscritorio';
 import { useNavAdmin } from '../NavAdmin';
@@ -37,6 +38,10 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
   const [nombre, setNombre] = useState('');
   const [cif, setCif] = useState('');
   const [tipologia, setTipologia] = useState(SIN_TIPOLOGIA);
+  // Departamentos de la empresa nueva: por defecto TODOS los activos (D4); el admin recorta después.
+  const departamentosActivos = useDepartamentosActivos();
+  const [departamentosNuevos, setDepartamentosNuevos] = useState<string[] | null>(null);
+  const departamentosElegidos = departamentosNuevos ?? departamentosActivos.map((d) => d.id);
   // Vistas: la activa vive en la URL (`?vista=importar`; sin parámetro = empresas), como en Usuarios. Importar es solo admin_grupo.
   const [formAbierto, setFormAbierto] = useState(false);
   const vista: 'empresas' | 'importar' = esAdminGrupo && nav.consulta.get('vista') === 'importar' ? 'importar' : 'empresas';
@@ -56,13 +61,14 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
 
   async function crearEmpresa() {
     if (!nombre) return;
-    const { error } = await crear(nombre, cif || null, areaDeSelector(tipologia, null));
+    const { error } = await crear(nombre, cif || null, areaDeSelector(tipologia, null), departamentosElegidos);
     if (error) toast(error, 'error');
     else {
       toast(`Empresa "${nombre}" creada`);
       setNombre('');
       setCif('');
       setTipologia(SIN_TIPOLOGIA);
+      setDepartamentosNuevos(null);
     }
   }
 
@@ -157,6 +163,10 @@ export function EmpresasEscritorio({ info }: { info: AdminInfo }) {
                     <label className={etiqueta}>Tipología (área del mapa)</label>
                     <SelectorTipologia value={tipologia} onChange={setTipologia} areas={areas} />
                   </div>
+                </div>
+                <div className="mt-3">
+                  <label className={etiqueta}>Departamentos de la empresa</label>
+                  <SelectorDepartamentos departamentos={departamentosActivos} value={departamentosElegidos} onChange={setDepartamentosNuevos} />
                 </div>
                 <button type="button" className="btn btn-primary mt-4" onClick={crearEmpresa}>
                   Crear empresa

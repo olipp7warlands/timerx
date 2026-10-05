@@ -175,6 +175,7 @@ export type Database = {
       departamento: {
         Row: {
           activo: boolean
+          color: string | null
           created_at: string
           id: string
           nombre: string
@@ -182,6 +183,7 @@ export type Database = {
         }
         Insert: {
           activo?: boolean
+          color?: string | null
           created_at?: string
           id?: string
           nombre: string
@@ -189,6 +191,7 @@ export type Database = {
         }
         Update: {
           activo?: boolean
+          color?: string | null
           created_at?: string
           id?: string
           nombre?: string
@@ -271,6 +274,36 @@ export type Database = {
             columns: ["area_id"]
             isOneToOne: false
             referencedRelation: "mapa_area"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresa_departamento: {
+        Row: {
+          departamento_id: string
+          empresa_id: string
+        }
+        Insert: {
+          departamento_id: string
+          empresa_id: string
+        }
+        Update: {
+          departamento_id?: string
+          empresa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresa_departamento_departamento_id_fkey"
+            columns: ["departamento_id"]
+            isOneToOne: false
+            referencedRelation: "departamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresa_departamento_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa"
             referencedColumns: ["id"]
           },
         ]
@@ -573,6 +606,36 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresa"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perfil_departamento: {
+        Row: {
+          departamento_id: string
+          perfil_id: string
+        }
+        Insert: {
+          departamento_id: string
+          perfil_id: string
+        }
+        Update: {
+          departamento_id?: string
+          perfil_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfil_departamento_departamento_id_fkey"
+            columns: ["departamento_id"]
+            isOneToOne: false
+            referencedRelation: "departamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perfil_departamento_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
             referencedColumns: ["id"]
           },
         ]
@@ -1269,6 +1332,7 @@ export type Database = {
         }
         Returns: string
       }
+      jornada_defecto: { Args: { p_dia: number }; Returns: number }
       jornada_del_dia: {
         Args: { p_empresa: string; p_fecha: string }
         Returns: number
@@ -1281,7 +1345,6 @@ export type Database = {
           laborable: boolean
         }[]
       }
-      jornada_defecto: { Args: { p_dia: number }; Returns: number }
       jornada_horas: { Args: never; Returns: number }
       periodo_cerrado: {
         Args: { p_empresa: string; p_fecha: string }

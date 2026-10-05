@@ -17,21 +17,11 @@ export interface Categoria {
   subcategorias: Subcategoria[];
 }
 
-export interface OpcionSelect {
-  valor: string;
-  etiqueta: string;
-}
-
 /**
- * Opciones de un select de categoría de la ADMINISTRACIÓN (ficha de usuario, edición inline, alta de usuario): TODO el catálogo
- * más «Sin categoría». La categoría es del trabajador y NO está atada a su departamento (el filtro por departamento/categoría es
- * solo del selector de TAREA al imputar: `lib/horas/tareas.ts`). Única fuente: si dos vías ofrecen listas distintas, es un bug.
+ * Catálogo de categorías (= ESPEJO de cada departamento, v2.0) con sus especialidades. SOLO LECTURA: lo usan Tarifas (la clave del dinero
+ * es la categoría espejo) y la imputación directa. La gestión de departamentos y especialidades vive en `useDepartamentosAdmin`.
+ * categoria_select/subcategoria_select son abiertas; la escritura es solo admin_grupo.
  */
-export function opcionesCategoria(categorias: Categoria[]): OpcionSelect[] {
-  return [{ valor: '', etiqueta: 'Sin especialidad' }, ...categorias.map((c) => ({ valor: c.id, etiqueta: c.nombre }))];
-}
-
-/** categoria_select/subcategoria_select son abiertas; la escritura es solo admin_grupo. */
 export function useCategorias() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,25 +49,5 @@ export function useCategorias() {
     recargar();
   }, [recargar]);
 
-  const crearCategoria = useCallback(
-    async (nombre: string, departamentoId: string | null = null) => {
-      const supabase = createClient();
-      const { data, error } = await supabase.from('categoria').insert({ nombre, departamento_id: departamentoId }).select('id').single();
-      if (!error) await recargar();
-      return { error: error?.message ?? null, id: data?.id ?? null };
-    },
-    [recargar]
-  );
-
-  const crearSubcategoria = useCallback(
-    async (categoriaId: string, nombre: string) => {
-      const supabase = createClient();
-      const { error } = await supabase.from('subcategoria').insert({ categoria_id: categoriaId, nombre });
-      if (!error) await recargar();
-      return { error: error?.message ?? null };
-    },
-    [recargar]
-  );
-
-  return { categorias, loading, recargar, crearCategoria, crearSubcategoria };
+  return { categorias, loading, recargar };
 }

@@ -11,15 +11,15 @@ interface FilaUsuario extends AltaUsuarioInput {
 
 export const importadorUsuarios = definir<FilaUsuario>({
   id: 'usuarios',
-  ignoradas: ['activo'],
+  // `especialidad`/`categoria`: columna de plantillas ANTERIORES a v2.0 (la especialidad del usuario ya no existe: el profesional pertenece a un departamento). Se acepta y se ignora.
+  ignoradas: ['activo', 'especialidad', 'categoria'],
   plantilla: {
     hoja: 'Usuarios',
     columnas: [
       { cabecera: 'nombre', obligatoria: true, descripcion: 'Nombre y apellidos de la persona.', ejemplo: 'Lucía Prieto' },
       { cabecera: 'email', obligatoria: true, descripcion: 'Correo de acceso. Es el identificador único de la persona: no puede existir ya.', ejemplo: 'lucia.prieto@empresa.com' },
       { cabecera: 'empresa', obligatoria: true, descripcion: 'Empresa empleadora, con el nombre EXACTO de una empresa que ya existe en la herramienta.', ejemplo: 'Wowinx SL' },
-      { cabecera: 'departamento', obligatoria: false, descripcion: 'Departamento, con el nombre exacto de uno existente. Vacío = sin departamento.', ejemplo: '3B3' },
-      { cabecera: 'especialidad', alias: ['categoria'], obligatoria: false, descripcion: 'Especialidad por defecto (tarifa y precarga), con el nombre exacto de una existente. Vacío = sin especialidad.', ejemplo: 'Desarrollo' },
+      { cabecera: 'departamento', obligatoria: false, descripcion: 'Departamento, con el nombre exacto de uno que exista EN la empresa de la persona. Vacío = sin departamento.', ejemplo: 'Desarrollo' },
       {
         cabecera: 'rol',
         obligatoria: false,
@@ -37,15 +37,15 @@ export const importadorUsuarios = definir<FilaUsuario>({
   },
 
   async analizar({ supabase }, filas) {
-    const [empresas, departamentos, categorias, perfiles] = await Promise.all([
+    const [empresas, departamentos, empresaDepartamento, perfiles] = await Promise.all([
       supabase.from('empresa').select('id, nombre'),
       supabase.from('departamento').select('id, nombre'),
-      supabase.from('categoria').select('id, nombre'),
+      supabase.from('empresa_departamento').select('empresa_id, departamento_id'),
       supabase.from('perfil').select('email'),
     ]);
     const idxEmpresa = indexar(empresas.data ?? []);
     const idxDepartamento = indexar(departamentos.data ?? []);
-    const idxCategoria = indexar(categorias.data ?? []);
+    const departamentosDeEmpresa = new Set((empresaDepartamento.data ?? []).map((r) => `${r.empresa_id}|${r.departamento_id}`));
     const existentes = new Set((perfiles.data ?? []).map((p) => claveTexto(p.email)));
     const enArchivo = new Map<string, number>();
 
@@ -81,12 +81,9 @@ export const importadorUsuarios = definir<FilaUsuario>({
         else departamentoId = id;
       }
 
-      let categoriaId: string | null = null;
-      if (v.especialidad) {
-        const id = idxCategoria.get(claveTexto(v.especialidad));
-        if (id === undefined) motivos.push(`especialidad '${v.especialidad}' no existe`);
-        else if (id === null) motivos.push(`especialidad '${v.especialidad}' es ambigua (hay varias con ese nombre)`);
-        else categoriaId = id;
+      // El departamento debe existir EN esa empresa (empresa_departamento, v2.0).
+      if (departamentoId && empresaId && !departamentosDeEmpresa.has(`${empresaId}|${departamentoId}`)) {
+        motivos.push(`el departamento '${v.departamento}' no existe en la empresa '${v.empresa}'`);
       }
 
       // «profesional» es el nombre visible del rol `empleado` del esquema; «empleado» (plantillas antiguas) sigue valiendo.
@@ -97,7 +94,7 @@ export const importadorUsuarios = definir<FilaUsuario>({
 
       const error = errorDeFila(fila, motivos);
       if (error) errores.push(error);
-      else validas.push({ fila, email, nombre, empresaId, departamentoId, categoriaId, rol: rol! });
+      else validas.push({ fila, email, nombre, empresaId, departamentoId, rol: rol! });
     }
     return { validas, errores };
   },

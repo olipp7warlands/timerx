@@ -24,7 +24,6 @@ const ETIQUETAS: Record<SeccionAdmin, string> = {
   empresas: 'Empresas',
   proyectos: 'Proyectos',
   departamentos: 'Departamentos',
-  especialidades: 'Especialidades',
   calendario: 'Calendario',
   mapa: 'Mapa',
   control: 'Control',

@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   sheet.columns = [
     { header: 'Origen', key: 'origen', width: 24 },
     { header: 'Destino', key: 'destino', width: 24 },
-    { header: 'Especialidad', key: 'categoria', width: 16 },
+    { header: 'Departamento', key: 'categoria', width: 16 },
     { header: 'Horas', key: 'horas', width: 12 },
     { header: '€/h', key: 'eurosHora', width: 10 },
     { header: 'Importe', key: 'importe', width: 14 },

@@ -1,5 +1,6 @@
 'use client';
 
+import { useColoresDepartamento } from '@/hooks/useColoresDepartamento';
 import { hoyMadrid } from '@/lib/fechas';
 import { useState } from 'react';
 import { useTarifas } from '@/hooks/admin/useTarifas';
@@ -9,14 +10,9 @@ import { useUsuarios } from '@/hooks/admin/useUsuarios';
 import { useToast } from '@/components/empleado/compartido/Toast';
 import type { AdminInfo } from '../types';
 
-const CAT_COLOR: Record<string, string> = {
-  Desarrollo: 'var(--cat-desarrollo)',
-  Diseño: 'var(--cat-diseno)',
-  Abogados: 'var(--cat-abogados)',
-  Gestión: 'var(--cat-gestion)',
-};
 
 export function TarifasEscritorio({ info }: { info: AdminInfo }) {
+  const colorDe = useColoresDepartamento();
   const { tarifas, crear } = useTarifas();
   const { categorias } = useCategorias();
   const { empresas } = useEmpresas();
@@ -56,12 +52,12 @@ export function TarifasEscritorio({ info }: { info: AdminInfo }) {
           <div className="card-body">
             <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Aplicar a</label>
             <select className="input" value={aplicarA} onChange={(e) => setAplicarA(e.target.value as 'categoria' | 'empleado')}>
-              <option value="categoria">Especialidad</option>
+              <option value="categoria">Departamento</option>
               <option value="empleado">Profesional (individual)</option>
             </select>
             {aplicarA === 'categoria' ? (
               <select className="input mt-2" value={form.categoriaId} onChange={(e) => setForm((f) => ({ ...f, categoriaId: e.target.value }))}>
-                <option value="">Selecciona especialidad</option>
+                <option value="">Selecciona departamento</option>
                 {categorias.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.nombre}
@@ -127,11 +123,11 @@ export function TarifasEscritorio({ info }: { info: AdminInfo }) {
                             Profesional de otra empresa
                           </span>
                         )}
-                        <span className="block text-[11px] text-ink-tertiary">prioridad sobre su especialidad</span>
+                        <span className="block text-[11px] text-ink-tertiary">prioridad sobre su departamento</span>
                       </>
                     ) : (
                       <>
-                        <span className="mr-2 inline-block h-[7px] w-[7px] rounded-full" style={{ background: CAT_COLOR[t.categoriaNombre ?? ''] ?? 'var(--ink-disabled)' }} />
+                        <span className="mr-2 inline-block h-[7px] w-[7px] rounded-full" style={{ background: colorDe(t.categoriaNombre) }} />
                         {t.categoriaNombre}
                       </>
                     )}

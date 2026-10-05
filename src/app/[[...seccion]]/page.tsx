@@ -38,8 +38,6 @@ export default async function EmpleadoPage({
       nombre={perfil.nombre}
       email={perfil.email}
       rol={perfil.rol}
-      departamentoId={perfil.departamento_id}
-      categoriaId={perfil.categoria_id}
     />
   );
 }

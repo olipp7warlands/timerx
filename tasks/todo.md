@@ -1,3 +1,22 @@
+# LOTE v2.0 (a) — modelo Departamento → Especialidad (2026-10-05) — EN PARADA para revisión
+
+> Plan aprobado en `tasks/plan-v2.0.md` (12 decisiones + C1/C2/C3). Lote (a) = BD + selector + usuarios + sección fusionada (+ colores: movidos aquí porque la 031 renombra departamentos y el color por nombre se habría roto). Lote (b) = importador/export del catálogo, exports restantes, semillas, barrido «tarea».
+> **NO está en producción.** Demo: 030 y 031 aplicadas; app en `main`.
+
+- [x] Fase 0: línea base (conteos, ANCLA `b908bdf7`/enmascarada `53553bd7`, conjunto visible por perfil = 15 para los 13 perfiles).
+- [x] 030 aditiva (color, `empresa_departamento`, `perfil_departamento`, trigger del espejo) aplicada y verificada (conteos e huellas idénticos).
+- [x] **C1** (sonda en transacción abortada + UI): alta/renombre/desactivación/reactivación del departamento crean/renombran/desactivan/reactivan su espejo en la misma transacción; sin tarifa `resolver_tarifa`=NULL y `cerrar_periodo` bloquea nombrando el departamento nuevo; con tarifa 77 → 77, vista valorada 154 €, `cerrar_periodo` cierra.
+- [x] **C2** (UI real): tarifa nueva para un departamento nuevo desde Tarifas (88 €/h) → `resolver_tarifa`=88; Excel de refacturación con cabecera «Departamento» y la fila del departamento nuevo (176 €).
+- [x] 031 conmutación aplicada en demo (autocomprobación OK): Desarrollo/Legal/Administración y Finanzas/Operaciones, espejo 1:1 NOT NULL UNIQUE, 15 enlaces `empresa_departamento`, Sara → Diseño. ANCLA enmascarada IDÉNTICA (`53553bd7`); normal nueva línea base **cruda `600be8b5` · canónica `ea31926b`** (cambian solo cadenas de nombre de departamento). Conteos: solo `departamento` 3→5.
+- [x] Prueba «nadie ve menos»: 13 perfiles, 0 ven menos, 0 ven más (15/15).
+- [x] Reversa `supabase/rollback/v2.0_down.sql` ENSAYADA en demo (transacción abortada): restaura nombres, enlaces, colores, Sara, tablas vacías, respaldo eliminado; imputaciones/tarifas/importe valorado idénticos.
+- [x] App: sección fusionada (listado con color/empresas/nº, alta con lista predefinida + personalizado + empresas, edición con color/empresas, especialidades dentro), selector sin «Otras tareas…» (regla única `repartirTareas`: empresa o conjunto exacto de `perfil_departamento`; departamento propio primero), Usuarios sin Especialidad (tabla, ficha, inline, invitación, importador la ignora), ficha de usuario «Departamentos al imputar» (conjunto exacto + vista previa), ficha y alta de empresa con departamentos, paleta de 12 colores, Tarifas/Refacturación/FichaProyecto por departamento, redirects `/admin/especialidades` y `/admin/categorias`.
+- [x] Verificación UI: ciclo Departamentos+C1+C2+visibilidad 30/30; importador de usuarios 6/6; recorrido con detector 0 palabras viejas; build/tsc limpios, lint 78=78.
+- [ ] **C3 (bloquea la fase 4)**: el perfil nº 7 de producción (cuenta aparecida el 30-sep) debe estar identificado antes de la 031 en producción (la migración aborta ante un perfil incoherente no declarado). Recordado en la parada.
+- [ ] Lote (b) y fase 4 (promoción).
+
+---
+
 # LOTE v1.7 (2026-10-04) — «Profesional», «Especialidad», sección Departamentos, banner de versión
 
 > main → demo → commit listo para promoción. SIN migración (esquema intacto: enum `rol_usuario` con valor `empleado`, tabla `categoria`, `empleado_proyecto`, `coste_empleado`, columnas y RPCs). Línea base: conteos `base17_conteos.txt` (scratchpad; imputacion 141, perfil 13) y huella ANCLA `b908bdf7` (71 claves, cruda `242545f6`).

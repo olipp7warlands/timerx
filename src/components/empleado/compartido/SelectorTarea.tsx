@@ -5,10 +5,8 @@ import { buscarTarea, type GrupoTareas } from '@/lib/horas/tareas';
 import { CatDot } from './CatDot';
 
 interface Props {
-  /** Tareas por defecto (categoría propia + transversales, o el filtro por departamento). */
+  /** Especialidades que la persona puede imputar, agrupadas por departamento (regla única de `repartirTareas`). */
   grupos: GrupoTareas[];
-  /** Resto del catálogo, tras «Otras tareas…». Vacío = sin esa entrada. */
-  otras: GrupoTareas[];
   /** `subcategoria.id` elegida ('' = ninguna). */
   value: string;
   onChange: (subcategoriaId: string) => void;
@@ -17,39 +15,34 @@ interface Props {
   disabled?: boolean;
 }
 
-type Item = { tipo: 'tarea'; id: string; nombre: string; categoriaNombre: string } | { tipo: 'otras' };
+type Item = { id: string; nombre: string; categoriaNombre: string };
 
-const aItems = (gs: GrupoTareas[]): Item[] => gs.flatMap((g) => g.subcategorias.map((s) => ({ tipo: 'tarea' as const, id: s.id, nombre: s.nombre, categoriaNombre: g.categoriaNombre })));
+const aItems = (gs: GrupoTareas[]): Item[] => gs.flatMap((g) => g.subcategorias.map((s) => ({ id: s.id, nombre: s.nombre, categoriaNombre: g.categoriaNombre })));
 
 /**
- * Picker de TAREA del escritorio (sustituye al `<select>` nativo): misma presentación que la hoja móvil de «¿Qué tarea?»
- * —cabeceras de categoría con su punto de color y «Otras tareas…» colapsada al final— en un popover anclado al campo.
+ * Picker de ESPECIALIDAD del escritorio (sustituye al `<select>` nativo): misma presentación que la hoja móvil de «¿Qué especialidad?»
+ * —cabeceras de departamento con su punto de color— en un popover anclado al campo. Desde v2.0 no hay «Otras tareas…»: lo que se
+ * ofrece lo decide la empresa (y, si el admin lo fija, el conjunto de departamentos de la persona); el cruce raro lo pide a su admin.
  * Accesible como «select-only combobox» (WAI-ARIA APG): el foco se queda en el botón, las opciones se recorren con
- * `aria-activedescendant` (↑ ↓ Inicio Fin, Enter/Espacio elige, Esc cierra, Tab sale) y «Otras tareas…» es un elemento más
- * de la lista (Enter lo despliega y el cursor pasa a la primera de las otras).
+ * `aria-activedescendant` (↑ ↓ Inicio Fin, Enter/Espacio elige, Esc cierra, Tab sale).
  * La hoja móvil es la referencia visual: el select nativo del mock web queda sustituido (divergencia documentada en PLAN.md).
  */
-export function SelectorTarea({ grupos, otras, value, onChange, ariaLabel = 'Tarea', placeholder = 'Selecciona tarea', disabled = false }: Props) {
+export function SelectorTarea({ grupos, value, onChange, ariaLabel = 'Especialidad', placeholder = 'Selecciona especialidad', disabled = false }: Props) {
   const uid = useId();
   const raiz = useRef<HTMLDivElement>(null);
   const lista = useRef<HTMLDivElement>(null);
   const [abierto, setAbierto] = useState(false);
-  const [otrasAbiertas, setOtrasAbiertas] = useState(false);
   const [activo, setActivo] = useState(0);
   const [haciaArriba, setHaciaArriba] = useState(false);
   const [altoMax, setAltoMax] = useState(320);
 
-  const items = useMemo<Item[]>(() => [...aItems(grupos), ...(otras.length > 0 ? [{ tipo: 'otras' as const }] : []), ...(otrasAbiertas ? aItems(otras) : [])], [grupos, otras, otrasAbiertas]);
-  const idItem = (it: Item) => `${uid}-${it.tipo === 'otras' ? 'otras' : it.id}`;
-  const elegida = value ? buscarTarea(grupos, otras, value) : null;
+  const items = useMemo<Item[]>(() => aItems(grupos), [grupos]);
+  const idItem = (it: Item) => `${uid}-${it.id}`;
+  const elegida = value ? buscarTarea(grupos, value) : null;
 
   function abrir() {
     if (disabled) return;
-    const esDeOtras = value !== '' && !grupos.some((g) => g.subcategorias.some((s) => s.id === value)) && otras.some((g) => g.subcategorias.some((s) => s.id === value));
-    const despliega = otrasAbiertas || esDeOtras;
-    const lote: Item[] = [...aItems(grupos), ...(otras.length > 0 ? [{ tipo: 'otras' as const }] : []), ...(despliega ? aItems(otras) : [])];
-    const i = lote.findIndex((it) => it.tipo === 'tarea' && it.id === value);
-    setOtrasAbiertas(despliega);
+    const i = items.findIndex((it) => it.id === value);
     setActivo(i >= 0 ? i : 0);
     const r = raiz.current?.getBoundingClientRect();
     if (r) {
@@ -67,14 +60,6 @@ export function SelectorTarea({ grupos, otras, value, onChange, ariaLabel = 'Tar
   }
 
   function elegir(it: Item) {
-    if (it.tipo === 'otras') {
-      // Despliega (o pliega) el resto: al desplegar el cursor pasa a la primera de las otras; al plegar vuelve al propio «Otras tareas…».
-      const despliega = !otrasAbiertas;
-      const i = items.findIndex((x) => x.tipo === 'otras');
-      setOtrasAbiertas(despliega);
-      setActivo(despliega ? i + 1 : i);
-      return;
-    }
     onChange(it.id);
     cerrar();
   }
@@ -135,7 +120,7 @@ export function SelectorTarea({ grupos, otras, value, onChange, ariaLabel = 'Tar
   }
 
   const idLista = `${uid}-lista`;
-  const opcion = (it: Extract<Item, { tipo: 'tarea' }>) => {
+  const opcion = (it: Item) => {
     const i = items.indexOf(it);
     const seleccionada = it.id === value;
     return (
@@ -163,11 +148,10 @@ export function SelectorTarea({ grupos, otras, value, onChange, ariaLabel = 'Tar
           <p id={idCab} className="micro flex items-center gap-2 px-3 pb-1 pt-1.5">
             <CatDot categoria={g.categoriaNombre} /> {g.categoriaNombre}
           </p>
-          {g.subcategorias.map((s) => opcion(items.find((it) => it.tipo === 'tarea' && it.id === s.id) as Extract<Item, { tipo: 'tarea' }>))}
+          {g.subcategorias.map((s) => opcion(items.find((it) => it.id === s.id) as Item))}
         </div>
       );
     });
-  const itemOtras = items.find((it) => it.tipo === 'otras');
 
   return (
     <div ref={raiz} className="relative">
@@ -207,26 +191,8 @@ export function SelectorTarea({ grupos, otras, value, onChange, ariaLabel = 'Tar
           style={{ maxHeight: altoMax }}
           className={`card absolute left-0 z-50 w-full min-w-[260px] overflow-y-auto p-1 shadow-[var(--sombra)] ${haciaArriba ? 'bottom-full mb-1' : 'top-full mt-1'}`}
         >
-          {grupos.length === 0 && otras.length === 0 && <p className="px-3 py-2 text-xs text-ink-tertiary">No hay tareas disponibles.</p>}
+          {grupos.length === 0 && <p className="px-3 py-2 text-xs text-ink-tertiary">No hay especialidades disponibles.</p>}
           {bloque(grupos)}
-          {itemOtras && (
-            <div
-              id={idItem(itemOtras)}
-              role="option"
-              aria-selected={false}
-              aria-label={otrasAbiertas ? 'Otras tareas, desplegadas' : 'Otras tareas, mostrar'}
-              data-activo={items.indexOf(itemOtras) === activo}
-              onMouseEnter={() => setActivo(items.indexOf(itemOtras))}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => elegir(itemOtras)}
-              className={`mt-1 flex cursor-pointer items-center justify-between rounded-lg border-t border-border px-3 py-2 text-[13px] font-extrabold text-ink-tertiary ${items.indexOf(itemOtras) === activo ? 'bg-subtle' : ''}`}
-              data-testid="otras-tareas"
-            >
-              <span>Otras tareas…</span>
-              <span aria-hidden="true">{otrasAbiertas ? '⌄' : '›'}</span>
-            </div>
-          )}
-          {otrasAbiertas && bloque(otras)}
         </div>
       )}
     </div>

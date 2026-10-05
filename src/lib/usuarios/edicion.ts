@@ -4,14 +4,12 @@ import type { RolUsuario } from '@/lib/auth/roles';
 export interface CamposPerfil {
   empresaId: string;
   departamentoId: string | null;
-  categoriaId: string | null;
   rol: RolUsuario;
 }
 
 export interface CambiosPerfil {
   empresaId?: string;
   departamentoId?: string | null;
-  categoriaId?: string | null;
   rol?: RolUsuario;
 }
 
@@ -25,7 +23,6 @@ export function cambiosDePerfil(actual: CamposPerfil, propuesto: CamposPerfil, p
   const cambios: CambiosPerfil = {};
   if (puedeEmpresaRol && propuesto.empresaId !== actual.empresaId) cambios.empresaId = propuesto.empresaId;
   if (propuesto.departamentoId !== actual.departamentoId) cambios.departamentoId = propuesto.departamentoId;
-  if (propuesto.categoriaId !== actual.categoriaId) cambios.categoriaId = propuesto.categoriaId;
   if (puedeEmpresaRol && propuesto.rol !== actual.rol) cambios.rol = propuesto.rol;
   return cambios;
 }

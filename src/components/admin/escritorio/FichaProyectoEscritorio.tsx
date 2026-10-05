@@ -1,5 +1,6 @@
 'use client';
 
+import { useColoresDepartamento } from '@/hooks/useColoresDepartamento';
 import { hoyMadrid } from '@/lib/fechas';
 import { useMemo, useState } from 'react';
 import { useFichaProyecto, type PersonaHoras } from '@/hooks/admin/useFichaProyecto';
@@ -13,12 +14,6 @@ import type { AreaTipologia } from '@/hooks/admin/useAreasTipologia';
 import { fmt, formatoMes } from '@/lib/horas/calendario';
 import type { ProyectoAdmin } from '@/hooks/admin/useProyectosAdmin';
 
-const CAT_COLOR: Record<string, string> = {
-  Desarrollo: 'var(--cat-desarrollo)',
-  Diseño: 'var(--cat-diseno)',
-  Abogados: 'var(--cat-abogados)',
-  Gestión: 'var(--cat-gestion)',
-};
 
 interface Props {
   proyecto: ProyectoAdmin;
@@ -32,6 +27,7 @@ interface Props {
 }
 
 export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambiarTipologia, onCambiarTipologia, onVolver }: Props) {
+  const colorDe = useColoresDepartamento();
   const { ficha, loading } = useFichaProyecto(proyecto.id, anio, mes);
   const { asignaciones, recargar: recargarAsig } = useAsignacionesProyecto(proyecto.id);
   const { asignar, finalizar } = useAsignaciones();
@@ -55,7 +51,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
   const idsConHoras = new Set(personasConHoras.map((p) => p.perfilId));
   const personasSinHoras: PersonaHoras[] = vigentes
     .filter((a) => !idsConHoras.has(a.empleadoId))
-    .map((a) => ({ perfilId: a.empleadoId, nombre: a.nombre, departamento: a.departamento, categoriaNombre: a.categoriaNombre ?? 'Sin especialidad', horas: 0 }));
+    .map((a) => ({ perfilId: a.empleadoId, nombre: a.nombre, departamento: a.departamento, categoriaNombre: '—', horas: 0 }));
   const filasPersonas = [...personasConHoras, ...personasSinHoras];
   const horasMes = ficha?.horasMes ?? 0;
   const hastaDe = (perfilId: string) => asignaciones.find((a) => a.empleadoId === perfilId)?.hasta ?? null;
@@ -155,12 +151,12 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
           <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3.5">
             <div className="card">
               <div className="card-head">
-                <h2 className="text-sm font-extrabold">Horas por especialidad</h2>
+                <h2 className="text-sm font-extrabold">Horas por departamento</h2>
               </div>
               <div className="card-body">
                 <Donut
                   total={ficha.horasMes}
-                  segmentos={ficha.porCategoria.map((c) => ({ etiqueta: c.nombre, valor: c.horas, color: CAT_COLOR[c.nombre] ?? 'var(--ink-disabled)' }))}
+                  segmentos={ficha.porCategoria.map((c) => ({ etiqueta: c.nombre, valor: c.horas, color: colorDe(c.nombre) }))}
                 />
               </div>
             </div>
@@ -192,7 +188,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
                   <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
                     <th className="border-b border-border px-2.5 py-2">Nombre</th>
                     <th className="border-b border-border px-2.5 py-2">Departamento</th>
-                    <th className="border-b border-border px-2.5 py-2">Especialidad</th>
+                    <th className="border-b border-border px-2.5 py-2">Imputado en</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">Horas</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">% del proyecto</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">Acciones</th>
@@ -210,7 +206,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
                         </td>
                         <td className="border-b border-border px-2.5 py-2.5">{p.departamento ?? '—'}</td>
                         <td className="border-b border-border px-2.5 py-2.5">
-                          <span className="mr-2 inline-block h-[7px] w-[7px] rounded-full" style={{ background: CAT_COLOR[p.categoriaNombre] ?? 'var(--ink-disabled)' }} />
+                          {p.categoriaNombre !== '—' && <span className="mr-2 inline-block h-[7px] w-[7px] rounded-full" style={{ background: colorDe(p.categoriaNombre) }} />}
                           {p.categoriaNombre}
                         </td>
                         <td className="mono border-b border-border px-2.5 py-2.5 text-right">{fmt(p.horas)}</td>
@@ -233,7 +229,7 @@ export function FichaProyectoEscritorio({ proyecto, anio, mes, areas, puedeCambi
                   <option value="">{disponibles.length === 0 ? 'Sin personas disponibles' : 'Selecciona persona'}</option>
                   {disponibles.map((u) => (
                     <option key={u.id} value={u.id}>
-                      {u.nombre} — {u.departamento ?? '—'} · {u.categoriaNombre ?? '—'}
+                      {u.nombre} — {u.departamento ?? '—'}
                     </option>
                   ))}
                 </select>

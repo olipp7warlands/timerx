@@ -13,7 +13,6 @@ import { UsuariosEscritorio } from './UsuariosEscritorio';
 import { AusenciasEscritorio } from './AusenciasEscritorio';
 import { EmpresasEscritorio } from './EmpresasEscritorio';
 import { ProyectosEscritorio } from './ProyectosEscritorio';
-import { CategoriasEscritorio } from './CategoriasEscritorio';
 import { DepartamentosEscritorio } from './DepartamentosEscritorio';
 import { CalendarioEscritorio } from './CalendarioEscritorio';
 import { MapaEscritorio } from './MapaEscritorio';
@@ -106,7 +105,6 @@ export function ShellEscritorioAdmin({ info }: Props) {
         {seccion === 'empresas' && <EmpresasEscritorio info={info} />}
         {seccion === 'proyectos' && <ProyectosEscritorio info={info} />}
         {seccion === 'departamentos' && <DepartamentosEscritorio info={info} />}
-        {seccion === 'especialidades' && <CategoriasEscritorio info={info} />}
         {seccion === 'calendario' && <CalendarioEscritorio info={info} />}
         {seccion === 'mapa' && <MapaEscritorio info={info} />}
         {seccion === 'control' && <ControlEscritorio info={info} />}

@@ -1,5 +1,6 @@
 'use client';
 
+import { DepartamentosDeEmpresa } from '../compartido/DepartamentosDeEmpresa';
 import { useState } from 'react';
 import type { Empresa } from '@/hooks/admin/useEmpresas';
 import type { ProyectoAdmin, NuevoProyecto } from '@/hooks/admin/useProyectosAdmin';
@@ -266,7 +267,6 @@ export function FichaEmpresaEscritorio({
                 <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
                   <th className="border-b border-border px-2.5 py-2">Nombre</th>
                   <th className="border-b border-border px-2.5 py-2">Departamento</th>
-                  <th className="border-b border-border px-2.5 py-2">Especialidad</th>
                   <th className="border-b border-border px-2.5 py-2">Rol</th>
                 </tr>
               </thead>
@@ -281,7 +281,6 @@ export function FichaEmpresaEscritorio({
                   >
                     <td className="border-b border-border px-2.5 py-2.5 font-extrabold">{u.nombre}</td>
                     <td className="border-b border-border px-2.5 py-2.5">{u.departamento ?? '—'}</td>
-                    <td className="border-b border-border px-2.5 py-2.5">{u.categoriaNombre ?? '—'}</td>
                     <td className="border-b border-border px-2.5 py-2.5">
                       <span className={`role inline-block rounded-full px-2.5 py-1 text-[11px] font-extrabold ${u.rol === 'admin_grupo' ? 'bg-accent text-on-accent' : 'bg-subtle text-ink-secondary'}`}>
                         {ETIQUETA_ROL[u.rol] ?? u.rol}
@@ -318,6 +317,8 @@ export function FichaEmpresaEscritorio({
             </div>
           </div>
         </div>
+
+        <DepartamentosDeEmpresa empresaId={empresa.id} puedeEditar={puedeEditar} />
 
         <div className="card">
           <div className="card-head">

@@ -1,5 +1,6 @@
 'use client';
 
+import { useColoresDepartamento } from '@/hooks/useColoresDepartamento';
 import { useState } from 'react';
 import { useRefacturacion } from '@/hooks/admin/useRefacturacion';
 import { usePeriodo } from '@/hooks/admin/usePeriodo';
@@ -8,14 +9,9 @@ import { useToast } from '@/components/empleado/compartido/Toast';
 import { formatoMes, formatoMesAnio } from '@/lib/horas/calendario';
 import type { AdminInfo } from '../types';
 
-const CAT_COLOR: Record<string, string> = {
-  Desarrollo: 'var(--cat-desarrollo)',
-  Diseño: 'var(--cat-diseno)',
-  Abogados: 'var(--cat-abogados)',
-  Gestión: 'var(--cat-gestion)',
-};
 
 export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
+  const colorDe = useColoresDepartamento();
   const [anioMes, setAnioMes] = useState(() => {
     const d = new Date();
     return { anio: d.getFullYear(), mes: d.getMonth() + 1 };
@@ -95,7 +91,7 @@ export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
       <div className="grid grid-cols-[minmax(0,1fr)_300px] items-start gap-4.5 max-[1000px]:grid-cols-1">
         <div className="card">
           <div className="card-head">
-            <h2 className="text-sm font-extrabold">Detalle por empresa y especialidad</h2>
+            <h2 className="text-sm font-extrabold">Detalle por empresa y departamento</h2>
           </div>
           <div className="px-1.5 pb-2">
             {loading ? (
@@ -106,7 +102,7 @@ export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
                   <tr className="text-left text-[11.5px] font-extrabold text-ink-tertiary">
                     <th className="border-b border-border px-2.5 py-2">Origen</th>
                     <th className="border-b border-border px-2.5 py-2">Destino</th>
-                    <th className="border-b border-border px-2.5 py-2">Especialidad</th>
+                    <th className="border-b border-border px-2.5 py-2">Departamento</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">Horas</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">€/h</th>
                     <th className="border-b border-border px-2.5 py-2 text-right">Importe</th>
@@ -118,7 +114,7 @@ export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
                       <td className="border-b border-border px-2.5 py-2.5">{l.empresaOrigen}</td>
                       <td className="border-b border-border px-2.5 py-2.5">{l.empresaDestino}</td>
                       <td className="border-b border-border px-2.5 py-2.5">
-                        <span className="mr-2 inline-block h-[7px] w-[7px] rounded-full" style={{ background: CAT_COLOR[l.categoria] ?? 'var(--ink-disabled)' }} />
+                        <span className="mr-2 inline-block h-[7px] w-[7px] rounded-full" style={{ background: colorDe(l.categoria) }} />
                         {l.categoria}
                       </td>
                       <td className="mono border-b border-border px-2.5 py-2.5 text-right">{l.horas.toFixed(1).replace('.', ',')}</td>
@@ -138,7 +134,7 @@ export function RefacturacionEscritorio({ info }: { info: AdminInfo }) {
               </table>
             )}
             <p className="foot px-3 pb-2.5 pt-3 text-xs text-ink-tertiary">
-              Las tarifas por profesional tienen prioridad sobre la de su especialidad. El proyecto Interno queda fuera por no refacturable.
+              Las tarifas por profesional tienen prioridad sobre la de su departamento. El proyecto Interno queda fuera por no refacturable.
             </p>
           </div>
         </div>

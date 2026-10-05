@@ -1,11 +1,11 @@
 'use client';
 
+import { DepartamentosVisibles } from '../compartido/DepartamentosVisibles';
 import { hoyMadrid } from '@/lib/fechas';
 import { useMemo, useState } from 'react';
 import type { UsuarioAdmin, ActualizarUsuarioInput } from '@/hooks/admin/useUsuarios';
 import { useEmpresas } from '@/hooks/admin/useEmpresas';
 import { opcionesDepartamento, useDepartamentos } from '@/hooks/admin/useDepartamentos';
-import { opcionesCategoria, useCategorias } from '@/hooks/admin/useCategorias';
 import { useProyectosAdmin } from '@/hooks/admin/useProyectosAdmin';
 import { useAsignacionesEmpleado } from '@/hooks/admin/useAsignacionesEmpleado';
 import { useAsignaciones } from '@/hooks/admin/useAsignaciones';
@@ -59,7 +59,6 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
 
   const { empresas } = useEmpresas();
   const { departamentos } = useDepartamentos();
-  const { categorias } = useCategorias();
   const { proyectos } = useProyectosAdmin();
   const { balance, loading: loadingBalance } = useBalanceMesEmpleado(usuario.id, anio, mes);
   const { porProyecto, ultimas, loading: loadingFicha } = useFichaUsuario(usuario.id, anio, mes);
@@ -77,7 +76,6 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
   const [draft, setDraft] = useState({
     empresaId: usuario.empresaId,
     departamentoId: usuario.departamentoId ?? '',
-    categoriaId: usuario.categoriaId ?? '',
     rol: usuario.rol as RolUsuario,
   });
   const [enviandoRecordatorio, setEnviandoRecordatorio] = useState(false);
@@ -138,7 +136,6 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
         setDraft({
           empresaId: usuario.empresaId,
           departamentoId: usuario.departamentoId ?? '',
-          categoriaId: usuario.categoriaId ?? '',
           rol: usuario.rol as RolUsuario,
         });
       }
@@ -149,8 +146,8 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
   async function onGuardarEdicion() {
     // SOLO los campos cambiados (`cambiosDePerfil`, como la edición inline). Empresa y rol solo los cambia admin_grupo (la BD lo impone desde la 021): al resto ni se le ofrecen ni se envían.
     const cambios = cambiosDePerfil(
-      { empresaId: usuario.empresaId, departamentoId: usuario.departamentoId, categoriaId: usuario.categoriaId, rol: usuario.rol as RolUsuario },
-      { empresaId: draft.empresaId, departamentoId: draft.departamentoId || null, categoriaId: draft.categoriaId || null, rol: draft.rol },
+      { empresaId: usuario.empresaId, departamentoId: usuario.departamentoId, rol: usuario.rol as RolUsuario },
+      { empresaId: draft.empresaId, departamentoId: draft.departamentoId || null, rol: draft.rol },
       esAdminGrupo
     );
     if (Object.keys(cambios).length === 0) {
@@ -201,7 +198,7 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
         <div>
           <h2 className="text-xl font-extrabold">{usuario.nombre}</h2>
           <p className="micro mt-0.5">
-            {usuario.empresaNombre} · {usuario.departamento ?? '—'} · {usuario.categoriaNombre ?? '—'} ·{' '}
+            {usuario.empresaNombre} · {usuario.departamento ?? '—'} ·{' '}
             <span className={`role inline-block rounded-full px-2 py-0.5 ${usuario.rol.includes('admin') ? 'bg-accent text-on-accent' : 'bg-subtle text-ink-secondary'}`}>
               {ETIQUETA_ROL[usuario.rol]}
             </span>{' '}
@@ -251,6 +248,12 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
             <p className="micro mt-1">Pendientes de aprobar</p>
             <p className="mt-0.5 text-[11px] font-semibold text-ink-tertiary">{pendientesUsuario.length ? 'requieren tu revisión' : 'nada pendiente'}</p>
           </div>
+        </div>
+      )}
+
+      {puedeEditar && (
+        <div className="mb-4">
+          <DepartamentosVisibles perfilId={usuario.id} empresaId={usuario.empresaId} puedeEditar={puedeEditar} />
         </div>
       )}
 
@@ -312,16 +315,6 @@ export function FichaUsuarioEscritorio({ info, usuario, unicoAdminGrupo = false,
                   <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Departamento</label>
                   <select className="input" value={draft.departamentoId} onChange={(e) => setDraft((d) => ({ ...d, departamentoId: e.target.value }))}>
                     {opcionesDepartamento(departamentos, draft.departamentoId).map((o) => (
-                      <option key={o.valor} value={o.valor}>
-                        {o.etiqueta}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-extrabold text-ink-tertiary">Especialidad</label>
-                  <select className="input" value={draft.categoriaId} onChange={(e) => setDraft((d) => ({ ...d, categoriaId: e.target.value }))}>
-                    {opcionesCategoria(categorias).map((o) => (
                       <option key={o.valor} value={o.valor}>
                         {o.etiqueta}
                       </option>

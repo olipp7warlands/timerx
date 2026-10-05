@@ -31,11 +31,20 @@ export function useEmpresas() {
   }, [recargar]);
 
   const crear = useCallback(
-    async (nombre: string, cif: string | null, areaId: string | null) => {
+    async (nombre: string, cif: string | null, areaId: string | null, departamentoIds: string[] = []) => {
       const supabase = createClient();
-      const { error } = await supabase.from('empresa').insert({ nombre, cif, area_id: areaId });
-      if (!error) await recargar();
-      return { error: error?.message ?? null };
+      const { data, error } = await supabase.from('empresa').insert({ nombre, cif, area_id: areaId }).select('id');
+      if (error) return { error: error.message };
+      // Departamentos de la empresa (v2.0): se fijan en el alta. Sin ellos, sus profesionales no verían ninguna especialidad.
+      if (data?.[0] && departamentoIds.length > 0) {
+        const { error: eVinc } = await supabase.from('empresa_departamento').insert(departamentoIds.map((d) => ({ empresa_id: data[0].id, departamento_id: d })));
+        if (eVinc) {
+          await recargar();
+          return { error: `La empresa se creó, pero no se pudieron asignar sus departamentos: ${eVinc.message}` };
+        }
+      }
+      await recargar();
+      return { error: null };
     },
     [recargar]
   );

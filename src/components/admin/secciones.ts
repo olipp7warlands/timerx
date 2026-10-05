@@ -4,7 +4,6 @@ import {
   IconAvion,
   IconEmpresa,
   IconCarpeta,
-  IconCategoria,
   IconOrganigrama,
   IconCalendario,
   IconMapa,
@@ -39,9 +38,8 @@ export const GRUPOS_SECCIONES: GrupoSeccion[] = [
       { id: 'proyectos', etiqueta: 'Proyectos', Icono: IconCarpeta },
       { id: 'calendario', etiqueta: 'Calendario', Icono: IconCalendario },
       { id: 'mapa', etiqueta: 'Mapa', Icono: IconMapa },
-      // Departamentos y Especialidades van juntos: el departamento es el que agrupa a las especialidades y a los profesionales.
+      // v2.0: Departamentos y Especialidades son UNA sola sección (las especialidades viven dentro de su departamento).
       { id: 'departamentos', etiqueta: 'Departamentos', Icono: IconOrganigrama, soloAdminGrupo: true },
-      { id: 'especialidades', etiqueta: 'Especialidades', Icono: IconCategoria },
     ],
   },
   {

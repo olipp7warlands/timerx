@@ -17,28 +17,24 @@ export interface UsuarioAdmin {
   empresaNombre: string;
   departamentoId: string | null;
   departamento: string | null;
-  categoriaId: string | null;
-  categoriaNombre: string | null;
   activo: boolean;
 }
 
 /**
  * Solo se escriben los campos PRESENTES. La ficha los manda todos (formulario completo); la edición inline de la tabla manda
  * únicamente el que se ha cambiado: así una fila con datos cacheados no reescribe (ni pisa) campos que otro admin haya
- * cambiado entretanto. `null` en departamento/categoría significa "quitar"; `undefined`, "no tocar".
+ * cambiado entretanto. `null` en departamento significa "quitar"; `undefined`, "no tocar".
  */
 export interface ActualizarUsuarioInput {
   empresaId?: string;
   departamentoId?: string | null;
-  categoriaId?: string | null;
   rol?: RolUsuario;
 }
 
 const SELECT = `
-  id, nombre, email, rol, empresa_id, departamento_id, categoria_id, activo,
+  id, nombre, email, rol, empresa_id, departamento_id, activo,
   empresa:empresa_id(nombre),
-  departamento:departamento_id(nombre),
-  categoria:categoria_id(nombre)
+  departamento:departamento_id(nombre)
 `;
 
 /** Listado de perfiles -- ya acotado por perfil_select (propia empresa + intragrupo para admin_empresa, 007/008). */
@@ -60,8 +56,6 @@ export function useUsuarios() {
         empresaNombre: f.empresa?.nombre ?? '',
         departamentoId: f.departamento_id,
         departamento: f.departamento?.nombre ?? null,
-        categoriaId: f.categoria_id,
-        categoriaNombre: f.categoria?.nombre ?? null,
         activo: f.activo,
       }))
     );
@@ -73,7 +67,7 @@ export function useUsuarios() {
   }, [recargar]);
 
   /**
-   * Update de perfil (empresa/departamento/categoría/rol). RLS (perfil_update_admin) acota admin_empresa a su propia empresa,
+   * Update de perfil (empresa/departamento/rol). RLS (perfil_update_admin) acota admin_empresa a su propia empresa,
    * y el trigger de la 021 reserva a admin_grupo el cambio EFECTIVO de rol y de empresa: quien no lo sea no debe enviarlos.
    */
   const actualizar = useCallback(
@@ -82,7 +76,6 @@ export function useUsuarios() {
       const cambios = {
         ...(input.empresaId !== undefined && { empresa_id: input.empresaId }),
         ...(input.departamentoId !== undefined && { departamento_id: input.departamentoId }),
-        ...(input.categoriaId !== undefined && { categoria_id: input.categoriaId }),
         ...(input.rol !== undefined && { rol: input.rol }),
       };
       const { data, error } = await supabase.from('perfil').update(cambios).eq('id', id).select('id');
