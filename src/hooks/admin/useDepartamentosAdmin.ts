@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { invalidarColoresDepartamento } from '@/hooks/useColoresDepartamento';
 import { siguienteColorLibre } from '@/lib/horas/colores-departamento';
+import { fijarVinculoEmpresa } from '@/lib/departamentos/vinculo-empresa';
 
 export interface Especialidad {
   id: string;
@@ -26,6 +27,8 @@ export interface DepartamentoFila {
   empresaIds: string[];
   /** Profesionales EN ACTIVO asignados al departamento. */
   profesionales: number;
+  /** Los mismos, por empresa (id de empresa → nº). */
+  profesionalesPorEmpresa: Record<string, number>;
 }
 
 export interface Persona {
@@ -78,7 +81,7 @@ export function useDepartamentosAdmin() {
     const [deps, cats, pers, emp, vinc] = await Promise.all([
       supabase.from('departamento').select('id, nombre, activo, color, responsable_id').order('nombre'),
       supabase.from('categoria').select('id, departamento_id, subcategoria(id, nombre, activa)'),
-      supabase.from('perfil').select('id, nombre, departamento_id, activo').order('nombre'),
+      supabase.from('perfil').select('id, nombre, departamento_id, empresa_id, activo').order('nombre'),
       supabase.from('empresa').select('id, nombre').order('nombre'),
       supabase.from('empresa_departamento').select('empresa_id, departamento_id'),
     ]);
@@ -98,6 +101,9 @@ export function useDepartamentosAdmin() {
         especialidades: [...(espejo?.subcategoria ?? [])].sort((a, b) => a.nombre.localeCompare(b.nombre)),
         empresaIds: (vinc.data ?? []).filter((v) => v.departamento_id === d.id).map((v) => v.empresa_id),
         profesionales: perfiles.filter((p) => p.departamento_id === d.id && p.activo).length,
+        profesionalesPorEmpresa: perfiles
+          .filter((p) => p.departamento_id === d.id && p.activo)
+          .reduce<Record<string, number>>((acc, p) => ({ ...acc, [p.empresa_id]: (acc[p.empresa_id] ?? 0) + 1 }), {}),
       };
     });
     return {
@@ -137,6 +143,7 @@ export function useDepartamentosAdmin() {
       const existentes = new Set(departamentos.map((d) => d.nombre.toLowerCase()));
       const usados = departamentos.map((d) => d.color);
       const creados: string[] = [];
+      const ids: string[] = [];
       const saltados: string[] = [];
       for (const n of nuevos) {
         const nombre = n.nombre.trim();
@@ -149,21 +156,22 @@ export function useDepartamentosAdmin() {
         const { data, error } = await supabase.from('departamento').insert({ nombre, color, responsable_id: n.responsableId ?? null }).select('id');
         if (error || (data?.length ?? 0) === 0) {
           await recargar();
-          return { error: error ? mensajeDe(error, `Ya existe un departamento llamado «${nombre}».`) : 'No se pudo crear el departamento (sin permisos).', creados, saltados };
+          return { error: error ? mensajeDe(error, `Ya existe un departamento llamado «${nombre}».`) : 'No se pudo crear el departamento (sin permisos).', creados, ids, saltados };
         }
         usados.push(color);
         existentes.add(nombre.toLowerCase());
         creados.push(nombre);
+        ids.push(data[0].id);
         if (empresaIds.length > 0) {
           const { error: eVinc } = await supabase.from('empresa_departamento').insert(empresaIds.map((e) => ({ empresa_id: e, departamento_id: data![0].id })));
           if (eVinc) {
             await recargar();
-            return { error: `«${nombre}» se creó, pero no se pudo asignar a las empresas: ${eVinc.message}`, creados, saltados };
+            return { error: `«${nombre}» se creó, pero no se pudo asignar a las empresas: ${eVinc.message}`, creados, ids, saltados };
           }
         }
       }
       await recargar();
-      return { error: null, creados, saltados };
+      return { error: null, creados, ids, saltados };
     },
     [departamentos, recargar]
   );
@@ -185,25 +193,14 @@ export function useDepartamentosAdmin() {
     [recargar]
   );
 
-  /** Fija las empresas donde existe el departamento (diferencial: inserta las nuevas, borra las que ya no). */
-  const fijarEmpresas = useCallback(
-    async (id: string, empresaIds: string[]) => {
-      const supabase = createClient();
-      const actuales = departamentos.find((d) => d.id === id)?.empresaIds ?? [];
-      const alta = empresaIds.filter((e) => !actuales.includes(e));
-      const baja = actuales.filter((e) => !empresaIds.includes(e));
-      if (alta.length > 0) {
-        const { error } = await supabase.from('empresa_departamento').insert(alta.map((e) => ({ empresa_id: e, departamento_id: id })));
-        if (error) return { error: error.message };
-      }
-      if (baja.length > 0) {
-        const { error } = await supabase.from('empresa_departamento').delete().eq('departamento_id', id).in('empresa_id', baja);
-        if (error) return { error: error.message };
-      }
+  /** Pone o quita UNA empresa del departamento (la misma mutación que usa la ficha de la empresa, con su guarda de profesionales). */
+  const fijarEmpresa = useCallback(
+    async (id: string, empresaId: string, existe: boolean) => {
+      const r = await fijarVinculoEmpresa(empresaId, id, existe);
       await recargar();
-      return { error: null };
+      return r;
     },
-    [departamentos, recargar]
+    [recargar]
   );
 
   const crearEspecialidad = useCallback(
@@ -234,5 +231,5 @@ export function useDepartamentosAdmin() {
     [recargar]
   );
 
-  return { departamentos, personas, empresas, loading, recargar, crear, actualizar, fijarEmpresas, crearEspecialidad, actualizarEspecialidad };
+  return { departamentos, personas, empresas, loading, recargar, crear, actualizar, fijarEmpresa, crearEspecialidad, actualizarEspecialidad };
 }

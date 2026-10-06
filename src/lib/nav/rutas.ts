@@ -18,7 +18,7 @@ const SECCIONES: Record<SeccionAdmin, { ficha: boolean }> = {
   ausencias: { ficha: false },
   empresas: { ficha: true },
   proyectos: { ficha: true },
-  departamentos: { ficha: false },
+  departamentos: { ficha: true },
   calendario: { ficha: false },
   mapa: { ficha: false },
   control: { ficha: false },

@@ -314,3 +314,12 @@ C imputar_directo: AE solo si empleado Y proyecto son de SU empresa (guarda RPC 
 - [ ] **Backlog sin urgencia**: M (asignación cross-empresa por admin_empresa) y N (`/auth/callback` origen mal calculado detrás de Railway, también en la demo) — `docs/seguridad-backlog.md`.
 - [ ] **Pendiente del usuario**: probar el flujo de «cambiar contraseña» y un deep-link/atrás/F5/móvil con su propia sesión ya autenticada (Fase 4 no pudo inyectar una sesión en el navegador: bloqueado por el clasificador de permisos de Claude Code, «materialización de credenciales»).
 
+
+---
+
+# LOTE v2.0.1 — UX de Departamentos: de edición inline a ficha (solo app, sin migración)
+- [x] Listado solo-filas (`row-link` + «Ver»; sin Abrir/Cerrar ni acordeón); card Importar/Exportar se queda en el listado.
+- [x] Ficha `/admin/departamentos/<id>` (`rutas.ts`: `departamentos.ficha = true`): cabecera (punto de color grande, estado, «‹ Volver»), Datos (nombre, responsable, color), **Empresas donde existe** (2.f: fila por empresa con casilla, nº de profesionales de ESA empresa en ESTE departamento y enlace a su ficha), Especialidades, Acciones (desactivar con su guarda).
+- [x] «＋ Nuevo departamento» navega a la ficha si se crea uno (si son varios, se queda en el listado).
+- [x] 2.f: UNA mutación sobre `empresa_departamento` (`lib/departamentos/vinculo-empresa.ts`) compartida por la ficha del departamento y la de la empresa; quitar una empresa con profesionales EN ACTIVO asignados → «Reubica antes a sus N profesionales.». La ficha de la empresa NO enlazaba de vuelta (el encargo lo daba por hecho): ahora cada departamento de su card lleva «Ver» → ficha del departamento.
+- [x] Verificado en navegador real (Cristian): `pw_v201.mjs`, 41/41; control contra el código anterior falla; huella ANCLA `600be8b5`/`ea31926b`/`53553bd7` y conteos sin cambios; tsc limpio, lint 78 (= base), build OK.

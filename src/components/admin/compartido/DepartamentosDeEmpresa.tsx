@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { colorDeClave } from '@/lib/horas/colores-departamento';
 import { useToast } from '@/components/empleado/compartido/Toast';
+import { fijarVinculoEmpresa } from '@/lib/departamentos/vinculo-empresa';
+import { useNavAdmin } from '../NavAdmin';
 
 export interface DepartamentoOpcion {
   id: string;
@@ -22,7 +24,14 @@ export function useDepartamentosActivos() {
       .eq('activo', true)
       .order('nombre')
       .then(({ data }) => {
-        if (vivo) setDepartamentos((data ?? []).map((d) => ({ id: d.id, nombre: d.nombre, color: d.color })));
+        if (vivo)
+          setDepartamentos(
+            (data ?? []).map((d) => ({
+              id: d.id,
+              nombre: d.nombre,
+              color: d.color,
+            }))
+          );
       });
     return () => {
       vivo = false;
@@ -37,26 +46,36 @@ export function SelectorDepartamentos({
   value,
   onChange,
   disabled = false,
+  onAbrir,
 }: {
   departamentos: DepartamentoOpcion[];
   value: string[];
   onChange: (v: string[]) => void;
   disabled?: boolean;
+  /** Si se pasa, cada departamento lleva un enlace a su ficha (navegación cruzada; solo quien ve la sección Departamentos). */
+  onAbrir?: (departamentoId: string) => void;
 }) {
   return (
     <div>
       <div className="flex flex-wrap gap-x-4 gap-y-1.5">
         {departamentos.map((d) => (
-          <label key={d.id} className="flex items-center gap-1.5 text-sm font-bold">
-            <input
-              type="checkbox"
-              disabled={disabled}
-              checked={value.includes(d.id)}
-              onChange={(ev) => onChange(ev.target.checked ? [...value, d.id] : value.filter((x) => x !== d.id))}
-            />
-            <span className="h-2 w-2 rounded-full" style={{ background: colorDeClave(d.color) }} aria-hidden="true" />
-            {d.nombre}
-          </label>
+          <span key={d.id} className="flex items-center gap-1.5">
+            <label className="flex items-center gap-1.5 text-sm font-bold">
+              <input
+                type="checkbox"
+                disabled={disabled}
+                checked={value.includes(d.id)}
+                onChange={(ev) => onChange(ev.target.checked ? [...value, d.id] : value.filter((x) => x !== d.id))}
+              />
+              <span className="h-2 w-2 rounded-full" style={{ background: colorDeClave(d.color) }} aria-hidden="true" />
+              {d.nombre}
+            </label>
+            {onAbrir && (
+              <button type="button" className="btn-text text-xs" onClick={() => onAbrir(d.id)} aria-label={`Abrir la ficha de ${d.nombre}`}>
+                Ver
+              </button>
+            )}
+          </span>
         ))}
       </div>
       {value.length === 0 && departamentos.length > 0 && (
@@ -69,6 +88,7 @@ export function SelectorDepartamentos({
 /** Tarjeta «Departamentos de la empresa» de la ficha: define qué departamentos EXISTEN en ella. Edita solo admin_grupo (RLS). */
 export function DepartamentosDeEmpresa({ empresaId, puedeEditar }: { empresaId: string; puedeEditar: boolean }) {
   const toast = useToast();
+  const nav = useNavAdmin();
   const departamentos = useDepartamentosActivos();
   const [guardados, setGuardados] = useState<string[] | null>(null);
   const [elegidos, setElegidos] = useState<string[]>([]);
@@ -95,18 +115,18 @@ export function DepartamentosDeEmpresa({ empresaId, puedeEditar }: { empresaId: 
 
   async function guardar() {
     if (guardados === null) return;
-    const supabase = createClient();
     const alta = elegidos.filter((e) => !guardados.includes(e));
     const baja = guardados.filter((e) => !elegidos.includes(e));
     setGuardando(true);
+    // La MISMA mutación que la ficha del departamento (con su guarda de profesionales); se corta en el primer error y se recarga lo real.
     let error: string | null = null;
-    if (alta.length > 0) error = (await supabase.from('empresa_departamento').insert(alta.map((d) => ({ empresa_id: empresaId, departamento_id: d })))).error?.message ?? null;
-    if (!error && baja.length > 0) error = (await supabase.from('empresa_departamento').delete().eq('empresa_id', empresaId).in('departamento_id', baja)).error?.message ?? null;
-    if (!error) {
-      const ids = await cargar();
-      setGuardados(ids);
-      setElegidos(ids);
+    for (const [d, existe] of [...alta.map((d) => [d, true] as const), ...baja.map((d) => [d, false] as const)]) {
+      error = (await fijarVinculoEmpresa(empresaId, d, existe)).error;
+      if (error) break;
     }
+    const ids = await cargar();
+    setGuardados(ids);
+    setElegidos(ids);
     setGuardando(false);
     toast(error ?? 'Departamentos de la empresa actualizados', error ? 'error' : undefined);
   }
@@ -120,7 +140,13 @@ export function DepartamentosDeEmpresa({ empresaId, puedeEditar }: { empresaId: 
         <p className="text-xs text-ink-tertiary">
           Definen qué departamentos existen en esta empresa y, con ello, qué especialidades pueden imputar sus profesionales (salvo que su admin les fije un conjunto concreto).
         </p>
-        <SelectorDepartamentos departamentos={departamentos} value={elegidos} onChange={setElegidos} disabled={!puedeEditar || guardados === null} />
+        <SelectorDepartamentos
+          departamentos={departamentos}
+          value={elegidos}
+          onChange={setElegidos}
+          disabled={!puedeEditar || guardados === null}
+          onAbrir={puedeEditar ? (id) => nav.ir('departamentos', { fichaId: id }) : undefined}
+        />
         {puedeEditar && (
           <button type="button" className="btn btn-primary btn-sm" disabled={!cambia || guardando} onClick={guardar}>
             {guardando ? 'Guardando…' : 'Guardar departamentos'}
