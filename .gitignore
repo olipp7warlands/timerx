@@ -50,3 +50,7 @@ scripts/.pack-revision-estado.json
 
 # Claude Code local harness state
 .claude/
+
+# guion de reset de estreno (no versionar)
+reset-estreno.estado*.json
+backups-reset/

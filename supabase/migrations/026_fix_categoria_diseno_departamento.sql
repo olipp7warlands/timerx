@@ -20,7 +20,9 @@ update categoria
 
 do $$
 begin
-  if (select departamento_id from categoria where id = '00000000-0000-0000-0001-000000000002')
+  -- Solo si la categoría existe: en un proyecto NUEVO el catálogo lo crea la semilla DESPUÉS de las migraciones (no hay nada que arreglar).
+  if exists (select 1 from categoria where id = '00000000-0000-0000-0001-000000000002')
+     and (select departamento_id from categoria where id = '00000000-0000-0000-0001-000000000002')
      is distinct from '00000000-0000-0000-0004-000000000003'::uuid then
     raise exception '026: la categoria "Diseño" no quedo enlazada al departamento "Diseño"';
   end if;

@@ -149,3 +149,84 @@ Decisión de producto **definitiva por ahora: sin email**. Todo lo que dependía
 - **Cambiar la contraseña inicial** de `oliver.perez@wowinx.com` en el primer login (menú del avatar → Cambiar contraseña) y, de paso, confirmar que ese formulario funciona en producción (Fase 4 no pudo probarlo con una sesión real por la restricción de credenciales del propio Claude Code).
 - Backlog abierto sin urgencia: **M** (un admin_empresa puede asignar a su proyecto un empleado de otra empresa) y **N** (`/auth/callback` calcula mal su origen detrás de Railway; bloquea activar email hasta corregirse) — `docs/seguridad-backlog.md`.
 
+## 14. Reset de estreno (producción desde cero) — PREPARADO, NO EJECUTADO
+
+**Decisión (propietario):** cuando llegue el estreno, producción se resetea completa. C3 (el perfil nº 7) queda sin objeto: la cuenta de Blanca, el pack de revisión y los datos de prueba mueren con el reset; no hay limpieza quirúrgica. El **proyecto Supabase** (`duksjzgoipwwrjvvgzon`) y el **servicio Railway** `timerx-prod` se CONSERVAN (mismo ref, claves y variables). La demo no se toca. **La ejecución solo arranca con la orden literal «ejecuta el reset»**: hasta entonces, ni backup, ni promoción, ni borrado, ni nada contra producción.
+
+### 14.1 El guion: `scripts/reset-estreno.mjs`
+
+```
+node scripts/reset-estreno.mjs <fase> --env=<prod.env, fuera del repo> [--confirmo1 --confirmo2] [--sin-parada] [--modo-email-ok] [--coautor]
+fases, en orden:  pre · promocion · bd · auth · superficie · bootstrap · verificacion · cierre      (`todo` = todas, con parada entre fases)
+```
+
+- **Doble confirmación al arrancar contra producción**: frase `BORRAR PRODUCCION` y el ref del proyecto. Sin TTY solo se acepta con `--confirmo1` y `--confirmo2` exactos (el operador los pasa únicamente tras la orden literal).
+- **Barreras** (probadas con un `.env` falso, sin tocar la red): sin `--ensayo` solo acepta el proyecto de producción; con `--ensayo` solo la DEMO y **nunca** ejecuta `promocion`, `bd` ni `bootstrap`; las fases que escriben exigen las anteriores en `reset-estreno.estado.json` (no versionado): `promocion`←`pre`, `bd`←`pre`+`promocion`, `bootstrap`←`bd`, `verificacion`←`bootstrap`.
+- Las claves de producción **no se leen de `.env.local`** (que es la demo): se pasan con `--env=` a un archivo fuera del repo (`prod.env`).
+- Los exports previos y el estado van a `backups-reset/` y `reset-estreno.estado*.json` (ambos en `.gitignore`).
+
+### 14.2 Hallazgos de la preparación (importantes)
+
+1. **La cadena de migraciones no se podía reconstruir en un proyecto nuevo.** La 026 (arreglo de datos) abortaba con el catálogo vacío, y la 031 también. Las migraciones 001–029 no siembran departamentos ni categorías (lo hacen las semillas), así que un proyecto nuevo las aplica sobre catálogo vacío. Corregidas: 026 (el chequeo solo si la categoría existe) y 031 (no-op sin departamentos). Esos dos archivos cambiaron **después** de aplicarse en demo (allí no cambia nada: ya están aplicadas); producción los aplicará ya con la versión nueva.
+2. **Son 30 migraciones, no 31**: 001–031 sin la 003, que no existe. El historial esperado tras el reset es **30/30**.
+3. **Qué hace `supabase db reset --linked`** (leído en el código fuente del CLI, `pkg/migration/queries/drop.sql` y `internal/db/reset/reset.go`): tras un prompt (se salta con `--yes`) **vacía todo `public`** (funciones, vistas, tablas, secuencias, tipos y policies; el esquema y sus privilegios por defecto se conservan), **trunca todas las tablas de `auth`** (los usuarios mueren), trunca `supabase_migrations`, elimina esquemas de usuario y extensiones fuera de una lista segura, y **vuelve a aplicar las migraciones y la semilla**. No usa Docker. **Trampa:** `config.toml` no declara semilla; sin `[db.seed]` el CLI cargaría `./seed.sql`, que es la semilla de la DEMO. Por eso el guion añade un `[db.seed] sql_paths = ["./seed-produccion.sql"]` temporal y lo revierte siempre con `git checkout`.
+4. **No hay Docker** en la máquina de trabajo: no existe ensayo en contenedor local ni de `db dump`. El export previo es por la API (service_role) y el seguro real son los backups físicos diarios de Supabase.
+
+### 14.3 Secuencia (lo que ejecuta el guion)
+
+**a) PRE-VUELO (`pre`)** — `comprobar-paridad` (sin DIVERGENCIA), conteos completos de todas las relaciones y de `auth.users`, **lista de lo que muere** (cuentas de Auth por email y filas por tabla), export previo de todas las tablas y de las cuentas a `backups-reset/<fecha>/`, comprobación de que el CLI está enlazado a `duksjzgoipwwrjvvgzon` desde el worktree `../TimerX-prod`, y `supabase backups list` (último backup físico `COMPLETED`).
+
+**b) PROMOCIÓN (`promocion`)** — en el worktree de `produccion`: `git merge --no-ff --no-commit origin/main`; un conflicto en `supabase/config.toml` se resuelve con el de producción (cualquier otro aborta el merge); se exige que el árbol de `produccion` sea idéntico a `main` salvo `config.toml`/`seed-produccion.sql`; parada; `git push origin produccion`; se espera a que `timerx-prod` sirva en `/api/version` el SHA del merge (≤ 15 min).
+
+**c) RESET DE BD (`bd`)** — última parada; `supabase db reset --linked --yes` con la semilla de producción (arriba); luego: **historial 30/30** (sin sondas), Auth sin usuarios (si quedara alguno, se borra), espera a que PostgREST recargue el esquema, **contenido de la semilla contra lo declarado** y **censo completo** con la sonda `scripts/sql/censo.sql` (migración temporal que aborta con `RAISE`, borrada en el acto; no deja rastro en el historial). Si algo no coincide, el guion se detiene.
+
+| Contenido de la semilla (se verifica uno a uno) | Valor |
+|---|---|
+| Empresas | 3 (Wowinx SL, Málaga CF SAD, Legal Norte SL), **sin CIF**, jornada 8/8/8/8/5,5/0/0 (21 filas) |
+| Departamentos | 4 con color y categoría **espejo 1:1** (mismo nombre, activos): Administración y Finanzas, Desarrollo, Diseño, Legal |
+| Especialidades | 14 (Desarrollo 4 · Diseño 3 · Legal 4 · Administración y Finanzas 3) |
+| `empresa_departamento` | 12 (3 empresas × 4) · `perfil_departamento` 0 |
+| Proyectos | 7 (ASESINT, INTERNO, LAUNCHER, MCHEF, TRX, WEBCORP, XIM) |
+| Mapa | 6 áreas · 22 elementos · 8 festivos |
+| Ajustes | 6: jornada 8, tope 12 h, descripción no obligatoria, bloqueo de meses cerrados, recordatorio off, jornada por defecto 8/8/8/8/5,5/0/0 |
+| Todo lo demás | 0 (perfil, auth.users, imputaciones, ausencias, periodos, tarifas, coste, tickets, recordatorios…) |
+
+| Censo v2.0 esperado (`scripts/sql/censo.sql`) | Valor |
+|---|---|
+| Tablas · vistas · secuencias | 25 · 4 · 1 |
+| Funciones (de trigger) · triggers | 60 (12) · 11 |
+| Policies · índices | 50 · 52 |
+| PK · FK · CHECK · UNIQUE · enums | 23 · 42 · 17 · 13 · 7 |
+| RLS activa | 25 de 25 |
+| `authenticator` · `pgrst.db_pre_request` | `public.cuenta_desactivada_pre_request` |
+| `anon` con EXECUTE (salvo el pre-request) · con privilegios de relación | 0 · 0 |
+| Objetos v2.0 | 3 tablas nuevas con RLS y sin `anon`; `respaldo_v20` ilegible; espejo no ejecutable; trigger del espejo; `categoria.departamento_id` NOT NULL + UNIQUE; CHECK de color |
+
+Además, **`MODO_EMAIL=log` y `APP_URL`** (variables de Railway, no de la BD) se confirman antes de seguir (el operador las comprueba con la API de Railway y pasa `--modo-email-ok`).
+
+**d) CONFIG AUTH (`auth`)** — el reset de BD no toca la config de Auth, pero se comprueba: `disable_signup: true`, `mailer_autoconfirm: false`, un `signUp` real → `422 signup_disabled`, y el número de usuarios de Auth no cambia (0 antes del bootstrap, 1 después).
+
+**e) SUPERFICIE (`superficie`)** — con la anon key: todas las tablas y vistas (descubiertas por el OpenAPI) → `42501`; escrituras inocuas → `42501`; todas las RPC con sus **argumentos reales** y valores inocuos (norma C) → `42501` (excluida la del pre-request, que `anon` ejecuta a propósito); conteos idénticos antes/después; `/debug` y `/debug/movil` → 404, `/login` 200, `/admin` 307, cron sin secreto 401, el bundle público solo apunta al Supabase de producción, `/api/version`.
+
+**f) BOOTSTRAP (`bootstrap`)** — `scripts/bootstrap-admin.mjs` crea `oliver.perez@wowinx.com` (Oliver Perez Parada, Wowinx SL, `admin_grupo`); la contraseña inicial se muestra **UNA vez** y no se guarda en ningún archivo.
+
+**g) VERIFICACIÓN DE ESTRENO (`verificacion`)** — ciclo mínimo con una cuenta ad hoc `prueba.estreno.<hex>@wowinx.com` (creada y borrada): profesional con departamento Desarrollo; asignación a XIM con la sesión del admin; **picker** (14 especialidades de 4 departamentos en producción); imputar 2 h en Backend; computar (`enviar_imputaciones` → 1); aprobar (`aprobar_imputaciones` con la sesión del admin → 1); ficha (`balance_mes_empleado` con 2 h); **ticket `T-001`** (en un proyecto limpio); **pre-request de la 025** (cuenta desactivada → 403 con el JWT ya emitido). **Reversión con conteos**: se borra todo lo creado, se resincroniza la referencia de tickets (`ticket_ref_resincronizar`) y los conteos vuelven a los de antes; en producción queda **SEED + mi cuenta** (perfil 1, auth 1, resto de tablas vacías). *El aprobador es la cuenta admin del propietario (`--admin-email`, por defecto la suya): hace falta un admin para asignar y aprobar, y solo actúa; su perfil no se modifica.*
+
+**h) CIERRE (`cierre`)** — `comprobar-paridad` debe dar **EN PARIDAD** (producción == `main`, 30/30 migraciones); `timerx-prod` y `timerx-prod-cron-recordatorios` en SUCCESS (Railway MCP/panel); entrega con `docs/dia-1.md`.
+
+### 14.4 Ensayo sin producción: qué se probó y qué no
+
+No hay contenedor local (sin Docker) ni proyecto desechable barato. Lo que SÍ se ejecutó, sin tocar producción y sin dejar nada en la demo (conteos y huella idénticos antes/después):
+
+- **Reconstrucción completa desde cero en una transacción abortada sobre la demo**: `drop schema public cascade` + las 30 migraciones + `seed-produccion.sql` (con su propia autocomprobación) + censo → **el censo es idéntico al de la demo** (tabla de 14.3). Así se descubrió el fallo de la 026.
+- **Seed desde cero** de `seed.sql` y `seed-produccion.sql` (vaciar, correr la 031 sobre catálogo vacío, sembrar, comprobar el modelo y que el trigger de la 030 sigue vivo).
+- **Fases reales del guion contra la demo** con `--ensayo`: `pre` (paridad, conteos, export, backups), `auth`, `superficie` (29/29 relaciones y 47 RPC → 42501), `verificacion` (ciclo completo incluido el 403 del pre-request y la reversión; repetido: la secuencia de tickets se resincroniza) y `cierre`.
+- **Barreras** con un `.env` falso de producción: demo sin `--ensayo`, fases destructivas en `--ensayo`, producción con `--ensayo`, confirmaciones ausentes/incorrectas, fases sin sus requisitos y fase desconocida: el guion se detiene en cada una **antes de contactar con ninguna red**.
+
+Lo que **NO se pudo ensayar** (revisado en seco, línea a línea): el **`supabase db reset --linked` real** (semántica leída en el código fuente del CLI, ver 14.2), el **merge y el push reales** de `promocion`, el **bootstrap** y la recarga de PostgREST tras el reset. Mitigaciones: el esquema reconstruido en la transacción abortada ya demostró que las migraciones + la semilla producen el censo esperado; el guion espera a PostgREST antes de verificar y se detiene ante cualquier diferencia; si `db reset` fallara a medias, **se repite la fase `bd`** (vuelve a vaciar y a reconstruir; es idempotente) con el export previo en `backups-reset/`; y los backups físicos diarios de Supabase son la red de seguridad real (restauración desde el panel).
+
+### 14.5 Protocolo de ejecución
+
+1. Hasta la orden literal «ejecuta el reset»: nada contra producción (ni siquiera `pre`).
+2. Con la orden: las fases se lanzan **una a una** con `--sin-parada`, informando tras cada una y **sin continuar nunca tras un fallo**; los `--confirmo1/--confirmo2` se pasan en ese momento. `MODO_EMAIL`/`APP_URL` se comprueban en Railway antes de `bd`.
+3. Tras `cierre`: el propietario entra, cambia su contraseña y sigue `docs/dia-1.md`.
